@@ -57,6 +57,28 @@ jobs:
         # Try to install deepchem, but don't fail if it's not available
         pip install deepchem || echo "DeepChem not available, autodoc will show warnings"
 
+    - name: Check Sphinx configuration
+      working-directory: docs/source
+      run: |
+        python -c "import conf; print('Sphinx configuration is valid')"
+
+    - name: Build documentation
+      working-directory: docs
+      run: |
+        python -m sphinx -b html source _build/html
+
+    - name: Check for common issues
+      working-directory: docs
+      run: |
+        # Check for broken internal links
+        echo "Checking for broken internal references..."
+        python -m sphinx -b linkcheck source _build/linkcheck || echo "Some links may be broken"
+        
+        # Generate build statistics
+        echo "Documentation build statistics:"
+        find _build/html -name "*.html" | wc -l | xargs echo "HTML files generated:"
+        du -sh _build/html | xargs echo "Total size:"
+
   test-makefile:
     runs-on: ubuntu-latest
     name: Test Makefile Targets
