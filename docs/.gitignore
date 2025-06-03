@@ -1,5 +1,6 @@
 # Sphinx build directory
 build/
+_build/
 
 # Sphinx cache
 source/_build/
