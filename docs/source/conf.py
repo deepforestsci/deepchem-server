@@ -132,6 +132,7 @@ autodoc_mock_imports = [
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
     "pandas": ("https://pandas.pydata.org/docs/", None),
+    "deepchem": ("https://deepchem.readthedocs.io/en/latest/", None),
 }
 
 # -- Options for todo extension ----------------------------------------------
