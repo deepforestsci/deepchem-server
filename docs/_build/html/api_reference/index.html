@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API Reference &mdash; DeepChem Server 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=8d563738"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="REST API" href="rest_api.html" />
+    <link rel="prev" title="Quick Start" href="../get_started/quick_start.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            DeepChem Server
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../get_started/index.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="rest_api.html">REST API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="core_modules.html">Core Modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html">Utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#authentication">Authentication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#error-handling">Error Handling</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../py_ds_library/index.html">Py-DS Library</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">DeepChem Server</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">API Reference</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api_reference/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="api-reference">
+<h1>API Reference<a class="headerlink" href="#api-reference" title="Link to this heading"></a></h1>
+<p>Complete reference documentation for the DeepChem Server API, including REST endpoints and core modules.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="rest_api.html">REST API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="rest_api.html#base-url">Base URL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest_api.html#interactive-documentation">Interactive Documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest_api.html#router-module-documentation">Router Module Documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest_api.html#available-featurizers">Available Featurizers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest_api.html#response-formats">Response Formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest_api.html#error-handling">Error Handling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest_api.html#fastapi-configuration">FastAPI Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest_api.html#best-practices">Best Practices</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="core_modules.html">Core Modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="core_modules.html#datastore-operations">Datastore Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="core_modules.html#address-management">Address Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="core_modules.html#cards-and-metadata">Cards and Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="core_modules.html#configuration">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="core_modules.html#featurization">Featurization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="core_modules.html#compute-operations">Compute Operations</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="utils.html">Utilities</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="utils.html#module-deepchem_server.utils">Utility Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html#overview">Overview</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h2>
+<p>DeepChem Server provides a comprehensive API for molecular machine learning workflows. The API is organized into several layers:</p>
+<ul class="simple">
+<li><p><strong>REST API</strong>: HTTP endpoints for data upload, featurization, and retrieval</p></li>
+<li><p><strong>Core Modules</strong>: Python modules that implement the server functionality</p></li>
+<li><p><strong>Utilities</strong>: Helper functions and utilities used throughout the system</p></li>
+</ul>
+<p>For interactive API testing and the most up-to-date endpoint documentation, visit <a class="reference external" href="http://localhost:8000/docs">http://localhost:8000/docs</a> when your server is running.</p>
+</section>
+<section id="authentication">
+<h2>Authentication<a class="headerlink" href="#authentication" title="Link to this heading"></a></h2>
+<p>Currently, DeepChem Server does not require authentication. All endpoints are publicly accessible when the server is running.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In production deployments, you should implement appropriate authentication and authorization mechanisms.</p>
+</div>
+</section>
+<section id="error-handling">
+<h2>Error Handling<a class="headerlink" href="#error-handling" title="Link to this heading"></a></h2>
+<p>All API endpoints return consistent error responses with appropriate HTTP status codes. Common status codes include:</p>
+<ul class="simple">
+<li><p><strong>200 OK</strong>: Request succeeded</p></li>
+<li><p><strong>400 Bad Request</strong>: Invalid request parameters</p></li>
+<li><p><strong>404 Not Found</strong>: Resource not found</p></li>
+<li><p><strong>422 Unprocessable Entity</strong>: Validation error</p></li>
+<li><p><strong>500 Internal Server Error</strong>: Server error</p></li>
+</ul>
+<p>For detailed error response formats and examples, visit <a class="reference external" href="http://localhost:8000/docs">http://localhost:8000/docs</a>.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../get_started/quick_start.html" class="btn btn-neutral float-left" title="Quick Start" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="rest_api.html" class="btn btn-neutral float-right" title="REST API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, DeepChem Server Team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

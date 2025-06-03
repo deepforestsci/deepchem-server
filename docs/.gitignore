@@ -1,0 +1,28 @@
+# Sphinx build directory
+build/
+
+# Sphinx cache
+source/_build/
+source/.doctrees/
+
+# Generated API documentation
+source/api_reference/generated/
+
+# Temporary files
+*.tmp
+*.swp
+*~
+.DS_Store
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Editor files
+.vscode/
+.idea/
+*.sublime-*
+
+# OS files
+Thumbs.db 
