@@ -8,6 +8,7 @@ from typing import Optional, List, Any, Union, IO
 import deepchem as dc
 import pandas as pd
 import logging
+from deepchem_server.core import model_mappings
 from PIL.PngImagePlugin import PngImageFile
 from PIL import Image
 from deepchem_server.core.cards import Card, DataCard, ModelCard
@@ -540,19 +541,18 @@ class DiskDataStore(DataStore):
         ----------
         address: DeepchemAddress of the data object to retrieve
         """
-        # address_key = DeepchemAddress.get_key(address)
-        # path = os.path.join(self.storage_loc, address_key)
+        address_key = DeepchemAddress.get_key(address)
+        path = os.path.join(self.storage_loc, address_key)
 
-        # model_card = self.get_card(address, kind='model')
+        model_card = self.get_card(address, kind='model')
 
-        # model = mappings.model_address_map[model_card.model_type](  # noqa
-        #     model_dir=path, **model_card.init_kwargs)
-        # try:
-        #     model.restore()
-        # except AttributeError:
-        #     model.reload()
-        # return model
-        raise NotImplementedError
+        model = model_mappings.model_address_map[model_card.model_type](  # noqa
+            model_dir=path, **model_card.init_kwargs)
+        try:
+            model.restore()
+        except AttributeError:
+            model.reload()
+        return model
 
     def get(self,
             address,

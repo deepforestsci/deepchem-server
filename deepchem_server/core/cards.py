@@ -2,6 +2,7 @@ import ast
 import json
 import datetime
 from typing import Optional, Dict
+from deepchem_server.core import model_mappings
 
 
 class Card:
@@ -152,4 +153,71 @@ class DataCard(Card):
 
 
 class ModelCard(Card):
-    pass
+    """Class for storing model card attributes
+
+    Parameters
+    ----------
+    address: str
+      The address of model in the datastore
+    model_type: str
+      The type of model. Ex: dc.models.RandomForest
+    train_dataset_address: str
+      Training dataset used to train the model
+    description: str
+      A description about the model
+    featurizer: str
+      The featurizer used in the dataset
+    intended_use: str
+      Notes on dataset - the intended use of the dataset
+    caveats: str
+      Notes on dataset - the caveats in using the dataset.
+    init_kwargs: dict **optional**
+      Initialization kwargs for the model ex: n_layers
+    train_kwargs: dict **optional**
+      Training kwargs for the model ex: n_epochs
+    """
+    SUPPORTED_MODEL_TYPES = list(model_mappings.model_address_map.keys())
+
+    def __init__(self,
+                 address: str,
+                 model_type: str,
+                 train_dataset_address: str,
+                 description: Optional[str] = None,
+                 featurizer: Optional[str] = None,
+                 intended_use: Optional[str] = None,
+                 caveats: Optional[str] = None,
+                 init_kwargs: Optional[Dict] = {},
+                 train_kwargs: Optional[Dict] = {},
+                 **kwargs):
+        super().__init__()
+        if not isinstance(address, str):
+            raise TypeError("address must be a string")
+        if not isinstance(model_type, str):
+            raise TypeError("model_type must by a string")
+        if not isinstance(train_dataset_address, str):
+            raise TypeError("train_dataset_address must be a string")
+        assert model_type in self.SUPPORTED_MODEL_TYPES, 'Model type {} is not supported. Supported model types are {}'.format(
+            model_type, ' '.join(self.SUPPORTED_MODEL_TYPES))
+        self.address = address
+        self.model_type = model_type
+        self.train_dataset_address = train_dataset_address
+        # Note: We don't have datatype here because we will be only storing
+        # models of type dc.model.Models
+        self.description = description
+        self.featurizer = featurizer
+        self.intended_use = intended_use
+        self.caveats = caveats
+        self.init_kwargs = init_kwargs
+        self.train_kwargs = train_kwargs
+        self.pretrained_model_address: Optional[str] = None
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
+    @classmethod
+    def from_json(cls, json_data: str):
+        data = json.loads(json_data)
+        return cls(**data)
+
+    @classmethod
+    def from_bytes(cls, card_bytes: bytes):
+        return ModelCard.from_json(card_bytes.decode('utf8'))

@@ -1,0 +1,9 @@
+model_class: GCNModel
+init_kwargs:
+  n_tasks: 1
+  mode: classification
+  batch: 2
+  learning_rate: 0.0003
+  dropouts: 0.5
+train_kwargs:
+  nb_epoch: 1

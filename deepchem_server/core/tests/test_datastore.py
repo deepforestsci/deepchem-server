@@ -8,7 +8,7 @@ from PIL import Image
 from PIL.PngImagePlugin import PngImageFile
 from deepchem_server.core.datastore import DiskDataStore
 from deepchem_server.core import cards
-from deepchem_server.core.cards import DataCard
+from deepchem_server.core.cards import DataCard, ModelCard
 
 
 def test_disk_datastore_in_memory_upload(disk_datastore):
@@ -379,3 +379,77 @@ def test_dir_disk_copy(disk_datastore, alternate_disk_datastore):
         alternate_disk_datastore)
     assert "alternate-test/alternate-user/test_dir_copy/" in alternate_disk_datastore.list_data(
     )
+
+
+def test_disk_datastore_upload_model(disk_datastore):
+    """Test uploading model."""
+    model_card = cards.ModelCard(address='',
+                                 model_type='random_forest_regressor',
+                                 train_dataset_address='',
+                                 description='this is a model')
+    from sklearn.ensemble import RandomForestRegressor
+    model = dc.models.SklearnModel(RandomForestRegressor())
+    model.save()
+    data_address = disk_datastore.upload_model('model', model, model_card)
+    model_retrieved = disk_datastore.get_model(data_address)
+    assert isinstance(model_retrieved, dc.models.Model)
+
+
+def test_disk_datastore_upload_nested_model(disk_datastore):
+    """Test uploading a nested model."""
+    model_card = cards.ModelCard(address='',
+                                 model_type='random_forest_regressor',
+                                 train_dataset_address='',
+                                 description='this is a model')
+    from sklearn.ensemble import RandomForestRegressor
+    model = dc.models.SklearnModel(RandomForestRegressor())
+    model.save()
+    data_address = disk_datastore.upload_model('test upload model/model', model,
+                                               model_card)
+    model_retrieved = disk_datastore.get_model(data_address)
+    assert isinstance(model_retrieved, dc.models.Model)
+    assert data_address == "deepchem://test/user/test upload model/model"
+
+
+def test_disk_datastore_upload_model_from_memory(disk_datastore):
+    """Test uploading model."""
+    filenames = ['checkpoint1.pt', 'config.yaml']
+    files = [
+        open('./assets/models/gcn/checkpoint1.pt', 'rb'),
+        open('./assets/models/gcn/config.yaml', 'rb')
+    ]
+    card = ModelCard(address='', train_dataset_address='', model_type='gcn')
+    model_address = disk_datastore.upload_model_from_memory(
+        model_name='model',
+        model_files=files,
+        model_filenames=filenames,
+        card=card)
+
+    # check that uploaded model exists
+    card_retrieved = disk_datastore.get_card(model_address, 'model')
+    assert card_retrieved.model_type == 'gcn'
+    assert card_retrieved.address == 'deepchem://test/user/model'
+
+    assert model_address == 'deepchem://test/user/model'
+
+
+def test_disk_datastore_upload_nested_model_from_memory(disk_datastore):
+    """Test uploading nested model from memory."""
+    filenames = ['checkpoint1.pt', 'config.yaml']
+    files = [
+        open('./assets/models/gcn/checkpoint1.pt', 'rb'),
+        open('./assets/models/gcn/config.yaml', 'rb')
+    ]
+    card = ModelCard(address='', train_dataset_address='', model_type='gcn')
+    model_address = disk_datastore.upload_model_from_memory(
+        model_name='test upload model from memory/model',
+        model_files=files,
+        model_filenames=filenames,
+        card=card)
+
+    # check that uploaded model exists
+    card_retrieved = disk_datastore.get_card(model_address, 'model')
+    assert card_retrieved.model_type == 'gcn'
+    assert card_retrieved.address == 'deepchem://test/user/test upload model from memory/model'
+
+    assert model_address == 'deepchem://test/user/test upload model from memory/model'
