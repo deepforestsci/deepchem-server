@@ -1,5 +1,6 @@
 import ast
 import json
+from ase.io import lammpsdata
 import datetime
 from typing import Optional, Dict
 
@@ -59,11 +60,13 @@ class DataCard(Card):
         'text/plain',
         'png',
         'binary',
+        'ase.atoms.Atoms',
+        'lammpsdata'
     ]
     SUPPORTED_FILE_TYPES = [
         'csv', 'dir', 'json', 'pdb', 'fasta', 'fastq', 'png', 'sdf', 'dcd',
         'txt', 'xml', 'py', 'pdbqt', 'zip', 'smi', 'smiles', 'bz2', 'cxsmiles',
-        'onnx', 'hdf5', 'log'
+        'onnx', 'hdf5', 'log', 'gpw', 'data'
     ]
 
     def __init__(self,

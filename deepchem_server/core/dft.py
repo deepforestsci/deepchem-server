@@ -18,11 +18,11 @@ import time
 
 
 def calc_potential_energy(lammps_data_path: str,
-                          ncores: int,
+                          ncores: Optional[int] = None,
                           atomic_style: str = "atomic",
                           mode: str = "fd",
                           xc: str = "PBE",
-                          convergence: dict = {}) -> ase.atoms.Atoms:
+                          convergence: Optional[dict] = None) -> ase.atoms.Atoms:
     """
     Calculate potential energy using GPAW.
     
@@ -73,16 +73,16 @@ def calc_potential_energy(lammps_data_path: str,
     )
     print(f"Potential energy: {potential_energy:.6f} eV")
 
-    return molecule
+    return calc
 
 
-def calculate_potential_energy(lammps_file_path: str,
-                               ouput_key: str,
+def calculate_potential_energy(datafile_address: str,
+                               output_key: str,
                                atomic_style: str = "atomic",
                                mode: str = "fd",
                                xc: str = "PBE",
                                ncores: Optional[int] = None,
-                               convergence: dict = {}):
+                               convergence: Optional[dict] = None):
     """
     Calculates the potential energy of a LAMMPS data file using GPAW and stores the updated calculator object.
     
@@ -90,7 +90,7 @@ def calculate_potential_energy(lammps_file_path: str,
     ----------
     lammps_file_path : str
         Path to the LAMMPS data file.
-    ouput_key : str
+    output_key : str
         Key to store the potential energy in the calculator's data.
     atomic_style : str, optional    
         Atomic style for reading the LAMMPS data file, by default "atomic".
@@ -103,18 +103,40 @@ def calculate_potential_energy(lammps_file_path: str,
     convergence : dict, optional
         Convergence parameters for GPAW, by default {}.
     """
-    if not lammps_file_path.endswith('.data'):
-        raise ValueError("LAMMPS data file must have a .data extension")
-
-    datastore = config.get_datastore()
-    tempdir = tempfile.TemporaryDirectory()
-    basedir = os.path.join(tempdir.name)
-
-    if ncores is None:
-        nproc = os.cpu_count()
-    else:
-        nproc = ncores
-
-    # TODO
+    if isinstance(datafile_address, str):
+        datafile_address = ast.literal_eval(datafile_address)
     
-    return None
+    if isinstance(output_key, str):
+        output_key = ast.literal_eval(output_key)
+    
+    datastore = config.get_datastore()
+    if datastore is None:
+        raise ValueError("Datastore is not configured. Please set up the datastore.")
+
+    datafile_path = datastore.get_path(datafile_address)
+    calc_obj = calc_potential_energy(
+        lammps_data_path=datafile_path,
+        ncores=ncores,
+        atomic_style=atomic_style,
+        mode=mode,
+        xc=xc,
+        convergence=convergence
+    )
+    
+    description = f"ASE Atoms object with attached GPAW calculator for potential energy calculation from LAMMPS data file: {datafile_address}"
+    card = DataCard(
+        address='',
+        file_type='gpw',
+        data_type='ase.atoms.Atoms',
+        description=description
+    )
+    tempdir = tempfile.TemporaryDirectory()
+    temp_output_path = os.path.join(tempdir.name, 'temp.gpw')
+    if not output_key.endswith('.gpw'):
+        output_key += '.gpw'
+
+    calc_obj.write(temp_output_path, mode='all')
+    output_address = datastore.upload_data(
+        DeepchemAddress.get_key(output_key), temp_output_path, card
+    )
+    return output_address
