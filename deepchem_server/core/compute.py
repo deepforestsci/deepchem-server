@@ -7,25 +7,50 @@ program_map = {'featurize': core.featurize}
 class ComputeWorkflow:
     """A Compute Workflow is a workflow that runs on Deepchem Server.
 
+    Parameters
+    ----------
+    program : Dict
+        A dictionary containing program configuration including 'program_name'
+        and other parameters required by the specific program.
+
     Examples
     --------
-    >>> program = program = {
-    ... 'program_name': 'featurize',
-    ... 'dataset_address': 'deepchem://profile_name/project_name/data.csv',
-    ... 'featurizer': 'ecfp',
-    ... 'output': 'test_output',
-    ... 'dataset_column': 'smiles',
-    ... 'feat_kwargs': {'size': 1024},
-    ... 'label_column': 'y',
+    >>> program = {
+    ...     'program_name': 'featurize',
+    ...     'dataset_address': 'deepchem://profile_name/project_name/data.csv',
+    ...     'featurizer': 'ecfp',
+    ...     'output': 'test_output',
+    ...     'dataset_column': 'smiles',
+    ...     'feat_kwargs': {'size': 1024},
+    ...     'label_column': 'y',
     ... }
+    >>> workflow = ComputeWorkflow(program)
     """
 
-    def __init__(self, program: Dict):
-        """Initialize Worfklow."""
+    def __init__(self, program: Dict) -> None:
+        """Initialize ComputeWorkflow.
+
+        Parameters
+        ----------
+        program : Dict
+            A dictionary containing program configuration.
+        """
         self.program: Dict = program
 
     def execute(self) -> Any:
-        """Runs the program in Dictionary format based on  `program_name` in program"""
+        """Run the program based on the 'program_name' in the program dictionary.
+
+        Returns
+        -------
+        Any
+            The output of the executed program.
+
+        Raises
+        ------
+        ValueError
+            If 'program_name' is not found in program or if the program_name
+            is not available in the program map.
+        """
         if 'program_name' not in self.program:
             raise ValueError("program_name not found in program")
         program_name: str = self.program['program_name']

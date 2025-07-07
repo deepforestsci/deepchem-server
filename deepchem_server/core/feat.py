@@ -20,23 +20,29 @@ featurizer_map = {
 
 
 def split_dataset(dataset_path: str, file_type: str, n_partition: int,
-                  available_checkpoints: List) -> List[str]:
-    """
-    Splits the dataset into n partitions.
+                  available_checkpoints: List[int]) -> List[str]:
+    """Split the dataset into n partitions.
 
     Parameters
     ----------
-    dataset_path: str
+    dataset_path : str
         The path to the dataset.
-    file_type: str
-        The type of the dataset.
-    n_partition: int
+    file_type : str
+        The type of the dataset (e.g., 'csv', 'sdf').
+    n_partition : int
         The number of partitions to split the dataset into.
+    available_checkpoints : list of int
+        List of checkpoint partition IDs that are already available.
 
     Returns
     -------
-    partitioned_datasets: List[str]
-        The list of addresses of the partitioned datasets.
+    list of str
+        The list of file paths of the partitioned datasets.
+
+    Raises
+    ------
+    NotImplementedError
+        If the file type is not supported for featurization.
     """
     basedir = os.path.dirname(dataset_path)
     datasets = []
@@ -87,36 +93,48 @@ def split_dataset(dataset_path: str, file_type: str, n_partition: int,
     return datasets
 
 
-def featurize_part(main_dataset_address, dataset_path: str, file_type: str,
-                   featurizer: dc.feat.Featurizer, dataset_column: str,
-                   label_column: Optional[str], checkpoint_output_key: str,
-                   nproc: int) -> None:
-    """
-    Featurizes a part of the dataset.
+def featurize_part(
+    main_dataset_address: str,
+    dataset_path: str,
+    file_type: str,
+    featurizer: dc.feat.Featurizer,
+    dataset_column: str,
+    label_column: Optional[str],
+    checkpoint_output_key: str,
+    nproc: int,
+) -> None:
+    """Featurize a part of the dataset.
 
     Parameters
     ----------
-    dataset_path: str
-        The path to the dataset.
-    file_type: str
-        The type of the dataset.
-    featurizer: dc.feat.Featurizer
+    main_dataset_address : str
+        Address of the main dataset being featurized.
+    dataset_path : str
+        The path to the dataset partition to featurize.
+    file_type : str
+        The type of the dataset (e.g., 'csv', 'sdf').
+    featurizer : dc.feat.Featurizer
         The featurizer to use.
-    dataset_column: str
+    dataset_column : str
         The column containing the input for featurizer.
-    label_column: [str] (**optional**)
+    label_column : str, optional
         The target column in case this dataset is going to be used for
         training purposes.
-    checkpoint_output_key: str
+    checkpoint_output_key : str
         The output key for checkpoint '.partial' folder.
-    nproc: int
-        The number of parts to split the dataset into.
-    available_checkpoints: List
-        The list of checkpoint ids already completed in the previous run (if any)
+    nproc : int
+        The total number of partitions being processed.
 
     Returns
     -------
-    None, output
+    None
+
+    Raises
+    ------
+    ValueError
+        If datastore is not set.
+    NotImplementedError
+        If the file type is not supported for featurization.
     """
     datastore = config.get_datastore()
     if datastore is None:
@@ -165,39 +183,48 @@ def featurize_part(main_dataset_address, dataset_path: str, file_type: str,
 
 
 def featurize_multi_core(
-        main_dataset_address, raw_dataset_path: str, file_type: str,
-        feat: dc.feat.Featurizer, dataset_column: str,
-        label_column: Optional[str], basedir: str, nproc: int,
-        checkpoint_output_key: str,
-        available_checkpoints: List) -> Iterable[Union[List, str]]:
-    """
-    Featurizes the dataset in parallel.
+    main_dataset_address: str,
+    raw_dataset_path: str,
+    file_type: str,
+    feat: dc.feat.Featurizer,
+    dataset_column: str,
+    label_column: Optional[str],
+    basedir: str,
+    nproc: int,
+    checkpoint_output_key: str,
+    available_checkpoints: List[int],
+) -> Iterable[Union[List, str]]:
+    """Featurize the dataset in parallel.
 
     Parameters
     ----------
-    raw_dataset_path: str
-        The path to the dataset.
-    file_type: str
-        The type of the dataset.
-    feat: dc.feat.Featurizer
+    main_dataset_address : str
+        Address of the main dataset being featurized.
+    raw_dataset_path : str
+        The path to the raw dataset.
+    file_type : str
+        The type of the dataset (e.g., 'csv', 'sdf').
+    feat : dc.feat.Featurizer
         The featurizer to use.
-    dataset_column: str
+    dataset_column : str
         The column containing the input for featurizer.
-    label_column: Optional[str]
+    label_column : str, optional
         The target column in case this dataset is going to be used for
-    basedir: str
+        training purposes.
+    basedir : str
         The base directory where the dataset is stored.
-    nproc: int
-        The number of parts to split the dataset into.
-    checkpoint_output_key: str
+    nproc : int
+        The number of partitions to split the dataset into.
+    checkpoint_output_key : str
         The output key for checkpoint '.partial' folder.
-    available_checkpoints: List
-        The list of checkpoint ids already completed in the previous run (if any)
+    available_checkpoints : list of int
+        The list of checkpoint ids already completed in the previous run (if any).
 
     Returns
     -------
-    datasets, merge_dir: Iterable[Union[List, str]]
-        The list of datasets and the directory where the merged dataset is stored.
+    list
+        A list containing [datasets, merge_dir] where datasets is a list of
+        DiskDataset objects and merge_dir is the directory path for merging.
     """
     dataset_paths = split_dataset(raw_dataset_path, file_type, nproc,
                                   available_checkpoints)
@@ -224,56 +251,70 @@ def featurize_multi_core(
     return [datasets, merge_dir]
 
 
-def featurize(dataset_address: str,
-              featurizer: str,
-              output: str,
-              dataset_column: str,
-              feat_kwargs: Dict = dict(),
-              label_column: Optional[str] = None,
-              n_core: Optional[int] = None,
-              single_core_threshold: Optional[int] = 250):
-    """
-    Featurizes the dataset at given address with specified featurizer and writes output to datastore.
-    If the compute node has more than 1 CPU core then the featurization is done by splitting the dataset
-    into parts of equal size and featurizing each part in parallel. The featurized parts are then merged
-    into a single dataset and written to the datastore. The number of parts is equal to the number of
-    cores available on the machine. If the compute node has only 1 CPU core then the featurization will
-    be done in a single process.
+def featurize(
+    dataset_address: str,
+    featurizer: str,
+    output: str,
+    dataset_column: str,
+    feat_kwargs: Dict = dict(),
+    label_column: Optional[str] = None,
+    n_core: Optional[int] = None,
+    single_core_threshold: Optional[int] = 250,
+) -> Optional[str]:
+    """Featurize the dataset at given address with specified featurizer.
+
+    Writes output to datastore. If the compute node has more than 1 CPU core
+    then the featurization is done by splitting the dataset into parts of equal
+    size and featurizing each part in parallel. The featurized parts are then
+    merged into a single dataset and written to the datastore. The number of
+    parts is equal to the number of cores available on the machine. If the
+    compute node has only 1 CPU core then the featurization will be done in a
+    single process.
 
     Restart support:
-    The featurize primitive saves a `(output).partial` folder where the checkpoints are saved until completion.
-    To resume a failed featurize execution, the featurize primitive can be rerun with the same arguments and
-    the checkpoints will be restored from the `(output).partial` folder and the folder is deleted once the
-    featurization process is complete.
+    The featurize primitive saves a `(output).partial` folder where the
+    checkpoints are saved until completion. To resume a failed featurize
+    execution, the featurize primitive can be rerun with the same arguments and
+    the checkpoints will be restored from the `(output).partial` folder and the
+    folder is deleted once the featurization process is complete.
 
-    Note: The restart fails if the n_core < n_core used before restart. Additionally, the checkpoints must
-    belong to the same dataset address as the initial run, otherwise, they will not be considered for the restart.
+    Note: The restart fails if the n_core < n_core used before restart.
+    Additionally, the checkpoints must belong to the same dataset address as the
+    initial run, otherwise, they will not be considered for the restart.
 
     Parameters
     ----------
-    dataset_address: str
-      The deepchem address of the dataset to featurize.
-    featurizer: str
-      Has to be a featurizer string in mappings
-    dataset_column: str
-      Column containing the input for featurizer.
-    feat_kwargs: Dict
-      Keyword arguments to pass to featurizer on initialization.
-    output: str
-      The name of output featurized dataset in your workspace.
-    label_column: str (**optional**)
-      The target column in case this dataset is going to be used for
-      training purposes.
-    n_core: int (**optional**)
+    dataset_address : str
+        The deepchem address of the dataset to featurize.
+    featurizer : str
+        Has to be a featurizer string in mappings.
+    output : str
+        The name of output featurized dataset in your workspace.
+    dataset_column : str
+        Column containing the input for featurizer.
+    feat_kwargs : dict, optional
+        Keyword arguments to pass to featurizer on initialization, by default {}.
+    label_column : str, optional
+        The target column in case this dataset is going to be used for
+        training purposes.
+    n_core : int, optional
         The number of cores to use for featurization.
-    single_core_threshold: int (**optional**)
-        The threshold size of the dataset size in megabytes above which multicore featurization
-        will be used.
+    single_core_threshold : int, optional
+        The threshold size of the dataset size in megabytes above which
+        multicore featurization will be used, by default 250.
 
     Returns
     -------
-    featurized_address
-      deepchem address of the featurized dataset.
+    str
+        Deepchem address of the featurized dataset.
+
+    Raises
+    ------
+    ValueError
+        If featurizer is not recognized, if input column is not specified for
+        CSV files, or if datastore is not set.
+    NotImplementedError
+        If the dataset format is not supported for featurization.
     """
     # TODO Allow a list of label column for multitask learning
     # TODO: Handle parsing of dictionary via parser
@@ -310,7 +351,7 @@ def featurize(dataset_address: str,
     tempdir = tempfile.TemporaryDirectory()
     basedir = os.path.join(tempdir.name)
 
-    # check if _checkpoint/ folder exists in given output folder in prithvi
+    # check if _checkpoint/ folder exists in given output folder in datastore
     available_checkpoints = []
     _storage_loc = datastore.storage_loc.rstrip("/")
     pattern = re.compile(

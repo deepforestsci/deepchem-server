@@ -54,7 +54,7 @@ def run_job(profile_name: str,
         datastore: DataStore = _init_datastore(profile_name=profile_name,
                                                project_name=project_name,
                                                backend=backend)
-        config.set_datastore(datastore)
+        config.set_datastore(datastore)  # type: ignore
         workflow = ComputeWorkflow(program)
         try:
             output = workflow.execute()

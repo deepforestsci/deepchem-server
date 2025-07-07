@@ -4,10 +4,11 @@ from __future__ import annotations
 import os
 import json
 import shutil
-from typing import Optional, List, Any, Union, IO
+from typing import Optional, List, Any, Union, IO, Tuple
 import deepchem as dc
 import pandas as pd
 import logging
+from deepchem_server.core import model_mappings
 from PIL.PngImagePlugin import PngImageFile
 from PIL import Image
 from deepchem_server.core.cards import Card, DataCard, ModelCard
@@ -34,9 +35,29 @@ KIND_LIST = [{
 DEFAULT_SAMPLE_ROWS = 100  # for disk datastore
 
 
-def _get_csv_or_dataframe_shape(*,
-                                filename: Optional[str] = None,
-                                dataframe: Optional[pd.DataFrame] = None):
+def _get_csv_or_dataframe_shape(
+        *,
+        filename: Optional[str] = None,
+        dataframe: Optional[pd.DataFrame] = None) -> Tuple[int, int]:
+    """Get the shape of a CSV file or pandas DataFrame.
+
+    Parameters
+    ----------
+    filename : str, optional
+        Path to the CSV file.
+    dataframe : pd.DataFrame, optional
+        The pandas DataFrame to get shape from.
+
+    Returns
+    -------
+    tuple of (int, int)
+        The shape as (number of rows, number of columns).
+
+    Raises
+    ------
+    ValueError
+        If neither filename nor dataframe is provided.
+    """
     if filename is None and dataframe is None:
         raise ValueError("Either one of filepath or dataframe should be set")
     if filename is not None:
@@ -71,16 +92,18 @@ class DataStore:
 
         Parameters
         ----------
-        filename: string
-          Should be the location of a file on disk that is to be uploaded.
-        dataset_name: string
-          The name of this dataset within your deepchem server datastore.
+        datastore_filename : Any
+            The name of this dataset within your deepchem server datastore.
+        filename : Any
+            Should be the location of a file on disk that is to be uploaded.
+        card : ModelCard or DataCard
+            The card containing metadata for the uploaded data.
 
         Returns
         -------
-        dataset_address: Optional[str]
-          If request failed, returns None. Else returns the deepchem server
-          dataset address for the dataset in question.
+        str or None
+            If request failed, returns None. Else returns the deepchem server
+            dataset address for the dataset in question.
         """
         raise NotImplementedError
 
@@ -90,58 +113,74 @@ class DataStore:
 
         Parameters
         ----------
-        deepchem_address: str
-          Should be the location of a file on deepchem server datastore.
-        kind: Optional[str]
+        deepchem_address : str
+            Should be the location of a file on deepchem server datastore.
+        kind : str, optional
             'data' or 'model' - used in cases which contain data in a directory
-            and we need to find the contents of the directory as data or model
-        fetch_sample: bool
-            Whether to get sample or full data
+            and we need to find the contents of the directory as data or model.
+        fetch_sample : bool
+            Whether to get sample or full data.
+
+        Returns
+        -------
+        Any
+            The requested data or model object.
         """
         raise NotImplementedError
 
     def delete_object(self, deepchem_address: str):
-        """Deletes an object pointed by the address from the datastore
+        """Delete an object pointed by the address from the datastore.
 
         Parameters
         ----------
-        deepchem_address: str
-          Location of object in the datastore
+        deepchem_address : str
+            Location of object in the datastore.
+
+        Returns
+        -------
+        Any
+            Result of the deletion operation.
         """
         raise NotImplementedError
 
     # TODO Add list_model utility
     def list_data(self):
-        """Lists data uploaded to deepchem server datastore.
+        """List data uploaded to deepchem server datastore.
 
         This method lists data that is present in deepchem server datastore
         for the present user.
+
+        Returns
+        -------
+        Any
+            Representation of available data in the datastore.
         """
         raise NotImplementedError
 
 
 class DiskDataStore(DataStore):
-    """A concrete datastore that stores objects on the local disk.
-    """
+    """A concrete datastore that stores objects on the local disk."""
 
-    def __init__(self,
-                 profile_name: str,
-                 project_name: str,
-                 basedir: Optional[str] = None,
-                 sample_rows: int = DEFAULT_SAMPLE_ROWS):
-        f"""Initializes a disk datastore within the given directory.
+    def __init__(
+        self,
+        profile_name: str,
+        project_name: str,
+        basedir: Optional[str] = None,
+        sample_rows: int = DEFAULT_SAMPLE_ROWS,
+    ) -> None:
+        """Initialize a disk datastore within the given directory.
 
         Parameters
         ----------
-        profile_name: str
-            Name of the profile
-        project_name: str
-            Name of the project
-        basedir: Optional[str]
+        profile_name : str
+            Name of the profile.
+        project_name : str
+            Name of the project.
+        basedir : str, optional
             Location on disk to hold data store. If none, create temporary folder.
-        sample_rows: int
-            Number of rows to get when fetching a sample instead of full data (works only for csv).
-            Default values is {DEFAULT_SAMPLE_ROWS}.
+        sample_rows : int, optional
+            Number of rows to get when fetching a sample instead of full data
+            (works only for csv), by default {DEFAULT_SAMPLE_ROWS}.
         """
         if basedir:
             self.storage_loc = os.path.join(basedir, profile_name, project_name)
@@ -154,11 +193,21 @@ class DiskDataStore(DataStore):
         self._objects = objects
         self.sample_rows = sample_rows
 
-    def _get_datastore_objects(self, directory: str):
-        """Private helper method to walk directory structure.
+    def _get_datastore_objects(self, directory: str) -> List[str]:
+        """Walk directory structure and collect all objects.
 
         It walks the root directory structure and collects all the objects
         in it including files and subfolder names.
+
+        Parameters
+        ----------
+        directory : str
+            The directory to walk through.
+
+        Returns
+        -------
+        list of str
+            List of relative paths to all files and directories.
         """
         # TODO We should also list objects in the common namespace which
         # can be used by the user
@@ -176,27 +225,36 @@ class DiskDataStore(DataStore):
                 entries.append(relative_path)
         return entries
 
-    def upload_data_from_memory(self,
-                                data: Any,
-                                datastore_filename,
-                                card: Union[DataCard, ModelCard, None],
-                                kind: str = 'data') -> Optional[str]:
+    def upload_data_from_memory(
+        self,
+        data: Any,
+        datastore_filename: str,
+        card: Union[DataCard, ModelCard, None],
+        kind: str = "data",
+    ) -> Optional[str]:
         """Upload in memory data to filestore.
 
         Parameters
         ----------
-        data: object
-          Dataset to upload (ex: dataframe, image dataset etc)
-        datastore_filename: string
-          The name of this dataset within your deepchem server datastore.
-        data_card: str
-          Description of dataset for the dataset card
+        data : Any
+            Dataset to upload (ex: dataframe, image dataset etc).
+        datastore_filename : str
+            The name of this dataset within your deepchem server datastore.
+        card : DataCard, ModelCard, or None
+            Description of dataset for the dataset card.
+        kind : str, optional
+            Type of data being uploaded, by default 'data'.
 
         Returns
         -------
-        dataset_address: Optional[str]
-          If request failed, returns None. Else returns the deepchem server
-          dataset address for the dataset in question.
+        str or None
+            If request failed, returns None. Else returns the deepchem server
+            dataset address for the dataset in question.
+
+        Raises
+        ------
+        ValueError
+            If unsupported data type is provided.
         """
         dataset_address = DeepchemAddress(self.address_prefix +
                                           datastore_filename).address
@@ -438,18 +496,24 @@ class DiskDataStore(DataStore):
 
     def get_card(
             self,
-            address,
-            kind: Optional[str] = 'data'
+            address: str,
+            kind: Optional[str] = "data"
     ) -> Optional[Union[DataCard, ModelCard]]:
-        """Fetch card from disk data store at address
+        """Fetch card from disk data store at address.
 
         Parameters
         ----------
-        address: DeepchemAddress of the data object to retrieve
-        kind : 'data' or 'model' - used in cases which contain data in a directory
-                and we need to find the contents of the directory as data or model
-        card: Union
-            Union of description of dataset and model for the dataset card and model card respectively
+        address : str
+            DeepchemAddress of the data object to retrieve.
+        kind : str, optional
+            'data' or 'model' - used in cases which contain data in a directory
+            and we need to find the contents of the directory as data or model,
+            by default 'data'.
+
+        Returns
+        -------
+        DataCard, ModelCard, or None
+            The card object if found, None otherwise.
         """
         if kind == 'data':
             address = address + '.cdc'
@@ -540,19 +604,18 @@ class DiskDataStore(DataStore):
         ----------
         address: DeepchemAddress of the data object to retrieve
         """
-        # address_key = DeepchemAddress.get_key(address)
-        # path = os.path.join(self.storage_loc, address_key)
+        address_key = DeepchemAddress.get_key(address)
+        path = os.path.join(self.storage_loc, address_key)
 
-        # model_card = self.get_card(address, kind='model')
+        model_card = self.get_card(address, kind='model')
 
-        # model = mappings.model_address_map[model_card.model_type](  # noqa
-        #     model_dir=path, **model_card.init_kwargs)
-        # try:
-        #     model.restore()
-        # except AttributeError:
-        #     model.reload()
-        # return model
-        raise NotImplementedError
+        model = model_mappings.model_address_map[model_card.model_type](  # noqa
+            model_dir=path, **model_card.init_kwargs)
+        try:
+            model.restore()
+        except AttributeError:
+            model.reload()
+        return model
 
     def get(self,
             address,
@@ -588,18 +651,17 @@ class DiskDataStore(DataStore):
         return None
 
     def get_file_size(self, address: str) -> int:
-        """
-        Returns size of the object
+        """Return size of the object.
 
         Parameters
         ----------
-        address: str
-          DeepchemAddress of the object
+        address : str
+            DeepchemAddress of the object.
 
         Returns
         -------
-        object_size: int
-          Size of the object
+        int
+            Size of the object in bytes.
         """
         address_key = DeepchemAddress.get_key(address)
         path = os.path.join(self.storage_loc, address_key)
@@ -615,14 +677,20 @@ class DiskDataStore(DataStore):
                         object_size += os.path.getsize(fp)
             return object_size
 
-    def delete_object(self, address: str, kind='data') -> bool:
-        """
-        Deletes an object from disk datastore
+    def delete_object(self, address: str, kind: str = "data") -> bool:
+        """Delete an object from disk datastore.
 
         Parameters
         ----------
-        address: str
-          Address of the object
+        address : str
+            Address of the object.
+        kind : str, optional
+            Type of object ('data', 'model', 'dir'), by default 'data'.
+
+        Returns
+        -------
+        bool
+            True if deletion was successful.
         """
         key = os.path.join(self.storage_loc, DeepchemAddress.get_key(address))
         if kind == 'data':
@@ -856,9 +924,13 @@ class DiskDataStore(DataStore):
                 raise ValueError(
                     "Destination card key could not be determined.")
 
-    def __repr__(self):
-        """
-        Returns objects in the DiskDataStore
+    def __repr__(self) -> str:
+        """Return objects in the DiskDataStore.
+
+        Returns
+        -------
+        str
+            String representation of all objects in the datastore.
         """
         # TODO A pretty print of objects. Ref: https://docs.python.org/3/library/pprint.html
         all_objects = self._get_datastore_objects(self.storage_loc)
