@@ -355,7 +355,7 @@ def featurize(
     tempdir = tempfile.TemporaryDirectory()
     basedir = os.path.join(tempdir.name)
 
-    # check if _checkpoint/ folder exists in given output folder in prithvi
+    # check if _checkpoint/ folder exists in given output folder in datastore
     available_checkpoints = []
     _storage_loc = datastore.storage_loc.rstrip("/")
     pattern = re.compile(

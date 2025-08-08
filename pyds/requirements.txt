@@ -1,0 +1,6 @@
+requests
+requests-toolbelt
+pytest
+pytest-mock
+responses
+pytest-cov
