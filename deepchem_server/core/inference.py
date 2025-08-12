@@ -15,13 +15,10 @@ from deepchem_server.core.cards import DataCard
 from deepchem_server.core.feat import featurizer_map
 from deepchem_server.core.progress_logger import log_progress
 
-
-def _infer_with_featurize(
-    model_address: str,
-    data_address: str,
-    dataset_column: str,
-    shard_size: Optional[int] = 8192
-) -> Callable[[], Iterator[Sequence[np.ndarray]]]:
+def _infer_with_featurize(model_address: str,
+                          data_address: str,
+                          dataset_column: str,
+                          shard_size: Optional[int] = 8192) -> Callable[[], Iterator[Sequence[np.ndarray]]]:
     """
     This function takes in csv file, and returns a callable iterator that
     featurizes it based on the featurizer used for train dataset and yields predictions
@@ -50,8 +47,7 @@ def _infer_with_featurize(
 
     # Get featurizer from model card
     train_dataset_address = model_card.train_dataset_address
-    train_dataset_card = datastore.get(train_dataset_address + '.cdc',
-                                       kind='data')
+    train_dataset_card = datastore.get(train_dataset_address + '.cdc', kind='data')
     feat_kwargs = train_dataset_card.feat_kwargs
     featurizer_code = train_dataset_card.featurizer
     if featurizer_code not in featurizer_map:
@@ -71,12 +67,9 @@ def _infer_with_featurize(
 
     return iterator
 
-
-def _infer_without_featurize(
-    model_address: str,
-    data_address: str,
-    shard_size: Optional[int] = 8192
-) -> Callable[[], Iterator[Sequence[np.ndarray]]]:
+def _infer_without_featurize(model_address: str,
+                             data_address: str,
+                             shard_size: Optional[int] = 8192) -> Callable[[], Iterator[Sequence[np.ndarray]]]:
     """
     This function takes in csv file, and returns a callable iterator that yields predictions
     on featurized data
@@ -102,13 +95,11 @@ def _infer_without_featurize(
     model = datastore.get(model_address, kind='model')
 
     def iterator() -> Iterator[Sequence[np.ndarray]]:
-        for X, _, _, ids in dataset.iterbatches(batch_size=shard_size,
-                                                deterministic=True):
+        for X, _, _, ids in dataset.iterbatches(batch_size=shard_size, deterministic=True):
             prediction = model.predict(dc.data.NumpyDataset(X))
             yield ids, prediction
 
     return iterator
-
 
 def infer(model_address: str,
           data_address: str,
@@ -167,9 +158,7 @@ def infer(model_address: str,
     data_card = datastore.get(data_address + '.cdc')
     if data_card.featurizer is None and data_address.endswith('.csv'):
         if dataset_column is None:
-            raise Exception(
-                "Requires dataset column name which contains raw inputs (example: smiles)"
-            )
+            raise Exception("Requires dataset column name which contains raw inputs (example: smiles)")
         log_progress('inference', 10, 'downloading dataset')
         iterator = _infer_with_featurize(model_address=model_address,
                                          data_address=data_address,
@@ -192,16 +181,12 @@ def infer(model_address: str,
             # The squeeze operation is ignored for 0th dim to avoid edge cases where,
             # for example, the prediction of shape (1,2,1) is reshaped to (2,) instead of (1, 2)
             prediction = np.squeeze(prediction,
-                                    axis=tuple(
-                                        ax for ax in range(1, prediction.ndim)
-                                        if prediction.shape[ax] == 1))
+                                    axis=tuple(ax for ax in range(1, prediction.ndim) if prediction.shape[ax] == 1))
 
             if len(prediction.shape) == 1:
                 pred_rows = [prediction]
             else:
-                pred_rows = [
-                    prediction[:, i] for i in range(prediction.shape[-1])
-                ]
+                pred_rows = [prediction[:, i] for i in range(prediction.shape[-1])]
 
             # supports only upto binary classification
             if threshold is not None:
@@ -213,8 +198,7 @@ def infer(model_address: str,
                 if len(pred_rows) == 1:
                     header_columns.append('y_preds')
                 else:
-                    header_columns.extend(
-                        [f'y{i+1}_preds' for i in range(len(pred_rows))])
+                    header_columns.extend([f'y{i+1}_preds' for i in range(len(pred_rows))])
                 if threshold is not None:
                     header_columns.append('binarized_preds')
                     pred_rows.append(binary_predictions)
@@ -229,5 +213,4 @@ def infer(model_address: str,
         output = output + '.csv'
 
     card = DataCard(address='', data_type='pandas.DataFrame', file_type='csv')
-    return datastore.upload_data(DeepchemAddress.get_key(output),
-                                 temp_output_path, card)
+    return datastore.upload_data(DeepchemAddress.get_key(output), temp_output_path, card)

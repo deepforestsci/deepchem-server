@@ -1,17 +1,17 @@
 import ast
-import math
 import logging
+import math
 from typing import Dict
-from deepchem_server.core import config
-from deepchem_server.core import model_mappings
+
+from deepchem.models.torch_models import TorchModel
+
+from deepchem_server.core import config, model_mappings
+from deepchem_server.core.address import DeepchemAddress
 from deepchem_server.core.cards import ModelCard
 from deepchem_server.core.datastore import DiskDataStore
 from deepchem_server.core.progress_logger import log_progress
-from deepchem_server.core.address import DeepchemAddress
-from deepchem.models.torch_models import TorchModel
 
 logger = logging.getLogger(__name__)
-
 
 def train(model_type: str,
           dataset_address: str,
@@ -63,8 +63,7 @@ def train(model_type: str,
     if isinstance(train_kwargs, str):
         train_kwargs = ast.literal_eval(train_kwargs)
     if model_type not in model_mappings.model_address_map:
-        raise ValueError(
-            f"Model type not recognized.\nLogs: {model_mappings.LOGS}")
+        raise ValueError(f"Model type not recognized.\nLogs: {model_mappings.LOGS}")
 
     model = model_mappings.model_address_map[model_type](**init_kwargs)
     model_name = DeepchemAddress.get_key(model_name)
@@ -72,26 +71,22 @@ def train(model_type: str,
     if datastore is None:
         raise ValueError("Datastore not set")
     dataset_size = datastore.get_file_size(dataset_address)
-    log_progress(
-        'training', 10,
-        f"downloading dataset '{dataset_address}' ({dataset_size} bytes)")
+    log_progress('training', 10, f"downloading dataset '{dataset_address}' ({dataset_size} bytes)")
     dataset = datastore.get(dataset_address)
 
     # if the model is a TorchModel, add a callback to log the epoch number
     if isinstance(model, TorchModel):
         batch_size = init_kwargs.get('batch_size', 100)
         nb_epoch = train_kwargs.get('nb_epoch', 10)
-        total_steps = math.ceil(
-            dataset.get_shape()[0][0] / batch_size) * nb_epoch
+        total_steps = math.ceil(dataset.get_shape()[0][0] / batch_size) * nb_epoch
         log_frequency = 1
 
         model.log_frequency = log_frequency
 
         def callback(_, step):
             if step % log_frequency == 0:
-                log_progress(
-                    'training', int(10 + (step / total_steps) * 80),
-                    f"training model '{model_name}' ({step}/{total_steps})")
+                log_progress('training', int(10 + (step / total_steps) * 80),
+                             f"training model '{model_name}' ({step}/{total_steps})")
 
         model.fit(dataset, callbacks=[callback], **train_kwargs)
     else:
@@ -114,9 +109,6 @@ def train(model_type: str,
                      description=description)
     log_progress('training', 95, f"uploading model '{model_name}' to datastore")
     if isinstance(datastore, DiskDataStore):
-        model_address = datastore.upload_data_from_memory(model,
-                                                          model_name,
-                                                          card,
-                                                          kind='model')
+        model_address = datastore.upload_data_from_memory(model, model_name, card, kind='model')
     log_progress('training', 100, f"model '{model_name}' uploaded to datastore")
     return model_address

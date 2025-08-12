@@ -1,9 +1,9 @@
 import ast
-import json
 import datetime
-from typing import Optional, Dict
-from deepchem_server.core import model_mappings
+import json
+from typing import Dict, Optional
 
+from deepchem_server.core import model_mappings
 
 class Card:
     """Base class for cards.
@@ -14,8 +14,7 @@ class Card:
 
     def __init__(self) -> None:
         """Initialize a Card with current timestamp."""
-        self.last_updated_time = datetime.datetime.now().strftime(
-            '%d-%B-%Y %H:%M:%S')
+        self.last_updated_time = datetime.datetime.now().strftime('%d-%B-%Y %H:%M:%S')
 
     def __bytes__(self) -> bytes:
         """Convert card to bytes representation.
@@ -52,7 +51,6 @@ class Card:
         None
         """
         setattr(self, key, value)
-
 
 class DataCard(Card):
     """Class for storing data card attributes.
@@ -99,9 +97,8 @@ class DataCard(Card):
         'binary',
     ]
     SUPPORTED_FILE_TYPES = [
-        'csv', 'dir', 'json', 'pdb', 'fasta', 'fastq', 'png', 'sdf', 'dcd',
-        'txt', 'xml', 'py', 'pdbqt', 'zip', 'smi', 'smiles', 'bz2', 'cxsmiles',
-        'onnx', 'hdf5', 'log'
+        'csv', 'dir', 'json', 'pdb', 'fasta', 'fastq', 'png', 'sdf', 'dcd', 'txt', 'xml', 'py', 'pdbqt', 'zip', 'smi',
+        'smiles', 'bz2', 'cxsmiles', 'onnx', 'hdf5', 'log'
     ]
 
     def __init__(self,
@@ -262,7 +259,6 @@ class DataCard(Card):
             Shape of the data to set.
         """
         self._shape = str(value)
-
 
 class ModelCard(Card):
     """Class for storing model card attributes.

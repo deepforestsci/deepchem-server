@@ -1,6 +1,8 @@
 import json
-from typing import Optional, Dict, List, Union
+from typing import Annotated, Dict, List, Optional, Union
+
 from fastapi import APIRouter, HTTPException
+from fastapi.params import Body
 
 from deepchem_server.core import model_mappings
 from deepchem_server.core.feat import featurizer_map
@@ -11,17 +13,16 @@ router = APIRouter(
     tags=["primitive"],
 )
 
-
 @router.post("/featurize")
 async def featurize(
-    profile_name: str,
-    project_name: str,
-    dataset_address: str,
-    featurizer: str,
-    output: str,
-    dataset_column: str,
-    feat_kwargs: Optional[Dict] = None,
-    label_column: Optional[str] = None,
+    profile_name: Annotated[str, Body()],
+    project_name: Annotated[str, Body()],
+    dataset_address: Annotated[str, Body()],
+    featurizer: Annotated[str, Body()],
+    output: Annotated[str, Body()],
+    dataset_column: Annotated[str, Body()],
+    feat_kwargs: Annotated[Optional[Dict], Body()] = None,
+    label_column: Annotated[Optional[str], Body()] = None,
 ) -> dict:
     """
     Submits a featurization job
@@ -85,25 +86,21 @@ async def featurize(
     }
 
     try:
-        result = run_job(profile_name=profile_name,
-                         project_name=project_name,
-                         program=program)
+        result = run_job(profile_name=profile_name, project_name=project_name, program=program)
     except Exception as e:
-        raise HTTPException(status_code=500,
-                            detail=f"Featurization failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Featurization failed: {str(e)}")
 
     return {"featurized_file_address": str(result)}
 
-
 @router.post("/train")
 async def train(
-    profile_name: str,
-    project_name: str,
-    dataset_address: str,
-    model_type: str,
-    model_name: str,
-    init_kwargs: Optional[Dict] = None,
-    train_kwargs: Optional[Dict] = None,
+    profile_name: Annotated[str, Body()],
+    project_name: Annotated[str, Body()],
+    dataset_address: Annotated[str, Body()],
+    model_type: Annotated[str, Body()],
+    model_name: Annotated[str, Body()],
+    init_kwargs: Annotated[Optional[Dict], Body()] = None,
+    train_kwargs: Annotated[Optional[Dict], Body()] = None,
 ) -> dict:
     """
     Submits a training job
@@ -150,8 +147,10 @@ async def train(
     if isinstance(train_kwargs, str):
         train_kwargs = json.loads(train_kwargs)
 
-    init_kwargs = parse_boolean_none_values_from_kwargs(init_kwargs)
-    train_kwargs = parse_boolean_none_values_from_kwargs(train_kwargs)
+    if init_kwargs is not None:
+        init_kwargs = parse_boolean_none_values_from_kwargs(init_kwargs)
+    if train_kwargs is not None:
+        train_kwargs = parse_boolean_none_values_from_kwargs(train_kwargs)
 
     program: Dict = {
         "program_name": "train",
@@ -163,25 +162,21 @@ async def train(
     }
 
     try:
-        result = run_job(profile_name=profile_name,
-                         project_name=project_name,
-                         program=program)
+        result = run_job(profile_name=profile_name, project_name=project_name, program=program)
     except Exception as e:
-        raise HTTPException(status_code=500,
-                            detail=f"Training failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Training failed: {str(e)}")
 
     return {"trained_model_address": str(result)}
 
-
 @router.post("/evaluate")
 async def evaluate(
-    profile_name: str,
-    project_name: str,
-    dataset_addresses: List[str],
-    model_address: str,
-    metrics: List[str],
-    output_key: str,
-    is_metric_plots: bool = False,
+    profile_name: Annotated[str, Body()],
+    project_name: Annotated[str, Body()],
+    dataset_addresses: Annotated[List[str], Body()],
+    model_address: Annotated[str, Body()],
+    metrics: Annotated[List[str], Body()],
+    output_key: Annotated[str, Body()],
+    is_metric_plots: Annotated[bool, Body()] = False,
 ) -> dict:
     """
     Submits an evaluation job
@@ -214,26 +209,22 @@ async def evaluate(
     }
 
     try:
-        result = run_job(profile_name=profile_name,
-                         project_name=project_name,
-                         program=program)
+        result = run_job(profile_name=profile_name, project_name=project_name, program=program)
     except Exception as e:
-        raise HTTPException(status_code=500,
-                            detail=f"Evaluation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Evaluation failed: {str(e)}")
 
     return {"evaluation_result_address": str(result)}
 
-
 @router.post("/infer")
 async def infer(
-    profile_name: str,
-    project_name: str,
-    model_address: str,
-    data_address: str,
-    output: str,
-    dataset_column: Optional[str] = None,
-    shard_size: Optional[int] = 8192,
-    threshold: Optional[Union[int, float]] = None,
+    profile_name: Annotated[str, Body()],
+    project_name: Annotated[str, Body()],
+    model_address: Annotated[str, Body()],
+    data_address: Annotated[str, Body()],
+    output: Annotated[str, Body()],
+    dataset_column: Annotated[Optional[str], Body()] = None,
+    shard_size: Annotated[Optional[int], Body()] = 8192,
+    threshold: Annotated[Optional[Union[int, float]], Body()] = None,
 ) -> dict:
     """
     Submits an inference job
@@ -276,17 +267,13 @@ async def infer(
             if threshold.lower() == "none":
                 threshold = None
             else:
-                raise HTTPException(
-                    status_code=400,
-                    detail={f"Invalid threshold value: {threshold}"})
+                raise HTTPException(status_code=400, detail={f"Invalid threshold value: {threshold}"})
 
     if isinstance(shard_size, str):
         try:
             shard_size = int(shard_size)
         except ValueError:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Invalid shard_size value: {shard_size}")
+            raise HTTPException(status_code=400, detail=f"Invalid shard_size value: {shard_size}")
 
     # Handle None values
     if dataset_column == "None":
@@ -304,11 +291,8 @@ async def infer(
     }
 
     try:
-        result = run_job(profile_name=profile_name,
-                         project_name=project_name,
-                         program=program)
+        result = run_job(profile_name=profile_name, project_name=project_name, program=program)
     except Exception as e:
-        raise HTTPException(status_code=500,
-                            detail=f"Inference failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Inference failed: {str(e)}")
 
     return {"inference_results_address": str(result)}
