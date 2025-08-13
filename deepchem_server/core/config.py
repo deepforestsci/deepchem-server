@@ -1,4 +1,5 @@
 from typing import Union
+
 from deepchem_server.core.datastore import DiskDataStore
 
 _DATASTORE = None

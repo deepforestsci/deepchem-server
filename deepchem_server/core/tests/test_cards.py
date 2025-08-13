@@ -1,6 +1,7 @@
-import unittest
-import tempfile
 import os
+import tempfile
+import unittest
+
 from deepchem_server.core.cards import DataCard, ModelCard
 
 

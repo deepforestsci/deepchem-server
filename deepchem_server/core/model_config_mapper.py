@@ -1,6 +1,7 @@
 import logging
+from typing import Any, Dict, List, Literal, Optional
+
 from _collections_abc import dict_keys, dict_values
-from typing import Literal, List, Any, Optional, Dict
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +61,7 @@ class DeepChemModelConfigMapper:
 
     Examples
     --------
-    >>> from deepchem_server.core.mappings import DeepChemModelConfigMapper
+    >>> from deepchem_server.core.model_config_mapper import DeepChemModelConfigMapper
     >>> from deepchem.models import GCNModel
     >>> model = DeepChemModelConfigMapper(
     ... model_class=GCNModel,
@@ -165,16 +166,16 @@ class DeepChemModelConfigMapper:
             tasks = {}
 
         self.model_config_mapping = {
-            'model_class':
+            "model_class":
                 model_class,
-            'model_class_name':
+            "model_class_name":
                 model_class_name,
-            'init_params':
+            "init_params":
                 self.parse_params(required_init_params, optional_init_params),
-            'train_params':
+            "train_params":
                 self.parse_params(required_train_params, optional_train_params),
-            'tasks':
-                tasks
+            "tasks":
+                tasks,
         }
 
     def add_init_params(
@@ -328,7 +329,7 @@ class DeepChemModelConfigMapper:
 
         Examples
         --------
-        >>> from deepchem.core.mappings import DeepChemModelConfigMapper
+        >>> from deepchem_server.core.model_config_mapper import DeepChemModelConfigMapper
         >>> from deepchem.models import GCNModel
         >>> model = DeepChemModelConfigMapper(
         ... model_class=GCNModel,
@@ -426,7 +427,7 @@ class ModelAddressWrapper(dict):
                 raise TypeError(
                     f"ModelAddressWrapper expected at most 1 arguments, got {len(args)}"
                 )
-            arg = args[0]
+            arg = args[0]  # type: ignore[index]
             if isinstance(arg, dict):
                 for key, value in arg.items():
                     self.__setitem__(key, value)

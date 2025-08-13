@@ -1,15 +1,17 @@
+import ast
+import multiprocessing as mp
 import os
 import re
-import ast
 import tempfile
-from typing import Optional, Dict, List, Iterable, Union, Set
-from deepchem_server.core import config
-from deepchem_server.core.cards import DataCard
+from typing import Dict, Iterable, List, Optional, Set, Union
+
 import deepchem as dc
 import pandas as pd
-import multiprocessing as mp
 from rdkit import Chem
+
+from deepchem_server.core import config
 from deepchem_server.core.address import DeepchemAddress
+from deepchem_server.core.cards import DataCard
 
 featurizer_map = {
     "ecfp": dc.feat.CircularFingerprint,
@@ -355,7 +357,7 @@ def featurize(
     tempdir = tempfile.TemporaryDirectory()
     basedir = os.path.join(tempdir.name)
 
-    # check if _checkpoint/ folder exists in given output folder in prithvi
+    # check if _checkpoint/ folder exists in given output folder in datastore
     available_checkpoints = []
     _storage_loc = datastore.storage_loc.rstrip("/")
     pattern = re.compile(

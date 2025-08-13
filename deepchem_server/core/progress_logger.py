@@ -1,5 +1,5 @@
-import sys
 import logging
+import sys
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO, force=True)
 logger = logging.getLogger("progress_logger")

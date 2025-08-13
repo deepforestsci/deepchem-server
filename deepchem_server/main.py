@@ -1,9 +1,10 @@
-from fastapi import FastAPI
-from fastapi.responses import JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
-from deepchem_server.routers import primitives, data
-
 import logging
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+
+from deepchem_server.routers import data, primitives
 
 logger = logging.getLogger("backend_logs")
 logger.setLevel(logging.INFO)

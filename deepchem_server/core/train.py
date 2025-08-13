@@ -1,14 +1,15 @@
 import ast
-import math
 import logging
+import math
 from typing import Dict
-from deepchem_server.core import config
-from deepchem_server.core import model_mappings
+
+from deepchem.models.torch_models import TorchModel
+
+from deepchem_server.core import config, model_mappings
+from deepchem_server.core.address import DeepchemAddress
 from deepchem_server.core.cards import ModelCard
 from deepchem_server.core.datastore import DiskDataStore
 from deepchem_server.core.progress_logger import log_progress
-from deepchem_server.core.address import DeepchemAddress
-from deepchem.models.torch_models import TorchModel
 
 logger = logging.getLogger(__name__)
 

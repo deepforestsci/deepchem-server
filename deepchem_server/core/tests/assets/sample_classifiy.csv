@@ -1,0 +1,7 @@
+Unnamed: 0,smiles,label
+0,C[C@@H](c1ccccc1Cl)n1cc(CC(=O)Nc2nc(C(C)(C)C)cs2)c2cc(Cl)ccc21,1
+1,CC(C)(C)Cc1csc(NC(=O)Cc2cn(Cc3ccccc3Cl)c3ccc(Cl)cc23)n1,0
+2,CC(C)(C)Cc1csc(NC(=O)Cc2csc3ccc(Cl)cc23)n1,1
+3,O=C(Cc1csc2ccc(Cl)cc12)Nc1nc(Cc2ccccc2)cs1,0
+4,CC(C)(C)c1csc(NC(=O)COC2CCCCC2)n1,0
+5,Cc1cc(NC(=O)c2nc(C(C)(C)C)cs2)cs1,0

@@ -1,14 +1,16 @@
-import pytest
 import os
 import tempfile
-import pandas as pd
-import numpy as np
+
 import deepchem as dc
+import numpy as np
+import pandas as pd
 from PIL import Image
 from PIL.PngImagePlugin import PngImageFile
-from deepchem_server.core.datastore import DiskDataStore
+import pytest
+
 from deepchem_server.core import cards
 from deepchem_server.core.cards import DataCard, ModelCard
+from deepchem_server.core.datastore import DiskDataStore
 
 
 def test_disk_datastore_in_memory_upload(disk_datastore):
