@@ -8,6 +8,7 @@ import tempfile
 
 from pyds.settings import Settings
 
+
 class TestSettings:
     """Test cases for Settings class."""
 
@@ -55,11 +56,14 @@ class TestSettings:
             json.dump(initial_data, f)
 
         # Load settings with overrides
-        settings = Settings(settings_file=temp_settings_file, profile="new-profile", project="new-project")
+        settings = Settings(settings_file=temp_settings_file,
+                            profile="new-profile",
+                            project="new-project")
 
         assert settings.get_profile() == "new-profile"
         assert settings.get_project() == "new-project"
-        assert settings.get_base_url() == "http://initial:8000"  # Not overridden
+        assert settings.get_base_url(
+        ) == "http://initial:8000"  # Not overridden
 
     def test_set_and_get_profile(self, settings_instance):
         """Test setting and getting profile."""
@@ -88,7 +92,8 @@ class TestSettings:
     def test_get_nonexistent_setting_with_default(self, settings_instance):
         """Test getting a non-existent setting with default value."""
         default_value = "default"
-        assert settings_instance.get_setting("nonexistent", default_value) == default_value
+        assert settings_instance.get_setting("nonexistent",
+                                             default_value) == default_value
 
     def test_is_configured_true(self, settings_instance):
         """Test is_configured returns True when profile and project are set."""
@@ -96,17 +101,21 @@ class TestSettings:
 
     def test_is_configured_false_no_profile(self, temp_settings_file):
         """Test is_configured returns False when profile is missing."""
-        settings = Settings(settings_file=temp_settings_file, project="test-project")
+        settings = Settings(settings_file=temp_settings_file,
+                            project="test-project")
         assert settings.is_configured() is False
 
     def test_is_configured_false_no_project(self, temp_settings_file):
         """Test is_configured returns False when project is missing."""
-        settings = Settings(settings_file=temp_settings_file, profile="test-profile")
+        settings = Settings(settings_file=temp_settings_file,
+                            profile="test-profile")
         assert settings.is_configured() is False
 
     def test_save_and_load(self, temp_settings_file):
         """Test saving and loading settings."""
-        settings = Settings(settings_file=temp_settings_file, profile="test-profile", project="test-project")
+        settings = Settings(settings_file=temp_settings_file,
+                            profile="test-profile",
+                            project="test-project")
         settings.set_setting("custom_key", "custom_value")
 
         # Create new instance to test loading
@@ -194,7 +203,8 @@ class TestSettings:
         """Test initialization with additional settings."""
         additional = {"custom1": "value1", "custom2": "value2"}
 
-        settings = Settings(settings_file=temp_settings_file, additional_settings=additional)
+        settings = Settings(settings_file=temp_settings_file,
+                            additional_settings=additional)
 
         assert settings.get_setting("custom1") == "value1"
         assert settings.get_setting("custom2") == "value2"

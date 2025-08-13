@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional, Union
 from .base import BaseClient
 from .settings import Settings
 
+
 class Primitives(BaseClient):
     """
     Client for interacting with DeepChem Server primitive endpoints.
@@ -17,7 +18,9 @@ class Primitives(BaseClient):
     including featurization, training, evaluation, and inference.
     """
 
-    def __init__(self, settings: Optional[Settings] = None, base_url: Optional[str] = None):
+    def __init__(self,
+                 settings: Optional[Settings] = None,
+                 base_url: Optional[str] = None):
         """
         Initialize Primitives client.
 
@@ -59,7 +62,8 @@ class Primitives(BaseClient):
             requests.exceptions.RequestException: If API request fails
         """
         # Get profile and project names (validates configuration)
-        profile, project = self._get_profile_and_project(profile_name, project_name)
+        profile, project = self._get_profile_and_project(
+            profile_name, project_name)
 
         if feat_kwargs is None:
             feat_kwargs = {}
@@ -113,7 +117,8 @@ class Primitives(BaseClient):
             requests.exceptions.RequestException: If API request fails
         """
         # Get profile and project names (validates configuration)
-        profile, project = self._get_profile_and_project(profile_name, project_name)
+        profile, project = self._get_profile_and_project(
+            profile_name, project_name)
 
         if init_kwargs is None:
             init_kwargs = {}
@@ -164,7 +169,8 @@ class Primitives(BaseClient):
             requests.exceptions.RequestException: If API request fails
         """
         # Get profile and project names (validates configuration)
-        profile, project = self._get_profile_and_project(profile_name, project_name)
+        profile, project = self._get_profile_and_project(
+            profile_name, project_name)
 
         # Prepare the request data
         data = {
@@ -212,7 +218,8 @@ class Primitives(BaseClient):
             requests.exceptions.RequestException: If API request fails
         """
         # Get profile and project names (validates configuration)
-        profile, project = self._get_profile_and_project(profile_name, project_name)
+        profile, project = self._get_profile_and_project(
+            profile_name, project_name)
 
         # Prepare the request data
         data = {

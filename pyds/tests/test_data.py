@@ -11,6 +11,7 @@ import responses
 from pyds import Settings
 from pyds.data import Data
 
+
 class TestData:
     """Test cases for Data class."""
 
@@ -46,8 +47,10 @@ class TestData:
             responses.POST,
             "http://localhost:8000/data/uploaddata",
             json={
-                "status": "success",
-                "dataset_address": "deepchem://test-profile/test-project/test.csv",
+                "status":
+                    "success",
+                "dataset_address":
+                    "deepchem://test-profile/test-project/test.csv",
             },
             status=200,
         )
@@ -61,14 +64,17 @@ class TestData:
         assert len(responses.calls) == 1
 
     @responses.activate
-    def test_upload_data_with_custom_profile_project(self, data_client_instance, sample_csv_file):
+    def test_upload_data_with_custom_profile_project(self, data_client_instance,
+                                                     sample_csv_file):
         """Test data upload with custom profile and project."""
         responses.add(
             responses.POST,
             "http://localhost:8000/data/uploaddata",
             json={
-                "status": "success",
-                "dataset_address": "deepchem://custom-profile/custom-project/test.csv",
+                "status":
+                    "success",
+                "dataset_address":
+                    "deepchem://custom-profile/custom-project/test.csv",
             },
             status=200,
         )
@@ -90,10 +96,12 @@ class TestData:
     def test_upload_data_file_not_found(self, data_client_instance):
         """Test data upload with non-existent file."""
         with pytest.raises(FileNotFoundError):
-            data_client_instance.upload_data(file_path="/nonexistent/file.csv", filename="test.csv")
+            data_client_instance.upload_data(file_path="/nonexistent/file.csv",
+                                             filename="test.csv")
 
     @responses.activate
-    def test_upload_data_server_error(self, data_client_instance, sample_csv_file):
+    def test_upload_data_server_error(self, data_client_instance,
+                                      sample_csv_file):
         """Test data upload with server error."""
         responses.add(
             responses.POST,
@@ -103,12 +111,14 @@ class TestData:
         )
 
         with pytest.raises(Exception) as exc_info:
-            data_client_instance.upload_data(file_path=sample_csv_file, filename="test.csv")
+            data_client_instance.upload_data(file_path=sample_csv_file,
+                                             filename="test.csv")
 
         assert "Internal server error" in str(exc_info.value)
 
     @responses.activate
-    def test_upload_data_bad_request(self, data_client_instance, sample_csv_file):
+    def test_upload_data_bad_request(self, data_client_instance,
+                                     sample_csv_file):
         """Test data upload with bad request error."""
         responses.add(
             responses.POST,
@@ -118,11 +128,13 @@ class TestData:
         )
 
         with pytest.raises(Exception) as exc_info:
-            data_client_instance.upload_data(file_path=sample_csv_file, filename="test.csv")
+            data_client_instance.upload_data(file_path=sample_csv_file,
+                                             filename="test.csv")
 
         assert "Invalid file format" in str(exc_info.value)
 
-    def test_upload_data_filename_from_path(self, data_client_instance, sample_csv_file):
+    def test_upload_data_filename_from_path(self, data_client_instance,
+                                            sample_csv_file):
         """Test that filename is extracted from file path when not provided."""
         with patch.object(data_client_instance, "_post") as mock_post:
             mock_post.return_value.status_code = 200
@@ -136,7 +148,8 @@ class TestData:
             # The data should be a MultipartEncoder
             assert "data" in kwargs
 
-    def test_upload_data_with_pathlib_path(self, data_client_instance, sample_csv_file):
+    def test_upload_data_with_pathlib_path(self, data_client_instance,
+                                           sample_csv_file):
         """Test data upload with pathlib.Path object."""
         path_obj = Path(sample_csv_file)
 
@@ -148,7 +161,8 @@ class TestData:
 
             assert mock_post.called
 
-    def test_upload_data_with_different_backends(self, data_client_instance, sample_csv_file):
+    def test_upload_data_with_different_backends(self, data_client_instance,
+                                                 sample_csv_file):
         """Test data upload with different backend options."""
         backends = ["local", "s3", "gcs"]
 
@@ -157,14 +171,16 @@ class TestData:
                 mock_post.return_value.status_code = 200
                 mock_post.return_value.json.return_value = {"status": "success"}
 
-                data_client_instance.upload_data(file_path=sample_csv_file, backend=backend)
+                data_client_instance.upload_data(file_path=sample_csv_file,
+                                                 backend=backend)
 
                 # Verify backend parameter was included
                 args, kwargs = mock_post.call_args
                 # The data should be a MultipartEncoder containing the backend
                 assert "data" in kwargs
 
-    def test_upload_data_requires_configuration(self, temp_settings_file, sample_csv_file):
+    def test_upload_data_requires_configuration(self, temp_settings_file,
+                                                sample_csv_file):
         """Test that upload_data requires proper configuration."""
         # Create unconfigured settings
         settings = Settings(settings_file=temp_settings_file)
@@ -176,14 +192,17 @@ class TestData:
         assert "Missing required settings" in str(exc_info.value)
 
     @responses.activate
-    def test_upload_data_with_sdf_file(self, data_client_instance, sample_sdf_file):
+    def test_upload_data_with_sdf_file(self, data_client_instance,
+                                       sample_sdf_file):
         """Test data upload with SDF file."""
         responses.add(
             responses.POST,
             "http://localhost:8000/data/uploaddata",
             json={
-                "status": "success",
-                "dataset_address": "deepchem://test-profile/test-project/test.sdf",
+                "status":
+                    "success",
+                "dataset_address":
+                    "deepchem://test-profile/test-project/test.sdf",
             },
             status=200,
         )
@@ -194,10 +213,11 @@ class TestData:
 
         assert result["status"] == "success"
 
-    def test_upload_data_multipart_encoder_creation(self, data_client_instance, sample_csv_file):
+    def test_upload_data_multipart_encoder_creation(self, data_client_instance,
+                                                    sample_csv_file):
         """Test that MultipartEncoder is created correctly."""
-        with patch.object(data_client_instance,
-                          "_post") as mock_post, patch("pyds.data.MultipartEncoder") as mock_encoder:
+        with patch.object(data_client_instance, "_post") as mock_post, patch(
+                "pyds.data.MultipartEncoder") as mock_encoder:
 
             mock_encoder_instance = Mock()
             mock_encoder_instance.content_type = "multipart/form-data"
@@ -221,7 +241,8 @@ class TestData:
             assert "backend" in call_args
 
     @responses.activate
-    def test_upload_data_custom_headers(self, data_client_instance, sample_csv_file):
+    def test_upload_data_custom_headers(self, data_client_instance,
+                                        sample_csv_file):
         """Test that correct headers are set for multipart upload."""
         responses.add(
             responses.POST,
@@ -236,13 +257,15 @@ class TestData:
         request_headers = responses.calls[0].request.headers
         assert "multipart/form-data" in request_headers.get("Content-Type", "")
 
-    def test_upload_data_empty_description(self, data_client_instance, sample_csv_file):
+    def test_upload_data_empty_description(self, data_client_instance,
+                                           sample_csv_file):
         """Test data upload with empty description."""
         with patch.object(data_client_instance, "_post") as mock_post:
             mock_post.return_value.status_code = 200
             mock_post.return_value.json.return_value = {"status": "success"}
 
             # Should not raise error with empty description
-            data_client_instance.upload_data(file_path=sample_csv_file, description="")
+            data_client_instance.upload_data(file_path=sample_csv_file,
+                                             description="")
 
             assert mock_post.called

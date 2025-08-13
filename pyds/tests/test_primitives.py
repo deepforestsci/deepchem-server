@@ -10,6 +10,7 @@ import responses
 from pyds import Settings
 from pyds.primitives import Primitives
 
+
 class TestPrimitivesCommonUtils:
     """Test cases for Primitives class common utilities and initialization."""
 
@@ -23,7 +24,8 @@ class TestPrimitivesCommonUtils:
     def test_init_with_base_url_override(self, settings_instance):
         """Test Primitives initialization with base_url override."""
         override_url = "http://override:9000"
-        primitives_client = Primitives(settings=settings_instance, base_url=override_url)
+        primitives_client = Primitives(settings=settings_instance,
+                                       base_url=override_url)
 
         assert primitives_client.base_url == override_url
 
@@ -123,6 +125,7 @@ class TestPrimitivesCommonUtils:
 
             assert "Missing required settings" in str(exc_info.value)
 
+
 class TestFeaturize:
     """Test cases for the featurize primitive operation."""
 
@@ -133,8 +136,10 @@ class TestFeaturize:
             responses.POST,
             "http://localhost:8000/primitive/featurize",
             json={
-                "status": "success",
-                "featurized_file_address": "deepchem://test-profile/test-project/featurized_data",
+                "status":
+                    "success",
+                "featurized_file_address":
+                    "deepchem://test-profile/test-project/featurized_data",
             },
             status=200,
         )
@@ -157,7 +162,8 @@ class TestFeaturize:
         assert b'"dataset_column": "smiles"' in request_body
 
     @responses.activate
-    def test_featurize_with_custom_profile_project(self, primitives_client_instance):
+    def test_featurize_with_custom_profile_project(self,
+                                                   primitives_client_instance):
         """Test featurization with custom profile and project."""
         responses.add(
             responses.POST,
@@ -234,6 +240,7 @@ class TestFeaturize:
 
         assert "Missing required settings" in str(exc_info.value)
 
+
 class TestTrain:
     """Test cases for the train primitive operation."""
 
@@ -244,8 +251,10 @@ class TestTrain:
             responses.POST,
             "http://localhost:8000/primitive/train",
             json={
-                "status": "success",
-                "model_address": "deepchem://test-profile/test-project/trained_model",
+                "status":
+                    "success",
+                "model_address":
+                    "deepchem://test-profile/test-project/trained_model",
             },
             status=200,
         )
@@ -291,6 +300,7 @@ class TestTrain:
         assert '"init_kwargs": {}' in request_body
         assert '"train_kwargs": {}' in request_body
 
+
 class TestEvaluate:
     """Test cases for the evaluate primitive operation."""
 
@@ -301,14 +311,18 @@ class TestEvaluate:
             responses.POST,
             "http://localhost:8000/primitive/evaluate",
             json={
-                "status": "success",
-                "evaluation_address": "deepchem://test-profile/test-project/evaluation_results",
+                "status":
+                    "success",
+                "evaluation_address":
+                    "deepchem://test-profile/test-project/evaluation_results",
             },
             status=200,
         )
 
         result = primitives_client_instance.evaluate(
-            dataset_addresses=["deepchem://test-profile/test-project/test_data"],
+            dataset_addresses=[
+                "deepchem://test-profile/test-project/test_data"
+            ],
             model_address="deepchem://test-profile/test-project/trained_model",
             metrics=["roc_auc_score", "accuracy_score"],
             output_key="evaluation_results",
@@ -347,7 +361,9 @@ class TestEvaluate:
         )
 
         request_body = responses.calls[0].request.body.decode("utf-8")
-        assert ('"dataset_addresses": ["deepchem://test-profile/test-project/train_data"' in request_body)
+        assert (
+            '"dataset_addresses": ["deepchem://test-profile/test-project/train_data"'
+            in request_body)
 
     @responses.activate
     def test_evaluate_default_is_metric_plots(self, primitives_client_instance):
@@ -360,7 +376,9 @@ class TestEvaluate:
         )
 
         primitives_client_instance.evaluate(
-            dataset_addresses=["deepchem://test-profile/test-project/test_data"],
+            dataset_addresses=[
+                "deepchem://test-profile/test-project/test_data"
+            ],
             model_address="deepchem://test-profile/test-project/trained_model",
             metrics=["accuracy_score"],
             output_key="evaluation_results",
@@ -368,6 +386,7 @@ class TestEvaluate:
 
         request_body = responses.calls[0].request.body.decode("utf-8")
         assert '"is_metric_plots": false' in request_body
+
 
 class TestInfer:
     """Test cases for the infer primitive operation."""
@@ -379,8 +398,10 @@ class TestInfer:
             responses.POST,
             "http://localhost:8000/primitive/infer",
             json={
-                "status": "success",
-                "inference_address": "deepchem://test-profile/test-project/inference_results",
+                "status":
+                    "success",
+                "inference_address":
+                    "deepchem://test-profile/test-project/inference_results",
             },
             status=200,
         )

@@ -7,6 +7,7 @@ import pytest
 import pyds
 from pyds import BaseClient, Data, Primitives, Settings
 
+
 class TestPackageInit:
     """Test cases for package initialization."""
 
@@ -110,7 +111,9 @@ class TestPackageInit:
         import pyds
 
         # Get all modules in the package
-        package_modules = [name for _, name, _ in pkgutil.iter_modules(pyds.__path__)]
+        package_modules = [
+            name for _, name, _ in pkgutil.iter_modules(pyds.__path__)
+        ]
 
         expected_modules = ["settings", "primitives", "data", "base"]
         for module in expected_modules:
