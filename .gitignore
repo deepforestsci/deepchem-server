@@ -1,3 +1,20 @@
 *.pyc
 *.idea/
 *.__pycache__/
+
+
+*.mypy_cache/
+*.pytest_cache/
+
+*local_datastore/
+data/
+
+# coverage reports
+*.coverage
+
+# pyds
+pyds/dist/
+pyds/build/
+pyds/pyds.egg-info/
+
+*.settings.json
