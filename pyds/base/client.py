@@ -8,7 +8,6 @@ import requests
 
 from ..settings import Settings
 
-
 class BaseClient:
     """
     Base client class containing common functionality for all DeepChem API clients.
@@ -17,9 +16,7 @@ class BaseClient:
     and other common operations that are used by specific client implementations.
     """
 
-    def __init__(self,
-                 settings: Optional[Settings] = None,
-                 base_url: Optional[str] = None):
+    def __init__(self, settings: Optional[Settings] = None, base_url: Optional[str] = None):
         """
         Initialize BaseClient.
 
@@ -47,13 +44,10 @@ class BaseClient:
                 missing.append("profile")
             if not self.settings.get_project():
                 missing.append("project")
-            raise ValueError(
-                f"Missing required settings: {', '.join(missing)}. "
-                f"Please configure using settings.set_profile() and settings.set_project()"
-            )
+            raise ValueError(f"Missing required settings: {', '.join(missing)}. "
+                             f"Please configure using settings.set_profile() and settings.set_project()")
 
-    def _make_request(self, method: str, endpoint: str,
-                      **kwargs) -> requests.Response:
+    def _make_request(self, method: str, endpoint: str, **kwargs) -> requests.Response:
         """
         Make HTTP request to the API.
 
@@ -144,18 +138,16 @@ class BaseClient:
         if response.status_code >= 400:
             try:
                 error_data = response.json()
-                error_message = error_data.get("detail",
-                                               f"HTTP {response.status_code}")
+                error_message = error_data.get("detail", f"HTTP {response.status_code}")
             except:
                 error_message = f"HTTP {response.status_code}"
             raise Exception(error_message)
 
         return response.json()
 
-    def _get_profile_project(
-            self,
-            profile_name: Optional[str] = None,
-            project_name: Optional[str] = None) -> tuple[str, str]:
+    def _get_profile_project(self,
+                             profile_name: Optional[str] = None,
+                             project_name: Optional[str] = None) -> tuple[str, str]:
         """
         Get profile and project names, either from parameters or settings.
 
@@ -179,10 +171,9 @@ class BaseClient:
         assert profile is not None and project is not None
         return profile, project
 
-    def _get_profile_and_project(
-            self,
-            profile_name: Optional[str] = None,
-            project_name: Optional[str] = None) -> tuple[str, str]:
+    def _get_profile_and_project(self,
+                                 profile_name: Optional[str] = None,
+                                 project_name: Optional[str] = None) -> tuple[str, str]:
         """
         Get profile and project names, either from parameters or settings.
 

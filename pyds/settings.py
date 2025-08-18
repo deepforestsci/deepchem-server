@@ -7,7 +7,6 @@ import os
 from pathlib import Path
 from typing import Any, Optional
 
-
 class Settings:
     """
     Settings class for managing profile and project configurations.
@@ -59,8 +58,7 @@ class Settings:
             self._additional_settings.update(additional_settings)
 
         # Save if any overrides were provided
-        if (profile is not None or project is not None or
-                base_url is not None or additional_settings):
+        if (profile is not None or project is not None or base_url is not None or additional_settings):
             self.save()
 
     def set_profile(self, profile_name: str) -> None:
@@ -176,9 +174,7 @@ class Settings:
             with open(self.settings_file, "w") as f:
                 json.dump(settings_data, f, indent=2)
         except Exception as e:
-            print(
-                f"Warning: Could not save settings to {self.settings_file}: {e}"
-            )
+            print(f"Warning: Could not save settings to {self.settings_file}: {e}")
 
     def load(self) -> None:
         """
@@ -194,13 +190,10 @@ class Settings:
             self.profile = settings_data.get("profile")
             self.project = settings_data.get("project")
             self.base_url = settings_data.get("base_url") or "http://localhost:8000"
-            self._additional_settings = settings_data.get(
-                "additional_settings", {})
+            self._additional_settings = settings_data.get("additional_settings", {})
 
         except Exception as e:
-            print(
-                f"Warning: Could not load settings from {self.settings_file}: {e}"
-            )
+            print(f"Warning: Could not load settings from {self.settings_file}: {e}")
 
     def reset(self) -> None:
         """
@@ -215,9 +208,7 @@ class Settings:
             try:
                 os.remove(self.settings_file)
             except Exception as e:
-                print(
-                    f"Warning: Could not remove settings file {self.settings_file}: {e}"
-                )
+                print(f"Warning: Could not remove settings file {self.settings_file}: {e}")
 
     def is_configured(self) -> bool:
         """
@@ -244,7 +235,5 @@ class Settings:
         Returns:
             Detailed representation of settings
         """
-        return (
-            f"Settings(profile='{self.profile}', project='{self.project}', "
-            f"base_url='{self.base_url}', settings_file='{self.settings_file}')"
-        )
+        return (f"Settings(profile='{self.profile}', project='{self.project}', "
+                f"base_url='{self.base_url}', settings_file='{self.settings_file}')")
