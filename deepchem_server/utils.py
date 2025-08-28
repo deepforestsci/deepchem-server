@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Dict, Optional
+from typing import Dict
 
 from deepchem_server.core import config
 from deepchem_server.core.compute import ComputeWorkflow
@@ -8,7 +8,7 @@ from deepchem_server.core.datastore import DataStore, DiskDataStore
 
 logger = logging.getLogger(__name__)
 
-DATA_DIR = os.getenv("DATADIR", "/data")
+DATA_DIR = os.getenv("DATADIR", "./data")
 
 
 def _init_datastore(profile_name: str,
@@ -91,7 +91,7 @@ def _upload_data(profile_name,
     contents: object
         The filepath in disk or file object in memory from which
         data will be read for writing to datastore
-    data_card: dict
+    data_card: DataCard
         data card for the file
     """
     datastore = _init_datastore(profile_name=profile_name,
@@ -109,22 +109,21 @@ def _upload_data(profile_name,
     return dataset_address
 
 
-def parse_boolean_none_values_from_kwargs(
-        kwargs: Dict[str, str]) -> Dict[str, Optional[bool]]:
+def parse_boolean_none_values_from_kwargs(kwargs: Dict) -> Dict:
     """
     Parse boolean values from kwargs and convert 'None' to None.
 
     Parameters
     ----------
-    kwargs : Dict[str, str]
-        Dictionary of string values to be parsed.
+    kwargs : Dict
+        Dictionary of values to be parsed.
 
     Returns
     -------
-    Dict[str, bool]
+    Dict
         Dictionary with boolean values and None where applicable.
     """
-    parsed_kwargs: Dict[str, Optional[bool]] = {}
+    parsed_kwargs: Dict = {}
     for key, value in kwargs.items():
         if isinstance(value, str):
             if value.lower() == "true":
@@ -133,4 +132,8 @@ def parse_boolean_none_values_from_kwargs(
                 parsed_kwargs[key] = False
             elif value.lower() == "none":
                 parsed_kwargs[key] = None
+            else:
+                parsed_kwargs[key] = value
+        else:
+            parsed_kwargs[key] = value
     return parsed_kwargs

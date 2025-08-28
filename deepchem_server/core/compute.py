@@ -1,5 +1,6 @@
-import deepchem_server.core as core
 from typing import Any, Dict
+
+import deepchem_server.core as core
 
 program_map = {
     "featurize": core.featurize,

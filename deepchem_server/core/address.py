@@ -1,6 +1,7 @@
 import os
-from deepchem_server.core import config
 from typing import Optional
+
+from deepchem_server.core import config
 
 DEEPCHEM_ADDRESS_PREFIX = 'deepchem://'
 

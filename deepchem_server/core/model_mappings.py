@@ -1,10 +1,12 @@
-import logging
-import deepchem as dc
-from functools import wraps
 from datetime import datetime
-from typing import Optional, Callable, Any
-from sklearn.linear_model import LinearRegression
+from functools import wraps
+import logging
+from typing import Any, Callable, Optional
+
+import deepchem as dc
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+from sklearn.linear_model import LinearRegression
+
 from deepchem_server.core.model_config_mapper import DeepChemModelConfigMapper, ModelAddressWrapper
 
 logger = logging.getLogger(__name__)
@@ -52,41 +54,69 @@ def sklearn_model(model: Callable) -> Callable:
 
 
 model_address_map = ModelAddressWrapper({
-    'linear_regression':
-        DeepChemModelConfigMapper(model_class=sklearn_model(LinearRegression),
-                                  required_init_params=None,
-                                  optional_init_params=[
-                                      "fit_intercept", "copy_X", "n_jobs",
-                                      "positive"
-                                  ],
-                                  required_train_params=None,
-                                  optional_train_params=None),
-    'random_forest_classifier':
+    "linear_regression":
+        DeepChemModelConfigMapper(
+            model_class=sklearn_model(LinearRegression),
+            required_init_params=None,
+            optional_init_params=[
+                "fit_intercept", "copy_X", "n_jobs", "positive"
+            ],
+            required_train_params=None,
+            optional_train_params=None,
+        ),
+    "random_forest_classifier":
         DeepChemModelConfigMapper(
             model_class=sklearn_model(RandomForestClassifier),
             required_init_params=None,
             optional_init_params=[
-                "n_estimators", "criterion", "max_depth", "min_samples_split",
-                "min_samples_leaf", "min_weight_fraction_leaf", "max_features",
-                "max_leaf_nodes", "min_impurity_decrease", "bootstrap",
-                "oob_score", "n_jobs", "random_state", "verbose", "warm_start",
-                "class_weight", "ccp_alpha", "max_samples"
+                "n_estimators",
+                "criterion",
+                "max_depth",
+                "min_samples_split",
+                "min_samples_leaf",
+                "min_weight_fraction_leaf",
+                "max_features",
+                "max_leaf_nodes",
+                "min_impurity_decrease",
+                "bootstrap",
+                "oob_score",
+                "n_jobs",
+                "random_state",
+                "verbose",
+                "warm_start",
+                "class_weight",
+                "ccp_alpha",
+                "max_samples",
             ],
             required_train_params=None,
-            optional_train_params=["sample_weight"]),
-    'random_forest_regressor':
+            optional_train_params=["sample_weight"],
+        ),
+    "random_forest_regressor":
         DeepChemModelConfigMapper(
             model_class=sklearn_model(RandomForestRegressor),
             required_init_params=None,
             optional_init_params=[
-                "n_estimators", "criterion", "max_depth", "min_samples_split",
-                "min_samples_leaf", "min_weight_fraction_leaf", "max_features",
-                "max_leaf_nodes", "min_impurity_decrease", "bootstrap",
-                "oob_score", "n_jobs", "random_state", "verbose", "warm_start",
-                "ccp_alpha", "max_samples"
+                "n_estimators",
+                "criterion",
+                "max_depth",
+                "min_samples_split",
+                "min_samples_leaf",
+                "min_weight_fraction_leaf",
+                "max_features",
+                "max_leaf_nodes",
+                "min_impurity_decrease",
+                "bootstrap",
+                "oob_score",
+                "n_jobs",
+                "random_state",
+                "verbose",
+                "warm_start",
+                "ccp_alpha",
+                "max_samples",
             ],
             required_train_params=None,
-            optional_train_params=["sample_weight"]),
+            optional_train_params=["sample_weight"],
+        ),
 })
 
 LOGS = {}
@@ -127,18 +157,41 @@ try:
         model_class=GCNModel,
         required_init_params=["n_tasks"],
         optional_init_params=[
-            "graph_conv_layers", "activation", "residual", "batchnorm",
-            "dropout", "predictor_hidden_feats", "predictor_dropout", "mode",
-            "number_atom_features", "n_classes", "self_loop", "output_types",
-            "batch_size", "learning_rate", "optimizer", "tensorboard", "wandb",
-            "log_frequency", "device", "regularization_loss", "wandb_logger"
+            "graph_conv_layers",
+            "activation",
+            "residual",
+            "batchnorm",
+            "dropout",
+            "predictor_hidden_feats",
+            "predictor_dropout",
+            "mode",
+            "number_atom_features",
+            "n_classes",
+            "self_loop",
+            "output_types",
+            "batch_size",
+            "learning_rate",
+            "optimizer",
+            "tensorboard",
+            "wandb",
+            "log_frequency",
+            "device",
+            "regularization_loss",
+            "wandb_logger",
         ],
         required_train_params=None,
         optional_train_params=[
-            "nb_epoch", "max_checkpoints_to_keep", "checkpoint_interval",
-            "deterministic", "restore", "variables", "loss", "callbacks",
-            "all_losses"
-        ])
+            "nb_epoch",
+            "max_checkpoints_to_keep",
+            "checkpoint_interval",
+            "deterministic",
+            "restore",
+            "variables",
+            "loss",
+            "callbacks",
+            "all_losses",
+        ],
+    )
     MODEL_FEAT_MAP["gcn"] = "molgraphconv"
 except ImportError as e2:
     update_logs(e2)

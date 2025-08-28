@@ -1,15 +1,17 @@
-import os
 import ast
 import json
+import os
 import tempfile
+from typing import List
+
+import deepchem as dc
 import numpy as np
 import pandas as pd
-import deepchem as dc
-from typing import List
-from deepchem_server.core import config
-from deepchem_server.core.cards import DataCard
 from sklearn.metrics import precision_recall_curve
+
+from deepchem_server.core import config
 from deepchem_server.core.address import DeepchemAddress
+from deepchem_server.core.cards import DataCard
 
 deepchem_server_metrics = {
     'pearson_r2_score':

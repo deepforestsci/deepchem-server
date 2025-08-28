@@ -1,7 +1,8 @@
 import ast
-import json
 import datetime
-from typing import Optional, Dict
+import json
+from typing import Dict, Optional
+
 from deepchem_server.core import model_mappings
 
 

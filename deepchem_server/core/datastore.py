@@ -1,19 +1,22 @@
 # mypy: ignore-errors
 # mypy errors ignored because ModelCard yet to added
 from __future__ import annotations
-import os
+
 import json
+import logging
+import os
+from pathlib import Path
 import shutil
-from typing import Optional, List, Any, Union, IO, Tuple
+from typing import Any, IO, List, Optional, Tuple, Union
+
 import deepchem as dc
 import pandas as pd
-import logging
-from deepchem_server.core import model_mappings
-from PIL.PngImagePlugin import PngImageFile
 from PIL import Image
-from deepchem_server.core.cards import Card, DataCard, ModelCard
+from PIL.PngImagePlugin import PngImageFile
+
+from deepchem_server.core import model_mappings
 from deepchem_server.core.address import DeepchemAddress
-from pathlib import Path
+from deepchem_server.core.cards import Card, DataCard, ModelCard
 
 try:
     import mdtraj as md

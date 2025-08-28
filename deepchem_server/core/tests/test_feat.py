@@ -1,9 +1,11 @@
-from deepchem_server.core.cards import DataCard
-from deepchem_server.core import config, featurize
-import pandas as pd
-import deepchem as dc
 import os
 import shutil
+
+import deepchem as dc
+import pandas as pd
+
+from deepchem_server.core import config, featurize
+from deepchem_server.core.cards import DataCard
 
 
 def test_featurize(disk_datastore):
