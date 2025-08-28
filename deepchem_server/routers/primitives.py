@@ -13,7 +13,6 @@ router = APIRouter(
     tags=["primitive"],
 )
 
-
 @router.post("/featurize")
 async def featurize(
     profile_name: Annotated[str, Body()],
@@ -87,15 +86,11 @@ async def featurize(
     }
 
     try:
-        result = run_job(profile_name=profile_name,
-                         project_name=project_name,
-                         program=program)
+        result = run_job(profile_name=profile_name, project_name=project_name, program=program)
     except Exception as e:
-        raise HTTPException(status_code=500,
-                            detail=f"Featurization failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Featurization failed: {str(e)}")
 
     return {"featurized_file_address": str(result)}
-
 
 @router.post("/train")
 async def train(
@@ -167,15 +162,11 @@ async def train(
     }
 
     try:
-        result = run_job(profile_name=profile_name,
-                         project_name=project_name,
-                         program=program)
+        result = run_job(profile_name=profile_name, project_name=project_name, program=program)
     except Exception as e:
-        raise HTTPException(status_code=500,
-                            detail=f"Training failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Training failed: {str(e)}")
 
     return {"trained_model_address": str(result)}
-
 
 @router.post("/evaluate")
 async def evaluate(
@@ -218,15 +209,11 @@ async def evaluate(
     }
 
     try:
-        result = run_job(profile_name=profile_name,
-                         project_name=project_name,
-                         program=program)
+        result = run_job(profile_name=profile_name, project_name=project_name, program=program)
     except Exception as e:
-        raise HTTPException(status_code=500,
-                            detail=f"Evaluation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Evaluation failed: {str(e)}")
 
     return {"evaluation_result_address": str(result)}
-
 
 @router.post("/infer")
 async def infer(
@@ -237,8 +224,7 @@ async def infer(
     output: Annotated[str, Body()],
     dataset_column: Annotated[Optional[str], Body()] = None,
     shard_size: Annotated[Optional[int], Body()] = 8192,
-    threshold: Annotated[Optional[Union[int, float]],
-                         Body()] = None,
+    threshold: Annotated[Optional[Union[int, float]], Body()] = None,
 ) -> dict:
     """
     Submits an inference job
@@ -281,17 +267,13 @@ async def infer(
             if threshold.lower() == "none":
                 threshold = None
             else:
-                raise HTTPException(
-                    status_code=400,
-                    detail={f"Invalid threshold value: {threshold}"})
+                raise HTTPException(status_code=400, detail={f"Invalid threshold value: {threshold}"})
 
     if isinstance(shard_size, str):
         try:
             shard_size = int(shard_size)
         except ValueError:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Invalid shard_size value: {shard_size}")
+            raise HTTPException(status_code=400, detail=f"Invalid shard_size value: {shard_size}")
 
     # Handle None values
     if dataset_column == "None":
@@ -309,15 +291,11 @@ async def infer(
     }
 
     try:
-        result = run_job(profile_name=profile_name,
-                         project_name=project_name,
-                         program=program)
+        result = run_job(profile_name=profile_name, project_name=project_name, program=program)
     except Exception as e:
-        raise HTTPException(status_code=500,
-                            detail=f"Inference failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Inference failed: {str(e)}")
 
     return {"inference_results_address": str(result)}
-
 
 @router.post("/generate_pose")
 async def docking_generate_pose(
@@ -331,7 +309,7 @@ async def docking_generate_pose(
 ) -> dict:
     """
     Generate VINA molecular docking poses.
-    
+
     Parameters
     ----------
     profile_name: str
@@ -348,13 +326,13 @@ async def docking_generate_pose(
         Vina exhaustiveness parameter (default: 10)
     num_modes: int
         Number of binding modes to generate (default: 9)
-        
+
     Returns
     -------
     dict
         Dictionary containing the address of the docking results
     """
-    
+
     program = {
         'program_name': 'generate_pose',
         'protein_address': protein_address,
@@ -363,13 +341,10 @@ async def docking_generate_pose(
         'exhaustiveness': exhaustiveness,
         'num_modes': num_modes,
     }
-    
+
     try:
-        result = run_job(profile_name=profile_name,
-                         project_name=project_name,
-                         program=program)
+        result = run_job(profile_name=profile_name, project_name=project_name, program=program)
     except Exception as e:
-        raise HTTPException(status_code=500,
-                            detail=f"VINA docking failed: {str(e)}")
-    
+        raise HTTPException(status_code=500, detail=f"VINA docking failed: {str(e)}")
+
     return {"docking_results_address": str(result)}
