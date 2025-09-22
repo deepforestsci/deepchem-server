@@ -1,16 +1,19 @@
-FROM mambaorg/micromamba:1.4.8
+FROM continuumio/miniconda3:23.5.2-0
 
 WORKDIR /app/deepchem_server
 
-ENV MAMBA_NO_LOW_SPEED_LIMIT=1
+COPY deepchem_server/requirements.txt .
 
-COPY --chown=$MAMBA_USER:$MAMBA_USER deepchem_server/environments/core_environment.yml ./core_environment.yml
+COPY deepchem_server/environments/core_environment.yml ./core_environment.yml
 
-USER root
-RUN apt update && apt install -y --no-install-recommends apt-utils && apt install -y build-essential git wget curl libgomp1
-USER $MAMBA_USER
+RUN apt-get update  \
+    && apt-get install -y --no-install-recommends apt-utils  \
+    && apt-get install -y curl libgomp1 git libboost-all-dev swig build-essential
 
-RUN micromamba install -y -n base -f ./core_environment.yml
+# Update conda and install Python 3.11, openmm and pdbfixer from conda-forge
+RUN conda update -n base -c defaults conda \
+    && conda env update -n base -f ./core_environment.yml \
+    && conda clean -ay
 
 COPY deepchem_server/ .
 

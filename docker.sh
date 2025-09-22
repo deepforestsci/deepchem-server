@@ -42,7 +42,7 @@ echo "Building DeepChem server with dockerfile: $DOCKERFILE"
 echo "Data directory: $DATA_DIR"
 
 # Build Deepchem server image
-docker compose build --no-cache
+docker compose build
 
 # Run deepchem server
 docker compose up -d
