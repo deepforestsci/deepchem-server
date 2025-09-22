@@ -1,14 +1,16 @@
-FROM python:3.10-slim
+FROM mambaorg/micromamba:1.4.8
 
 WORKDIR /app/deepchem_server
 
-COPY deepchem_server/requirements.txt .
+ENV MAMBA_NO_LOW_SPEED_LIMIT=1
 
-RUN apt-get update && apt-get install -y --no-install-recommends apt-utils
+COPY --chown=$MAMBA_USER:$MAMBA_USER deepchem_server/environments/core_environment.yml ./core_environment.yml
 
-RUN apt-get -y install curl libgomp1
+USER root
+RUN apt update && apt install -y --no-install-recommends apt-utils && apt install -y build-essential git wget curl libgomp1
+USER $MAMBA_USER
 
-RUN pip install --no-cache-dir -r requirements.txt
+RUN micromamba install -y -n base -f ./core_environment.yml
 
 COPY deepchem_server/ .
 
