@@ -1,32 +1,28 @@
-FROM continuumio/miniconda3:23.5.2-0
+FROM mambaorg/micromamba:2.3.2
 
-ENV PYTHONDONTWRITEBYTECODE=1 \
+ENV MAMBA_NO_LOW_SPEED_LIMIT=1 \
+	PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     DEBIAN_FRONTEND=noninteractive
 
 WORKDIR /app/deepchem_server
 
-COPY deepchem_server/environments/core_environment.yml ./
+COPY --chown=$MAMBA_USER:$MAMBA_USER deepchem_server/environments/core_environment.yml /tmp/env.yaml
 
-# Install system dependencies and clean up in a single layer
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    apt-utils \
-    curl \
-    libgomp1 \
-    git \
-    libboost-all-dev \
-    swig \
-    build-essential && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/* && \
-    conda update -n base -c defaults conda && \
-    conda env update -n base -f ./core_environment.yml && \
-    conda clean -afy
+RUN micromamba install -y -n base -f /tmp/env.yaml && \
+    micromamba clean --all --yes
 
 COPY deepchem_server/ .
 
 EXPOSE 8000
+
+USER root
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    libgomp1 && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+USER $MAMBA_USER
 
 WORKDIR /app
 
