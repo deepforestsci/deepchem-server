@@ -19,10 +19,7 @@ Please check the option that is related to your PR.
 
 ## Checklist
 
-- [ ] Run `yapf -i <modified file>` and check no errors
-- [ ] Run `flake8 <modified file> --count` and check no errors
-- [ ] Run `mypy -p deepchem_server` and check no errors
-- [ ] Run `mypy -p pyds` and check no errors
+- [ ] Run `lint.sh` and ensure that it passes (Use `./lint.sh --fix` to fix formatting issues automatically)
 - [ ] I have performed a self-review of my own code
 - [ ] I have commented my code, particularly in hard-to-understand areas
 - [ ] I have made corresponding changes to the documentation
