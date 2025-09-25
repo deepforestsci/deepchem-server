@@ -1,9 +1,12 @@
 import os
-import numpy as np
+
 import deepchem as dc
-from deepchem_server.core import cards, splitter, config, featurize
-from deepchem_server.core.cards import DataCard
+import numpy as np
 import pandas as pd
+
+from deepchem_server.core import cards, config, featurize, splitter
+from deepchem_server.core.cards import DataCard
+
 
 def test_k_fold_split_deepchem_dataset(disk_datastore):
     dataset = dc.data.NumpyDataset(X=np.random.rand(100, 5), y=np.random.rand(100, 1))
@@ -17,6 +20,7 @@ def test_k_fold_split_deepchem_dataset(disk_datastore):
         test_data = disk_datastore.get(test_address)
         n_test_data_points += test_data.X.shape[0]
     assert n_test_data_points == 100
+
 
 def test_k_fold_scaffold_split_deepchem_dataset(disk_datastore):
     """Test k-fold scaffold split on deepchem dataset"""
@@ -42,6 +46,7 @@ def test_k_fold_scaffold_split_deepchem_dataset(disk_datastore):
         assert dataset_card.featurizer == "ecfp"
     assert n_test_data_points == 5000
 
+
 def test_k_fold_stratified_split_deepchem_dataset(disk_datastore):
     """Test k-fold stratified split on deepchem dataset"""
     current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -65,6 +70,7 @@ def test_k_fold_stratified_split_deepchem_dataset(disk_datastore):
         dataset_card = disk_datastore.get_card(test_address, kind='data')
         assert dataset_card.featurizer == "ecfp"
     assert n_test_data_points == 5000
+
 
 def test_tvt_scaffold_split_deepchem_dataset(disk_datastore):
     """Test train-valid-test scaffold split on deepchem dataset"""
@@ -103,6 +109,7 @@ def test_tvt_scaffold_split_deepchem_dataset(disk_datastore):
     assert len(train_data) == 3500
     assert len(valid_data) == 1000
     assert len(test_data) == 500
+
 
 def test_tvt_stratified_split_deepchem_dataset(disk_datastore):
     """Test train-valid-test stratified split on deepchem dataset"""

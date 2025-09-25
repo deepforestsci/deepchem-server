@@ -2,6 +2,7 @@ from typing import Any, Dict
 
 import deepchem_server.core as core
 
+
 program_map = {
     "featurize": core.featurize,
     "train": core.train,
@@ -9,6 +10,7 @@ program_map = {
     "infer": core.infer,
     "train_valid_test_split": core.train_valid_test_split,
 }
+
 
 class ComputeWorkflow:
     """A Compute Workflow is a workflow that runs on Deepchem Server.

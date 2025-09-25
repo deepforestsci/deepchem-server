@@ -9,10 +9,12 @@ from deepchem_server.core import model_mappings
 from deepchem_server.core.feat import featurizer_map
 from deepchem_server.utils import parse_boolean_none_values_from_kwargs, run_job
 
+
 router = APIRouter(
     prefix="/primitive",
     tags=["primitive"],
 )
+
 
 @router.post("/featurize")
 async def featurize(
@@ -93,6 +95,7 @@ async def featurize(
 
     return {"featurized_file_address": str(result)}
 
+
 @router.post("/train")
 async def train(
     profile_name: Annotated[str, Body()],
@@ -169,6 +172,7 @@ async def train(
 
     return {"trained_model_address": str(result)}
 
+
 @router.post("/evaluate")
 async def evaluate(
     profile_name: Annotated[str, Body()],
@@ -215,6 +219,7 @@ async def evaluate(
         raise HTTPException(status_code=500, detail=f"Evaluation failed: {str(e)}")
 
     return {"evaluation_result_address": str(result)}
+
 
 @router.post("/infer")
 async def infer(
@@ -297,6 +302,7 @@ async def infer(
         raise HTTPException(status_code=500, detail=f"Inference failed: {str(e)}")
 
     return {"inference_results_address": str(result)}
+
 
 @router.post("/train-valid-test-split")
 async def train_valid_test_split(

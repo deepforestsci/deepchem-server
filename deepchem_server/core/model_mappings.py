@@ -9,6 +9,7 @@ from sklearn.linear_model import LinearRegression
 
 from deepchem_server.core.model_config_mapper import DeepChemModelConfigMapper, ModelAddressWrapper
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -29,8 +30,7 @@ def sklearn_model(model: Callable) -> Callable:
 
     # The wrapper here is used for distinguishing SklearnModel parameters and scikit-learn model parameters
     @wraps(model)
-    def initialize_sklearn_model(model_dir: Optional[str] = None,
-                                 **kwargs) -> Any:
+    def initialize_sklearn_model(model_dir: Optional[str] = None, **kwargs) -> Any:
         """Initialize sklearn model wrapped in DeepChem SklearnModel.
 
         Parameters
@@ -58,9 +58,7 @@ model_address_map = ModelAddressWrapper({
         DeepChemModelConfigMapper(
             model_class=sklearn_model(LinearRegression),
             required_init_params=None,
-            optional_init_params=[
-                "fit_intercept", "copy_X", "n_jobs", "positive"
-            ],
+            optional_init_params=["fit_intercept", "copy_X", "n_jobs", "positive"],
             required_train_params=None,
             optional_train_params=None,
         ),

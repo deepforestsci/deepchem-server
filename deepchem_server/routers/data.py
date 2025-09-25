@@ -6,6 +6,7 @@ from fastapi import APIRouter, File, Form, UploadFile
 from deepchem_server.core.cards import DataCard
 from deepchem_server.utils import _upload_data
 
+
 logger = logging.getLogger("backend_logs")
 logger.setLevel(logging.INFO)
 
@@ -69,15 +70,7 @@ async def upload_data(
     else:
         data_type = ''
 
-    card: DataCard = DataCard(address='',
-                              file_type=file_type,
-                              data_type=data_type,
-                              description=description)
+    card: DataCard = DataCard(address='', file_type=file_type, data_type=data_type, description=description)
 
-    address: str = _upload_data(profile_name,
-                                project_name,
-                                filename,
-                                contents,
-                                card,
-                                backend=backend)  # type: ignore
+    address: str = _upload_data(profile_name, project_name, filename, contents, card, backend=backend)  # type: ignore
     return {"dataset_address": address}

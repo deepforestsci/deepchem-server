@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 
 from deepchem_server.routers import data, primitives
 
+
 logger = logging.getLogger("backend_logs")
 logger.setLevel(logging.INFO)
 

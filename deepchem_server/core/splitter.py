@@ -1,11 +1,14 @@
 import os
 import tempfile
+
+import deepchem as dc
 import numpy as np
 import pandas as pd
-import deepchem as dc
+
 from deepchem_server.core import config
-from deepchem_server.core.cards import DataCard
 from deepchem_server.core.address import DeepchemAddress
+from deepchem_server.core.cards import DataCard
+
 
 splitter_map = {
     'random': dc.splits.RandomSplitter(),
@@ -13,6 +16,7 @@ splitter_map = {
     'scaffold': dc.splits.ScaffoldSplitter(),
     'random_stratified': dc.splits.RandomStratifiedSplitter(),
 }
+
 
 def _k_fold_split_dc_dataset(splitter_type, dataset_address, k):
     datastore = config.get_datastore()
@@ -33,6 +37,7 @@ def _k_fold_split_dc_dataset(splitter_type, dataset_address, k):
                                                          card=card)
         addresses.append((train_address, test_address))
     return addresses
+
 
 def _k_fold_split_csv(splitter_type, dataset_address, k):
     address_key = DeepchemAddress.get_key(dataset_address).strip('.csv')
@@ -66,6 +71,7 @@ def _k_fold_split_csv(splitter_type, dataset_address, k):
         addresses.append((train_address, test_address))
     return addresses
 
+
 def k_fold_split(splitter_type: str, dataset_address: str, k: int):
     if isinstance(k, str):
         k = int(k)
@@ -77,6 +83,7 @@ def k_fold_split(splitter_type: str, dataset_address: str, k: int):
         return _k_fold_split_dc_dataset(splitter_type, dataset_address, k)
     elif data_card.data_type in ['pandas.DataFrame', 'DataFrame']:
         return _k_fold_split_csv(splitter_type, dataset_address, k)
+
 
 def _train_test_valid_split_dc_dataset(splitter_type, dataset_address, frac_train, frac_valid, frac_test):
     datastore = config.get_datastore()
@@ -100,6 +107,7 @@ def _train_test_valid_split_dc_dataset(splitter_type, dataset_address, frac_trai
     card.description = 'test dataset'
     test_address = datastore.upload_data_from_memory(data=test, datastore_filename=address_key + '_test', card=card)
     return [train_address, valid_address, test_address]
+
 
 def _train_test_valid_split_csv(splitter_type, dataset_address, frac_train, frac_valid, frac_test):
     # Not suitable for splitting very large datasets
@@ -128,6 +136,7 @@ def _train_test_valid_split_csv(splitter_type, dataset_address, frac_train, frac
                                                       datastore_filename=address_key + '_valid.csv',
                                                       card=card)
     return [train_address, valid_address, test_address]
+
 
 def train_valid_test_split(splitter_type: str,
                            dataset_address: str,

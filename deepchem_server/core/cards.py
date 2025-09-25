@@ -15,8 +15,7 @@ class Card:
 
     def __init__(self) -> None:
         """Initialize a Card with current timestamp."""
-        self.last_updated_time = datetime.datetime.now().strftime(
-            '%d-%B-%Y %H:%M:%S')
+        self.last_updated_time = datetime.datetime.now().strftime('%d-%B-%Y %H:%M:%S')
 
     def __bytes__(self) -> bytes:
         """Convert card to bytes representation.
@@ -100,9 +99,8 @@ class DataCard(Card):
         'binary',
     ]
     SUPPORTED_FILE_TYPES = [
-        'csv', 'dir', 'json', 'pdb', 'fasta', 'fastq', 'png', 'sdf', 'dcd',
-        'txt', 'xml', 'py', 'pdbqt', 'zip', 'smi', 'smiles', 'bz2', 'cxsmiles',
-        'onnx', 'hdf5', 'log'
+        'csv', 'dir', 'json', 'pdb', 'fasta', 'fastq', 'png', 'sdf', 'dcd', 'txt', 'xml', 'py', 'pdbqt', 'zip', 'smi',
+        'smiles', 'bz2', 'cxsmiles', 'onnx', 'hdf5', 'log'
     ]
 
     def __init__(self,
