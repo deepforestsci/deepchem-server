@@ -412,11 +412,13 @@ class DiskDataStore(DataStore):
         model_address = DeepchemAddress(self.address_prefix + modelname).address
         card.address = model_address
         dest_loc = os.path.join(self.storage_loc, modelname)
+
+        if os.path.exists(dest_loc):
+            raise FileExistsError(f"Model '{modelname}' already exists!")
+
         dir_path = os.path.dirname(dest_loc)
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)
-        else:
-            raise FileExistsError(f"Model name '{modelname}' already exists!")
 
         assert isinstance(model, dc.models.Model), 'Model must be a deepchem model'
         shutil.copytree(model.model_dir, dest_loc)
