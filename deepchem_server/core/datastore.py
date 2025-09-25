@@ -16,7 +16,7 @@ from PIL.PngImagePlugin import PngImageFile
 
 from deepchem_server.core import model_mappings
 from deepchem_server.core.address import DeepchemAddress
-from deepchem_server.core.cards import Card, DataCard, ModelCard
+from deepchem_server.core.cards import Card, DataCard, ModelCard  # yapf: disable
 
 
 try:

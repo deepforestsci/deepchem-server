@@ -147,9 +147,11 @@ if [ "$FIX_FORMAT" = true ]; then
     echo "$PYTHON_FILES" | xargs yapf --in-place
     echo -e "${GREEN}✓ Formatting applied${NC}"
 else
-    if echo "$PYTHON_FILES" | xargs yapf --diff | grep -q "^---"; then
-        echo -e "${RED}✗ Formatting issues found${NC}"
-        echo "Run with --fix to automatically fix formatting issues"
+    YAPF_DIFF=$(echo "$PYTHON_FILES" | xargs yapf --diff || true)
+    if [ -n "$YAPF_DIFF" ]; then
+        echo -e "\n$YAPF_DIFF"
+        echo -e "${RED}✗ Yapf formatting issues found:${NC}"
+        echo -e "Run with --fix to automatically fix formatting issues"
         YAPF_FAILED=true
     else
         echo -e "${GREEN}✓ All files are properly formatted${NC}"
