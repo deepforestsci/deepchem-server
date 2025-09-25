@@ -18,6 +18,7 @@ from deepchem_server.core import model_mappings
 from deepchem_server.core.address import DeepchemAddress
 from deepchem_server.core.cards import Card, DataCard, ModelCard
 
+
 try:
     import mdtraj as md
 except ModuleNotFoundError:
@@ -38,10 +39,9 @@ KIND_LIST = [{
 DEFAULT_SAMPLE_ROWS = 100  # for disk datastore
 
 
-def _get_csv_or_dataframe_shape(
-        *,
-        filename: Optional[str] = None,
-        dataframe: Optional[pd.DataFrame] = None) -> Tuple[int, int]:
+def _get_csv_or_dataframe_shape(*,
+                                filename: Optional[str] = None,
+                                dataframe: Optional[pd.DataFrame] = None) -> Tuple[int, int]:
     """Get the shape of a CSV file or pandas DataFrame.
 
     Parameters
@@ -89,8 +89,7 @@ class DataStore:
     implementations.
     """
 
-    def upload_data(self, datastore_filename: Any, filename: Any,
-                    card: Union[ModelCard, DataCard]) -> Optional[str]:
+    def upload_data(self, datastore_filename: Any, filename: Any, card: Union[ModelCard, DataCard]) -> Optional[str]:
         """Upload data to the datastore in question.
 
         Parameters
@@ -110,8 +109,7 @@ class DataStore:
         """
         raise NotImplementedError
 
-    def get(self, deepchem_address: str, kind: Optional[str],
-            fetch_sample: bool):
+    def get(self, deepchem_address: str, kind: Optional[str], fetch_sample: bool):
         """Fetch something from datastore at address.
 
         Parameters
@@ -218,13 +216,11 @@ class DiskDataStore(DataStore):
         for root, dirs, files in os.walk(directory):
             for dir in dirs:
                 # relpath removes main directory info from path to avoid repetition in list data
-                relative_path = os.path.relpath(os.path.join(root, dir),
-                                                directory)
+                relative_path = os.path.relpath(os.path.join(root, dir), directory)
                 entries.append(relative_path + "/")
             for file in files:
                 # relpath removes main directory info from path to avoid repetition in list data
-                relative_path = os.path.relpath(os.path.join(root, file),
-                                                directory)
+                relative_path = os.path.relpath(os.path.join(root, file), directory)
                 entries.append(relative_path)
         return entries
 
@@ -234,7 +230,7 @@ class DiskDataStore(DataStore):
         datastore_filename: str,
         card: Union[DataCard, ModelCard, None],
         kind: str = "data",
-    ) -> Optional[str]:
+    ) -> str:
         """Upload in memory data to filestore.
 
         Parameters
@@ -258,9 +254,10 @@ class DiskDataStore(DataStore):
         ------
         ValueError
             If unsupported data type is provided.
+        FileExistsError
+            If the file name already exists in the datastore.
         """
-        dataset_address = DeepchemAddress(self.address_prefix +
-                                          datastore_filename).address
+        dataset_address = DeepchemAddress(self.address_prefix + datastore_filename).address
         dest_loc = os.path.join(self.storage_loc, datastore_filename)
 
         dir_path = os.path.dirname(dest_loc)
@@ -277,24 +274,18 @@ class DiskDataStore(DataStore):
         if isinstance(card, DataCard) and isinstance(data, pd.DataFrame):
             card.shape = _get_csv_or_dataframe_shape(dataframe=data)
             data.to_csv(path_or_buf=dest_loc, index=False)
-        elif isinstance(card, DataCard) and isinstance(data,
-                                                       dc.data.NumpyDataset):
+        elif isinstance(card, DataCard) and isinstance(data, dc.data.NumpyDataset):
             # This writes to disk
             card.shape = data.get_shape()
-            dc.data.DiskDataset.from_numpy(data.X,
-                                           data.y,
-                                           data.w,
-                                           data.ids,
-                                           data_dir=dest_loc)
+            dc.data.DiskDataset.from_numpy(data.X, data.y, data.w, data.ids, data_dir=dest_loc)
         elif isinstance(data, dc.models.Model):
             shutil.copytree(data.model_dir, dest_loc)
-        elif isinstance(card, DataCard) and isinstance(data,
-                                                       dc.data.DiskDataset):
+        elif isinstance(card, DataCard) and isinstance(data, dc.data.DiskDataset):
             card.shape = data.get_shape()
             try:
                 shutil.copytree(data.data_dir, dest_loc)
             except FileExistsError:
-                return ''
+                raise FileExistsError(f"File name '{datastore_filename}' already exists!")
         elif isinstance(data, str):
             with open(dest_loc, 'w') as fp:
                 fp.write(data)
@@ -304,14 +295,15 @@ class DiskDataStore(DataStore):
         elif isinstance(data, PngImageFile):
             data.save(dest_loc)
         else:
-            raise ValueError(
-                "Only dataframes, deepchem datasets, and models are supported for now"
-            )
+            raise ValueError("Only dataframes, deepchem datasets, and models are supported for now")
 
         if kind == 'data':
             card_path = dest_loc + '.cdc'
         elif kind == 'model':
             card_path = dest_loc + '.cmc'
+        else:
+            raise ValueError(f"Unsupported kind '{kind}' provided. "
+                             f"Supported kinds are {[k['name'] for k in KIND_LIST]}")
         if card is not None:
             with open(card_path, 'wb') as fp:
                 fp.write(bytes(card))
@@ -330,11 +322,11 @@ class DiskDataStore(DataStore):
         datastore_filename: str
           The name of this dataset within your deepchem server datastore.
         filename: str
-          Should be the location of a file or directory on disk
-          that is to be uploaded.
-        TODO: This can be raw data contents as well. Rename!
-        data_card: str
-          Description of dataset for the dataset card
+          Should be the location of a file or directory on disk that is to be uploaded.
+        card: ModelCard or DataCard
+            The card containing metadata for the uploaded data.
+        kind: Optional[str]
+            Type of data being uploaded, by default 'data'.
 
         Returns
         -------
@@ -342,8 +334,7 @@ class DiskDataStore(DataStore):
            If request failed, returns None. Else returns the deepchem server
            dataset address for the dataset in question.
         """
-        dataset_address = DeepchemAddress(self.address_prefix +
-                                          datastore_filename).address
+        dataset_address = DeepchemAddress(self.address_prefix + datastore_filename).address
         card.address = dataset_address
         dest_loc = os.path.join(self.storage_loc, datastore_filename)
         if isinstance(card, DataCard) and datastore_filename.endswith('.csv'):
@@ -357,7 +348,7 @@ class DiskDataStore(DataStore):
             try:
                 shutil.copytree(filename, dest_loc)
             except FileExistsError:
-                raise FileExistsError("File already exists!")
+                raise FileExistsError(f"File name '{datastore_filename}' already exists!")
         elif os.path.isfile(filename):
             shutil.copyfile(filename, dest_loc)
         elif isinstance(filename, bytes):
@@ -424,9 +415,10 @@ class DiskDataStore(DataStore):
         dir_path = os.path.dirname(dest_loc)
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)
+        else:
+            raise FileExistsError(f"Model name '{modelname}' already exists!")
 
-        assert isinstance(model,
-                          dc.models.Model), 'Model must be a deepchem model'
+        assert isinstance(model, dc.models.Model), 'Model must be a deepchem model'
         shutil.copytree(model.model_dir, dest_loc)
 
         # Write Model card
@@ -456,8 +448,7 @@ class DiskDataStore(DataStore):
         else:
             raise FileNotFoundError(f"Directory {_dir} not found")
 
-    def upload_model_from_memory(self, model_name: str, model_files: List[IO],
-                                 model_filenames: List[str],
+    def upload_model_from_memory(self, model_name: str, model_files: List[IO], model_filenames: List[str],
                                  card: ModelCard) -> Union[str, None]:
         """Upload model data to DiskDataStore
 
@@ -478,8 +469,7 @@ class DiskDataStore(DataStore):
             If request failed, returns None. Else returns the deepchem server
             model address for the uploaded model.
         """
-        model_address = DeepchemAddress(self.address_prefix +
-                                        model_name).address
+        model_address = DeepchemAddress(self.address_prefix + model_name).address
         card.address = model_address
         dest_loc = os.path.join(self.storage_loc, model_name)
         dir_path = os.path.dirname(dest_loc)
@@ -497,11 +487,7 @@ class DiskDataStore(DataStore):
             fp.write(bytes(card))
         return model_address
 
-    def get_card(
-            self,
-            address: str,
-            kind: Optional[str] = "data"
-    ) -> Optional[Union[DataCard, ModelCard]]:
+    def get_card(self, address: str, kind: Optional[str] = "data") -> Optional[Union[DataCard, ModelCard]]:
         """Fetch card from disk data store at address.
 
         Parameters
@@ -620,10 +606,7 @@ class DiskDataStore(DataStore):
             model.reload()
         return model
 
-    def get(self,
-            address,
-            kind: Optional[str] = 'data',
-            fetch_sample: bool = False):
+    def get(self, address, kind: Optional[str] = 'data', fetch_sample: bool = False):
         """Fetch something from disk datastore at address.
 
         Parameters
@@ -638,13 +621,9 @@ class DiskDataStore(DataStore):
         """
         # TODO Check whether key exists
         if address.endswith('.cdc'):
-            return self.get_card(
-                address[:-4],
-                kind='data')  # [:-4] removes ".cdc" from address string
+            return self.get_card(address[:-4], kind='data')  # [:-4] removes ".cdc" from address string
         elif address.endswith('.cmc'):
-            return self.get_card(
-                address[:-4],
-                kind='model')  # [:-4] removes ".cmc" from address string
+            return self.get_card(address[:-4], kind='model')  # [:-4] removes ".cmc" from address string
         if kind == 'data':
             dataset = self.get_data(address, fetch_sample)
             return dataset
@@ -710,9 +689,7 @@ class DiskDataStore(DataStore):
             os.remove(card_key)
         return True
 
-    def download_object(self,
-                        address: str,
-                        filename: Union[str, Path, None] = None) -> None:
+    def download_object(self, address: str, filename: Union[str, Path, None] = None) -> None:
         """
         Downloads a object from disk datastore
 
@@ -768,8 +745,7 @@ class DiskDataStore(DataStore):
                         object_size += os.path.getsize(fp)
             return object_size
 
-    def move_object(self, source_address: str, dest_address: str,
-                    dest_datastore: DiskDataStore) -> None:
+    def move_object(self, source_address: str, dest_address: str, dest_datastore: DiskDataStore) -> None:
         """
         Move an object from one location to another
 
@@ -788,8 +764,7 @@ class DiskDataStore(DataStore):
         """
 
         # Get the source key and destination key of the object and the card
-        source_key = os.path.join(self.storage_loc,
-                                  DeepchemAddress.get_key(source_address))
+        source_key = os.path.join(self.storage_loc, DeepchemAddress.get_key(source_address))
         for kind in KIND_LIST:
             if source_key.endswith(kind['extension']):
                 raise ValueError("Cannot move a card")
@@ -803,23 +778,18 @@ class DiskDataStore(DataStore):
         if not kind_matched and not os.path.isdir(source_key):
             raise ValueError("Source does not have a card")
 
-        dest_key = os.path.join(dest_datastore.storage_loc,
-                                DeepchemAddress.get_key(dest_address))
+        dest_key = os.path.join(dest_datastore.storage_loc, DeepchemAddress.get_key(dest_address))
         dest_dir = os.path.dirname(dest_key)
-        if dest_key.strip('/') != dest_dir.strip(
-                '/') and not os.path.exists(dest_dir):
+        if dest_key.strip('/') != dest_dir.strip('/') and not os.path.exists(dest_dir):
             os.makedirs(dest_dir)
 
         for kind in KIND_LIST:
             if dest_key.endswith(kind['extension']):
                 raise ValueError("Destination cannot be a card")
-        dest_card_key = (dest_key +
-                         kind_matched['extension']) if kind_matched else None
+        dest_card_key = (dest_key + kind_matched['extension']) if kind_matched else None
 
         # dest_key and dest_card_key should not exist
-        if os.path.exists(dest_key) and (not kind_matched or
-                                         (dest_card_key and
-                                          os.path.exists(dest_card_key))):
+        if os.path.exists(dest_key) and (not kind_matched or (dest_card_key and os.path.exists(dest_card_key))):
             raise FileExistsError("Destination object already exists")
 
         # Check if source is a directory
@@ -827,8 +797,7 @@ class DiskDataStore(DataStore):
             # Copy the directory to the destination
             shutil.copytree(source_key, dest_key)
             if kind_matched and dest_card_key:
-                shutil.copyfile(source_key + kind_matched['extension'],
-                                dest_card_key)
+                shutil.copyfile(source_key + kind_matched['extension'], dest_card_key)
         else:
             # Copy the object to the destination
             shutil.copyfile(source_key, dest_key)
@@ -843,15 +812,12 @@ class DiskDataStore(DataStore):
                 with open(dest_card_key, 'wb') as fp:
                     fp.write(bytes(card))
             else:
-                raise ValueError(
-                    "Destination card key could not be determined.")
+                raise ValueError("Destination card key could not be determined.")
 
         # Delete the object and the card from the source
-        self.delete_object(source_address,
-                           kind=kind_matched['name'] if kind_matched else 'dir')
+        self.delete_object(source_address, kind=kind_matched['name'] if kind_matched else 'dir')
 
-    def copy_object(self, source_address: str, dest_address: str,
-                    dest_datastore: DiskDataStore) -> None:
+    def copy_object(self, source_address: str, dest_address: str, dest_datastore: DiskDataStore) -> None:
         """
         Copy an object from one location to another
 
@@ -870,8 +836,7 @@ class DiskDataStore(DataStore):
         """
 
         # Get the source key and destination key of the object and the card
-        source_key = os.path.join(self.storage_loc,
-                                  DeepchemAddress.get_key(source_address))
+        source_key = os.path.join(self.storage_loc, DeepchemAddress.get_key(source_address))
         for kind in KIND_LIST:
             if source_key.endswith(kind['extension']):
                 raise ValueError("Cannot move a card")
@@ -885,22 +850,18 @@ class DiskDataStore(DataStore):
         if not kind_matched and not os.path.isdir(source_key):
             raise ValueError("Source does not have a card")
 
-        dest_key = os.path.join(dest_datastore.storage_loc,
-                                DeepchemAddress.get_key(dest_address))
+        dest_key = os.path.join(dest_datastore.storage_loc, DeepchemAddress.get_key(dest_address))
         dest_dir = os.path.dirname(dest_key)
-        if dest_key.strip('/') != dest_dir.strip(
-                '/') and not os.path.exists(dest_dir):
+        if dest_key.strip('/') != dest_dir.strip('/') and not os.path.exists(dest_dir):
             os.makedirs(dest_dir)
 
         for kind in KIND_LIST:
             if dest_key.endswith(kind['extension']):
                 raise ValueError("Destination cannot be a card")
-        dest_card_key = (dest_key +
-                         kind_matched['extension']) if kind_matched else None
+        dest_card_key = (dest_key + kind_matched['extension']) if kind_matched else None
 
         # dest_key and dest_card_key should not exist
-        if os.path.exists(dest_key) and (dest_card_key and
-                                         os.path.exists(dest_card_key)):
+        if os.path.exists(dest_key) and (dest_card_key and os.path.exists(dest_card_key)):
             raise FileExistsError("Destination object already exists")
 
         # Check if source is a directory
@@ -908,8 +869,7 @@ class DiskDataStore(DataStore):
             # Copy the directory to the destination
             shutil.copytree(source_key, dest_key)
             if kind_matched and dest_card_key:
-                shutil.copyfile(source_key + kind_matched['extension'],
-                                dest_card_key)
+                shutil.copyfile(source_key + kind_matched['extension'], dest_card_key)
         else:
             # Copy the object to the destination
             shutil.copyfile(source_key, dest_key)
@@ -924,8 +884,24 @@ class DiskDataStore(DataStore):
                 with open(dest_card_key, 'wb') as fp:
                     fp.write(bytes(card))
             else:
-                raise ValueError(
-                    "Destination card key could not be determined.")
+                raise ValueError("Destination card key could not be determined.")
+
+    def exists(self, address: str) -> bool:
+        """
+        Check if an object exists in the datastore
+
+        Parameters
+        ----------
+        address: str
+          DeepchemAddress of the object
+
+        Returns
+        -------
+        bool
+          True if the object exists, False otherwise
+        """
+        key = os.path.join(self.storage_loc, DeepchemAddress.get_key(address))
+        return os.path.exists(key)
 
     def __repr__(self) -> str:
         """Return objects in the DiskDataStore.

@@ -13,6 +13,7 @@ from deepchem_server.core import config
 from deepchem_server.core.address import DeepchemAddress
 from deepchem_server.core.cards import DataCard
 
+
 featurizer_map = {
     "ecfp": dc.feat.CircularFingerprint,
     "graphconv": dc.feat.ConvMolFeaturizer,
@@ -25,8 +26,7 @@ featurizer_map = {
 }
 
 
-def split_dataset(dataset_path: str, file_type: str, n_partition: int,
-                  available_checkpoints: List[int]) -> List[str]:
+def split_dataset(dataset_path: str, file_type: str, n_partition: int, available_checkpoints: List[int]) -> List[str]:
     """Split the dataset into n partitions.
 
     Parameters
@@ -55,8 +55,7 @@ def split_dataset(dataset_path: str, file_type: str, n_partition: int,
     if file_type == 'csv':
         df = pd.read_csv(dataset_path)
         part_size = df.shape[0] // n_partition
-        overflow = df.shape[
-            0] % n_partition  # remainder of the datapoints after n equal partitions
+        overflow = df.shape[0] % n_partition  # remainder of the datapoints after n equal partitions
         for i in range(n_partition):
             if i in available_checkpoints:
                 continue
@@ -94,8 +93,7 @@ def split_dataset(dataset_path: str, file_type: str, n_partition: int,
             for mol in mol_l[start:end]:
                 writer.write(mol)
     else:
-        raise NotImplementedError(
-            f"Featurization of {dataset_path} not supported.")
+        raise NotImplementedError(f"Featurization of {dataset_path} not supported.")
     return datasets
 
 
@@ -150,27 +148,18 @@ def featurize_part(
 
     if file_type == 'csv':
         if label_column is not None:
-            loader = dc.data.CSVLoader(tasks=[label_column],
-                                       feature_field=dataset_column,
-                                       featurizer=featurizer)
+            loader = dc.data.CSVLoader(tasks=[label_column], feature_field=dataset_column, featurizer=featurizer)
         else:
-            loader = dc.data.CSVLoader(tasks=[],
-                                       feature_field=dataset_column,
-                                       featurizer=featurizer)
+            loader = dc.data.CSVLoader(tasks=[], feature_field=dataset_column, featurizer=featurizer)
         dataset = loader.create_dataset(dataset_path)
     elif file_type == 'sdf':
         if label_column is not None:
-            loader = dc.data.SDFLoader(tasks=[label_column],
-                                       featurizer=featurizer,
-                                       sanitize=True)
+            loader = dc.data.SDFLoader(tasks=[label_column], featurizer=featurizer, sanitize=True)
         else:
-            loader = dc.data.SDFLoader(tasks=[],
-                                       featurizer=featurizer,
-                                       sanitize=True)
+            loader = dc.data.SDFLoader(tasks=[], featurizer=featurizer, sanitize=True)
         dataset = loader.create_dataset(dataset_path)
     else:
-        raise NotImplementedError(
-            f"Featurization of '{file_type}' not supported.")
+        raise NotImplementedError(f"Featurization of '{file_type}' not supported.")
     dataset.move(dest_dir)
     checkpoint_id = dataset_path.split('/')[-1].split('.')[0][-1]
     card = DataCard(address='',
@@ -183,9 +172,8 @@ def featurize_part(
                     description=f"featurized partition of \
             {main_dataset_address} : {checkpoint_id} of {nproc-1}")
 
-    datastore.upload_data_from_memory(
-        dataset, checkpoint_output_key +
-        f'/_checkpoint/part_{checkpoint_id}_of_{nproc-1}', card)
+    datastore.upload_data_from_memory(dataset,
+                                      checkpoint_output_key + f'/_checkpoint/part_{checkpoint_id}_of_{nproc-1}', card)
 
 
 def featurize_multi_core(
@@ -232,14 +220,12 @@ def featurize_multi_core(
         A list containing [datasets, merge_dir] where datasets is a list of
         DiskDataset objects and merge_dir is the directory path for merging.
     """
-    dataset_paths = split_dataset(raw_dataset_path, file_type, nproc,
-                                  available_checkpoints)
+    dataset_paths = split_dataset(raw_dataset_path, file_type, nproc, available_checkpoints)
     processes = []
 
     for dataset_path in dataset_paths:
         p = mp.Process(target=featurize_part,
-                       args=(main_dataset_address, dataset_path, file_type,
-                             feat, dataset_column, label_column,
+                       args=(main_dataset_address, dataset_path, file_type, feat, dataset_column, label_column,
                              checkpoint_output_key, nproc))
         processes.append(p)
         p.start()
@@ -326,9 +312,7 @@ def featurize(
     # TODO: Handle parsing of dictionary via parser
     featurizer = featurizer.lower()
     if featurizer not in featurizer_map:
-        raise ValueError(
-            f"Featurizer not recognized.\nAvailable featurizers: {featurizer_map}"
-        )
+        raise ValueError(f"Featurizer not recognized.\nAvailable featurizers: {featurizer_map}")
     if dataset_address.endswith('csv'):
         if dataset_column == 'None' or dataset_column is None:
             raise ValueError("Please specify input column.")
@@ -357,23 +341,23 @@ def featurize(
     tempdir = tempfile.TemporaryDirectory()
     basedir = os.path.join(tempdir.name)
 
+    if datastore.exists(output_key):
+        raise FileExistsError(
+            f"Output address {output_key} already exists in datastore. Please choose a different output name.")
+
     # check if _checkpoint/ folder exists in given output folder in datastore
     available_checkpoints = []
     _storage_loc = datastore.storage_loc.rstrip("/")
-    pattern = re.compile(
-        fr"{_storage_loc}/{checkpoint_output_key}/_checkpoint/part_\d+_of_\d+\.cdc$"
-    )
+    pattern = re.compile(fr"{_storage_loc}/{checkpoint_output_key}/_checkpoint/part_\d+_of_\d+\.cdc$")
     n_core_set: Set[int] = set()
     for item in datastore._get_datastore_objects(_storage_loc):
         match = pattern.search(item)
         if match:
             card = datastore.get(item)
-            if card and hasattr(card,
-                                'parent') and card.parent == dataset_address:
+            if card and hasattr(card, 'parent') and card.parent == dataset_address:
                 n_core_set.add(card.n_core)
                 available_checkpoints.append(int(card.checkpoint_id))
-                chkpt_tmp_path: str = os.path.join(
-                    tempdir.name, f'part{int(card.checkpoint_id)}')
+                chkpt_tmp_path: str = os.path.join(tempdir.name, f'part{int(card.checkpoint_id)}')
                 chkpt_address = item[:-4]  # removes .cdc
                 datastore.download_object(chkpt_address, chkpt_tmp_path)
 
@@ -381,8 +365,7 @@ def featurize(
         n_core = list(n_core_set)[0]
         if n_core > os.cpu_count():  # type: ignore
             raise Exception(
-                f"Current job config is insufficient to restart the job as it requires atleast {n_core//2} vcpus"
-            )
+                f"Current job config is insufficient to restart the job as it requires atleast {n_core//2} vcpus")
     elif len(n_core_set) > 1:
         raise Exception("Checkpoints found with more than one partition type")
 
@@ -399,20 +382,15 @@ def featurize(
         file_size = dataset_size / (1000 * 1000)
 
         if nproc and nproc > 1 and file_size and single_core_threshold and file_size > single_core_threshold:
-            datasets, merge_dir = featurize_multi_core(
-                dataset_address, raw_dataset_path, 'csv', feat, dataset_column,
-                label_column, basedir, nproc, checkpoint_output_key,
-                available_checkpoints)
+            datasets, merge_dir = featurize_multi_core(dataset_address, raw_dataset_path, 'csv', feat, dataset_column,
+                                                       label_column, basedir, nproc, checkpoint_output_key,
+                                                       available_checkpoints)
             dataset = dc.data.DiskDataset.merge(datasets, merge_dir=merge_dir)
         else:
             if label_column is not None:
-                loader = dc.data.CSVLoader(tasks=[label_column],
-                                           feature_field=dataset_column,
-                                           featurizer=feat)
+                loader = dc.data.CSVLoader(tasks=[label_column], feature_field=dataset_column, featurizer=feat)
             else:
-                loader = dc.data.CSVLoader(tasks=[],
-                                           feature_field=dataset_column,
-                                           featurizer=feat)
+                loader = dc.data.CSVLoader(tasks=[], feature_field=dataset_column, featurizer=feat)
             dataset = loader.create_dataset(raw_dataset_path)
 
     elif dataset_address.endswith('sdf'):
@@ -422,25 +400,19 @@ def featurize(
         file_size = dataset_size / (1024 * 1024)
 
         if nproc and nproc > 1 and file_size and single_core_threshold and file_size > single_core_threshold:
-            datasets, merge_dir = featurize_multi_core(
-                dataset_address, raw_dataset_path, 'sdf', feat, dataset_column,
-                label_column, basedir, nproc, checkpoint_output_key,
-                available_checkpoints)
+            datasets, merge_dir = featurize_multi_core(dataset_address, raw_dataset_path, 'sdf', feat, dataset_column,
+                                                       label_column, basedir, nproc, checkpoint_output_key,
+                                                       available_checkpoints)
             dataset = dc.data.DiskDataset.merge(datasets, merge_dir=merge_dir)
         else:
             if label_column is not None:
-                loader = dc.data.SDFLoader(tasks=[label_column],
-                                           featurizer=feat,
-                                           sanitize=True)
+                loader = dc.data.SDFLoader(tasks=[label_column], featurizer=feat, sanitize=True)
             else:
-                loader = dc.data.SDFLoader(tasks=[],
-                                           featurizer=feat,
-                                           sanitize=True)
+                loader = dc.data.SDFLoader(tasks=[], featurizer=feat, sanitize=True)
             dataset = loader.create_dataset(raw_dataset_path)
 
     else:
-        raise NotImplementedError(
-            f"Featurization of {dataset_address} not supported.")
+        raise NotImplementedError(f"Featurization of {dataset_address} not supported.")
 
     for key, value in feat_kwargs_restore.items():
         feat_kwargs[key] = value
@@ -451,11 +423,8 @@ def featurize(
                     data_type=type(dataset).__name__,
                     feat_kwargs=feat_kwargs)
 
-    featurized_address = datastore.upload_data_from_memory(
-        dataset, output_key, card)
+    featurized_address = datastore.upload_data_from_memory(dataset, output_key, card)
 
     if checkpoint_output_key + '/' in datastore.list_data():
-        datastore.delete_object(address=_storage_loc + "/" +
-                                checkpoint_output_key,
-                                kind='dir')
+        datastore.delete_object(address=_storage_loc + "/" + checkpoint_output_key, kind='dir')
     return featurized_address

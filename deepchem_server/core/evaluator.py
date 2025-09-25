@@ -13,25 +13,17 @@ from deepchem_server.core import config
 from deepchem_server.core.address import DeepchemAddress
 from deepchem_server.core.cards import DataCard
 
+
 deepchem_server_metrics = {
-    'pearson_r2_score':
-        dc.metrics.Metric(dc.metrics.pearson_r2_score),
-    'jaccard_score':
-        dc.metrics.Metric(dc.metrics.jaccard_score),
-    'prc_auc_score':
-        dc.metrics.Metric(dc.metrics.prc_auc_score),
-    'roc_auc_score':
-        dc.metrics.Metric(dc.metrics.roc_auc_score),
-    'rms_score':
-        dc.metrics.Metric(dc.metrics.rms_score),
-    'mae_error':
-        dc.metrics.Metric(dc.metrics.mae_score),
-    'bedroc_score':
-        dc.metrics.Metric(dc.metrics.bedroc_score),
-    'accuracy_score':
-        dc.metrics.Metric(dc.metrics.accuracy_score),
-    'balanced_accuracy_score':
-        dc.metrics.Metric(dc.metrics.balanced_accuracy_score),
+    'pearson_r2_score': dc.metrics.Metric(dc.metrics.pearson_r2_score),
+    'jaccard_score': dc.metrics.Metric(dc.metrics.jaccard_score),
+    'prc_auc_score': dc.metrics.Metric(dc.metrics.prc_auc_score),
+    'roc_auc_score': dc.metrics.Metric(dc.metrics.roc_auc_score),
+    'rms_score': dc.metrics.Metric(dc.metrics.rms_score),
+    'mae_error': dc.metrics.Metric(dc.metrics.mae_score),
+    'bedroc_score': dc.metrics.Metric(dc.metrics.bedroc_score),
+    'accuracy_score': dc.metrics.Metric(dc.metrics.accuracy_score),
+    'balanced_accuracy_score': dc.metrics.Metric(dc.metrics.balanced_accuracy_score),
 }
 
 
@@ -51,9 +43,7 @@ def prc_auc_curve(y_true: np.ndarray, y_preds: np.ndarray) -> pd.DataFrame:
     df: pd.DataFrame
         precision recall dataframe
     """
-    precision, recall, thresholds = precision_recall_curve(y_true,
-                                                           y_preds[:, 1],
-                                                           pos_label=1)
+    precision, recall, thresholds = precision_recall_curve(y_true, y_preds[:, 1], pos_label=1)
     thresholds = np.append(thresholds, None)  # type: ignore
     df = pd.DataFrame({
         'precision': precision,
@@ -100,11 +90,7 @@ def model_evaluator(dataset_addresses: List[str],
     model = datastore.get(model_address, kind='model')
 
     if not is_metric_plots:
-        eval_metrics = [
-            deepchem_server_metrics[metric]
-            for metric in metrics
-            if metric not in plot_metrics.keys()
-        ]
+        eval_metrics = [deepchem_server_metrics[metric] for metric in metrics if metric not in plot_metrics.keys()]
         if len(eval_metrics) == 0:
             raise ValueError("No non-plot metric provided to evaluate")
         dataset_scores = dict()
@@ -113,16 +99,12 @@ def model_evaluator(dataset_addresses: List[str],
             scores = model.evaluate(dataset, eval_metrics)
             dataset_scores[dataset_address] = scores
         dataset_scores_final: str = json.dumps(dataset_scores)
-        description = "evaluation of %s datasets using %s metrics" % (
-            ' '.join(dataset_addresses), ' '.join(metrics))
-        card = DataCard(address='',
-                        file_type='json',
-                        data_type='json',
-                        description=description)
+        description = "evaluation of %s datasets using %s metrics" % (' '.join(dataset_addresses), ' '.join(metrics))
+        card = DataCard(address='', file_type='json', data_type='json', description=description)
         if not output_key.endswith('.json'):
             output_key = output_key + '.json'
-        output_address = datastore.upload_data_from_memory(
-            dataset_scores_final, DeepchemAddress.get_key(output_key), card)
+        output_address = datastore.upload_data_from_memory(dataset_scores_final, DeepchemAddress.get_key(output_key),
+                                                           card)
     else:
         if len(metrics) > 1:
             raise Exception("only one plot metric supported")
@@ -144,6 +126,5 @@ def model_evaluator(dataset_addresses: List[str],
         df.to_csv(temp_output_path, index=False)
 
         card = DataCard(address='', file_type='csv', data_type='DataFrame')
-        output_address = datastore.upload_data(
-            DeepchemAddress.get_key(output_key), temp_output_path, card)
+        output_address = datastore.upload_data(DeepchemAddress.get_key(output_key), temp_output_path, card)
     return output_address
