@@ -425,3 +425,34 @@ def test_disk_datastore_upload_nested_model_from_memory(disk_datastore):
     assert card_retrieved.address == 'deepchem://test/user/test upload model from memory/model'
 
     assert model_address == 'deepchem://test/user/test upload model from memory/model'
+
+
+def test_disk_datastore_exists(disk_datastore: DiskDataStore, tmp_csv: str):
+    """Test the exists method of DiskDataStore."""
+    random_address = "deepchem://test/user/non_existent_file.csv"
+    assert not disk_datastore.exists(random_address)
+
+    # Test with uploaded data file
+    data_card = cards.DataCard(
+        address="",
+        file_type="csv",
+        data_type="pandas.DataFrame",
+        description="this is a pandas dataframe",
+    )
+
+    data_address = disk_datastore.upload_data("test_exists.csv", tmp_csv, data_card)
+    assert disk_datastore.exists(data_address)
+    assert disk_datastore.exists(data_address + ".cdc")
+
+    # Test with data uploaded from memory
+    df = pd.DataFrame({"foo": [1, 2], "bar": [3, 4]})
+    memory_data_address = disk_datastore.upload_data_from_memory(
+        df, "test_exists_memory.csv", data_card
+    )
+    assert disk_datastore.exists(memory_data_address)
+    assert disk_datastore.exists(memory_data_address + ".cdc")
+
+    # Test after deleting a file
+    disk_datastore.delete_object(data_address, kind="data")
+    assert not disk_datastore.exists(data_address)
+    assert not disk_datastore.exists(data_address + ".cdc")
