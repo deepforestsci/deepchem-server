@@ -446,9 +446,7 @@ def test_disk_datastore_exists(disk_datastore: DiskDataStore, tmp_csv: str):
 
     # Test with data uploaded from memory
     df = pd.DataFrame({"foo": [1, 2], "bar": [3, 4]})
-    memory_data_address = disk_datastore.upload_data_from_memory(
-        df, "test_exists_memory.csv", data_card
-    )
+    memory_data_address = disk_datastore.upload_data_from_memory(df, "test_exists_memory.csv", data_card)
     assert disk_datastore.exists(memory_data_address)
     assert disk_datastore.exists(memory_data_address + ".cdc")
 
