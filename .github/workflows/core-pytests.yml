@@ -9,6 +9,7 @@ on:
       - main
     paths:
       - "deepchem_server/core/**"
+      - ".github/workflows/core-pytests.yml"
   workflow_dispatch:
 
 jobs:
