@@ -31,7 +31,7 @@ jobs:
           post-cleanup: "all"
       
       - name: Install dev dependencies
-        run: pip install -r deepchem_server/environments/dev-requirements.txt
+        run: micromamba run -n deepchem-server-env pip install -r deepchem_server/environments/dev-requirements.txt
 
       - name: Run tests
-        run: pytest deepchem_server/core/tests/
+        run: micromamba run -n deepchem-server-env pytest deepchem_server/core/tests/
