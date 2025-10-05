@@ -24,9 +24,10 @@ jobs:
         uses: ./.github/actions/cleanup
 
       - name: Set up MicroMamba and install core dependencies
-        uses: mamba-org/setup-micromamba@v1
+        uses: mamba-org/setup-micromamba@v2
         with:
           environment-file: "./deepchem_server/environments/core_environment.yml"
+          init-shell: bash
           post-cleanup: "all"
       
       - name: Install dev dependencies
