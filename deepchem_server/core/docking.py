@@ -169,7 +169,7 @@ def generate_pose(
     >>> from deepchem_server.core.docking import generate_pose
     >>> result = generate_pose(
     ...     protein_address="deepchem://user/protein.pdb",
-    ...     ligand_address="deepchem://user/ligand.pdb", 
+    ...     ligand_address="deepchem://user/ligand.pdb",
     ...     output="docking_results"
     ... )
     >>> print(result)
