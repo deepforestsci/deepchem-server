@@ -61,4 +61,14 @@ The compute module handles computational tasks and job execution.
 .. automodule:: deepchem_server.core.compute
    :members:
    :undoc-members:
+   :show-inheritance:
+
+Molecular Docking
+------------------
+
+The docking module provides molecular docking capabilities using AutoDock VINA.
+
+.. automodule:: deepchem_server.core.docking
+   :members:
+   :undoc-members:
    :show-inheritance: 

@@ -105,25 +105,105 @@ def generate_pose(
     num_modes: int = 9,
 ) -> str:
     """
-    Generate VINA molecular docking poses.
+    Generate molecular docking poses using AutoDock VINA.
+
+    Performs molecular docking between a protein and ligand using the AutoDock VINA
+    algorithm. The function downloads protein and ligand files from the datastore,
+    prepares them for docking, generates multiple binding poses, and returns the
+    results with binding affinity scores.
 
     Parameters
     ----------
-    protein_address: str
-        DeepChem address of the protein PDB file
-    ligand_address: str
-        DeepChem address of the ligand file (PDB/SDF)
-    output: str
-        Output name for the docking results
-    exhaustiveness: int
-        Vina exhaustiveness parameter (default: 10)
-    num_modes: int
-        Number of binding modes to generate (default: 9)
+    protein_address : str
+        DeepChem datastore address of the protein PDB file. The protein structure
+        should be clean and properly formatted for docking.
+    ligand_address : str
+        DeepChem datastore address of the ligand file. Supports both PDB and SDF
+        formats. For SDF files, the first molecule will be used for docking.
+    output : str
+        Name for the docking results output. The results will be stored as a JSON
+        file with this name in the datastore.
+    exhaustiveness : int, default=10
+        VINA exhaustiveness parameter controlling search thoroughness. Higher values
+        provide more thorough sampling but take longer. Typical range: 1-32.
+    num_modes : int, default=9
+        Number of binding poses to generate. VINA will return up to this many
+        different binding conformations ranked by binding affinity.
 
     Returns
     -------
     str
-        DeepChem address of the docking results
+        DeepChem datastore address of the docking results JSON file containing:
+        - docking_method: "VINA"
+        - num_modes: Number of poses actually generated
+        - scores: Dictionary with binding affinities for each pose
+        - complexes_count: Number of protein-ligand complexes generated
+        - message: Status message
+
+    Raises
+    ------
+    ValueError
+        If protein_address or ligand_address is empty/None
+        If datastore is not configured
+        If protein/ligand files cannot be parsed
+        If no valid docking poses are generated
+    ImportError
+        If required dependencies (RDKit, PDBFixer, OpenMM) are not available
+    Exception
+        If VINA docking process fails for any reason
+
+    Notes
+    -----
+    The function automatically handles:
+    - Protein structure preparation (missing residues, hydrogens, etc.)
+    - Ligand 3D coordinate generation and optimization
+    - SDF to PDB conversion for ligands
+    - Progress logging throughout the process
+
+    The binding affinity scores are in kcal/mol, where more negative values
+    indicate stronger binding.
+
+    Examples
+    --------
+    Basic docking with default parameters:
+    >>> from deepchem_server.core.docking import generate_pose
+    >>> result = generate_pose(
+    ...     protein_address="deepchem://user/protein.pdb",
+    ...     ligand_address="deepchem://user/ligand.pdb", 
+    ...     output="docking_results"
+    ... )
+    >>> print(result)
+    'deepchem://user/docking_results_results.json'
+
+    High-throughput docking with multiple poses:
+    >>> result = generate_pose(
+    ...     protein_address="deepchem://user/3cyx_clean.pdb",
+    ...     ligand_address="deepchem://user/ligand.sdf",
+    ...     output="hts_docking",
+    ...     exhaustiveness=20,
+    ...     num_modes=20
+    ... )
+
+    Quick screening with minimal parameters:
+    >>> result = generate_pose(
+    ...     protein_address="deepchem://user/protein.pdb",
+    ...     ligand_address="deepchem://user/ligand.pdb",
+    ...     output="quick_screen",
+    ...     exhaustiveness=1,
+    ...     num_modes=3
+    ... )
+
+    Working with nested datastore paths:
+    >>> result = generate_pose(
+    ...     protein_address="deepchem://user/docking/protein.pdb",
+    ...     ligand_address="deepchem://user/docking/ligand.pdb",
+    ...     output="deepchem://user/docking/results"
+    ... )
+
+    See Also
+    --------
+    deepchem_server.routers.primitives.docking_generate_pose : REST API endpoint
+    deepchem.dock.pose_generation.VinaPoseGenerator : Underlying VINA implementation
     """
 
     datastore = config.get_datastore()
