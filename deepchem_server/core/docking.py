@@ -65,7 +65,7 @@ def _embed_and_optimize(mol: Any) -> Any:
 def _upload_complexes_to_datastore(complexes: list, output: str, datastore, tmp_dir: str) -> str:
     """
     Upload docking complexes to datastore as PDB files.
-    
+
     Parameters
     ----------
     complexes : list
@@ -76,19 +76,19 @@ def _upload_complexes_to_datastore(complexes: list, output: str, datastore, tmp_
         Datastore instance to upload to
     tmp_dir : str
         Temporary directory containing the complex files
-        
+
     Returns
     -------
     str
         DeepChem address of the complexes directory
     """
     from deepchem_server.core.cards import DataCard
-    
+
     log_progress('docking', 85, f'uploading {len(complexes)} protein-ligand complexes')
-    
+
     # Create complexes directory in datastore
     complexes_dir = f"{output}_complexes"
-    
+
     # Upload each complex as a separate PDB file
     complex_addresses = []
     for i, complex_item in enumerate(complexes):
@@ -99,22 +99,22 @@ def _upload_complexes_to_datastore(complexes: list, output: str, datastore, tmp_
         else:
             # It might be a complex object, try to get file path
             complex_path = getattr(complex_item, 'filename', None) or str(complex_item)
-        
+
         # Check if file exists
         if os.path.exists(complex_path):
             # Create individual complex file name
-            complex_filename = f"{output}_complex_{i+1}.pdb"
-            
+            complex_filename = f"{output}_complex_{i + 1}.pdb"
+
             # Create DataCard for complex
             card = DataCard(address='', file_type='pdb', data_type='text/plain')
-            
+
             # Upload complex to datastore
             uploaded_address = datastore.upload_data(complex_filename, complex_path, card)
             if uploaded_address:
                 complex_addresses.append(uploaded_address)
         else:
             log_progress('docking', 85, f'Warning: Complex file not found: {complex_path}')
-    
+
     # Return the directory address (first complex address without filename)
     if complex_addresses:
         # Extract directory from first complex address
@@ -241,14 +241,14 @@ def generate_pose(
     ... )
     >>> print(result)
     'deepchem://user/docking_results_results.json'
-    
+
     Access results and complexes:
     >>> datastore = config.get_datastore()
     >>> results = datastore.get(result, kind='data')
     >>> print(f"Generated {results['num_modes']} poses")
     >>> print(f"Best score: {results['scores']['mode 1']['affinity (kcal/mol)']}")
     >>> print(f"Complexes available at: {results['complexes_address']}")
-    
+
     Access individual complexes:
     >>> for i in range(1, results['num_modes'] + 1):
     ...     complex_address = f"{results['complexes_address']}/docking_results_complex_{i}.pdb"
