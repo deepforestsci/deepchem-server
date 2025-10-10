@@ -41,6 +41,7 @@ def test_generate_pose_basic_functionality(disk_datastore):
     assert 'num_modes' in results
     assert 'scores' in results
     assert 'complexes_count' in results
+    assert 'complexes_address' in results
     assert 'message' in results
 
     # Check specific values
