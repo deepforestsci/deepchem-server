@@ -77,9 +77,6 @@ show_docker_logs() {
 
 # Function to check service status
 check_service_status() {
-    log_info "Checking deepchem-server status..."
-    
-    # Check if the service is running
     if $DOCKER_COMPOSE_CMD ps deepchem-server | grep -q "Up"; then
         log_success "✓ deepchem-server is running"
         return 0
@@ -90,14 +87,22 @@ check_service_status() {
 }
 
 healthcheck_status() {
-    log_info "Checking deepchem-server healthcheck..."
-    if curl -f http://localhost:8000/healthcheck &> /dev/null; then
-        log_success "✓ deepchem-server is healthy"
-        return 0
-    else
-        log_warning "⚠ deepchem-server is not healthy"
-        return 1
-    fi
+
+    max_retries=3
+    retry_delay=5
+    retries=1
+
+    while [ $retries -le $max_retries ]; do
+        if curl -f http://localhost:8000/healthcheck &> /dev/null; then
+            log_success "✓ deepchem-server is healthy"
+            return 0
+        else
+            log_warning "Healthcheck failed. Retrying... [$retries/$max_retries]"
+            retries=$((retries + 1))
+            sleep $retry_delay
+        fi
+    done
+    return 1
 }
 
 # Parse command line arguments
@@ -135,7 +140,6 @@ while [[ $# -gt 0 ]]; do
       echo "Usage: $0 [OPTIONS]"
       echo "Options:"
       echo "  -f, --dockerfile DOCKERFILE    Specify dockerfile to use (default: Dockerfile)"
-      echo "  -d, --local-data-dir DIRECTORY Specify local data directory (default: ./local_datastore)"
       echo "  -l, --logs                     Show logs (all available logs by default)"
       echo "  -lf, --logs-follow             Follow logs in real-time after starting"
       echo "  -lt, --logs-tail NUMBER        Number of log lines to show (default: $TAIL_LOGS)"
