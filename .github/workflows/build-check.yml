@@ -39,3 +39,14 @@ jobs:
 
       - name: Run build and run script
         run: ./docker.sh
+      
+      - name: Healthcheck
+        run: |
+          if ./docker.sh -s; then
+            echo "Healthcheck passed"
+            exit 0
+          else
+            ./docker.sh -l
+            echo "Healthcheck failed! Check the logs above for debugging."
+            exit 1
+          fi
