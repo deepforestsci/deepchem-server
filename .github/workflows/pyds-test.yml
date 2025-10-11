@@ -49,16 +49,12 @@ jobs:
         run: chmod +x ./scripts/pytest_pyds.sh
 
       - name: Run tests
-        id: run-tests
-        continue-on-error: true
-        run: ./scripts/pytest_pyds.sh
-      
-      - name: Docker Compose Logs
         run: |
-          ./docker.sh -l
-      
-      - name: Check test results
-        if: steps.run-tests.outcome == 'failure'
-        run: |
-          echo "Tests failed! Check the logs above for debugging information."
-          exit 1
+          if ./scripts/pytest_pyds.sh; then
+            echo "Tests passed"
+            exit 0
+          else
+            ./docker.sh -l
+            echo "Tests failed! Check the logs above for debugging."
+            exit 1
+          fi
