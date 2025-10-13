@@ -349,3 +349,55 @@ async def train_valid_test_split(
         raise HTTPException(status_code=500, detail=f"Train valid test split failed: {str(e)}")
 
     return {"train_valid_test_split_results_address": result}
+
+@router.post("/generate_pose")
+async def docking_generate_pose(
+    profile_name: str,
+    project_name: str,
+    protein_address: str,
+    ligand_address: str,
+    output: str,
+    exhaustiveness: int = 10,
+    num_modes: int = 9,
+) -> dict:
+    """
+    Generate VINA molecular docking poses.
+
+    Parameters
+    ----------
+    profile_name: str
+        Name of the Profile where the job is run
+    project_name: str
+        Name of the Project where the job is run
+    protein_address: str
+        DeepChem address of the protein PDB file
+    ligand_address: str
+        DeepChem address of the ligand file (PDB/SDF)
+    output: str
+        Output name for the docking results
+    exhaustiveness: int
+        Vina exhaustiveness parameter (default: 10)
+    num_modes: int
+        Number of binding modes to generate (default: 9)
+
+    Returns
+    -------
+    dict
+        Dictionary containing the address of the docking results
+    """
+
+    program = {
+        'program_name': 'generate_pose',
+        'protein_address': protein_address,
+        'ligand_address': ligand_address,
+        'output': output,
+        'exhaustiveness': exhaustiveness,
+        'num_modes': num_modes,
+    }
+
+    try:
+        result = run_job(profile_name=profile_name, project_name=project_name, program=program)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"VINA docking failed: {str(e)}")
+
+    return {"docking_results_address": str(result)}
