@@ -48,7 +48,7 @@ def test_generate_pose_basic_functionality(disk_datastore):
     assert results['num_modes'] >= 0
     assert results['complexes_count'] >= 0
     assert 'VINA docking completed successfully' in results['message']
-    
+
     # Check complex addresses if available
     if 'complex_addresses' in results:
         assert isinstance(results['complex_addresses'], dict)
@@ -366,7 +366,7 @@ def test_generate_pose_pdbqt_support(disk_datastore):
     assert 'docking_method' in results
     assert 'scores' in results
     assert 'complex_addresses' in results
-    
+
     # Check if PDBQT addresses are included (may or may not be present depending on Vina output)
     if 'pdbqt_addresses' in results:
         assert isinstance(results['pdbqt_addresses'], dict)
@@ -415,13 +415,13 @@ def test_generate_pose_pdbqt_multiple_modes(disk_datastore):
     assert 'docking_method' in results
     assert 'scores' in results
     assert 'complex_addresses' in results
-    
+
     # Check if PDBQT addresses are included (may or may not be present depending on Vina output)
     if 'pdbqt_addresses' in results:
         assert isinstance(results['pdbqt_addresses'], dict)
         # Should have separate files for each mode
         assert len(results['pdbqt_addresses']) >= 1
-        
+
         for mode_key, pdbqt_address in results['pdbqt_addresses'].items():
             assert pdbqt_address.startswith('deepchem://')
             # Verify PDBQT file can be retrieved
