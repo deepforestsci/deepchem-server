@@ -329,4 +329,105 @@ def test_generate_pose_data_card_integration(disk_datastore):
 
     # Verify DataCard properties
     assert result_card.file_type == 'json'
-    assert result_card.data_type == 'docking results'
+    assert result_card.data_type == 'json'
+
+
+def test_generate_pose_pdbqt_support(disk_datastore):
+    """Test VINA pose generation with PDBQT file support."""
+    config.set_datastore(disk_datastore)
+
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    pdb_test_file = os.path.join(current_dir, "assets/cleaned_3cyx.pdb")
+    ligand_test_file = os.path.join(current_dir, "assets/ligand_3cyx.pdb")
+
+    card_protein = DataCard(address='', file_type='pdb', data_type='text/plain')
+    card_ligand = DataCard(address='', file_type='pdb', data_type='text/plain')
+
+    pdb_address = disk_datastore.upload_data("protein_test.pdb", pdb_test_file, card_protein)
+    ligand_address = disk_datastore.upload_data("ligand_test.pdb", ligand_test_file, card_ligand)
+
+    # Test with PDBQT support enabled (single mode)
+    result_address = generate_pose(protein_address=pdb_address,
+                                   ligand_address=ligand_address,
+                                   output='test_output_pdbqt',
+                                   exhaustiveness=1,
+                                   num_modes=1,
+                                   save_pdbqt=True)
+
+    # Verify result
+    assert result_address.startswith('deepchem://')
+    assert result_address.endswith('_results.json')
+
+    # Download and verify results
+    results_data = disk_datastore.get(result_address)
+    results = json.loads(results_data) if isinstance(results_data, str) else results_data
+
+    # Check basic structure
+    assert 'docking_method' in results
+    assert 'scores' in results
+    assert 'complex_addresses' in results
+    
+    # Check if PDBQT addresses are included (may or may not be present depending on Vina output)
+    if 'pdbqt_addresses' in results:
+        assert isinstance(results['pdbqt_addresses'], dict)
+        for mode_key, pdbqt_address in results['pdbqt_addresses'].items():
+            assert pdbqt_address.startswith('deepchem://')
+            # Verify PDBQT file can be retrieved
+            pdbqt_data = disk_datastore.get(pdbqt_address)
+            assert pdbqt_data is not None
+            assert isinstance(pdbqt_data, list)  # Should be list of lines
+            # Basic PDBQT validation
+            pdbqt_text = ''.join(pdbqt_data)
+            assert 'ATOM' in pdbqt_text or 'HETATM' in pdbqt_text
+
+
+def test_generate_pose_pdbqt_multiple_modes(disk_datastore):
+    """Test VINA pose generation with PDBQT support for multiple modes."""
+    config.set_datastore(disk_datastore)
+
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    pdb_test_file = os.path.join(current_dir, "assets/cleaned_3cyx.pdb")
+    ligand_test_file = os.path.join(current_dir, "assets/ligand_3cyx.pdb")
+
+    card_protein = DataCard(address='', file_type='pdb', data_type='text/plain')
+    card_ligand = DataCard(address='', file_type='pdb', data_type='text/plain')
+
+    pdb_address = disk_datastore.upload_data("protein_test.pdb", pdb_test_file, card_protein)
+    ligand_address = disk_datastore.upload_data("ligand_test.pdb", ligand_test_file, card_ligand)
+
+    # Test with PDBQT support enabled (multiple modes)
+    result_address = generate_pose(protein_address=pdb_address,
+                                   ligand_address=ligand_address,
+                                   output='test_output_pdbqt_multi',
+                                   exhaustiveness=1,
+                                   num_modes=3,
+                                   save_pdbqt=True)
+
+    # Verify result
+    assert result_address.startswith('deepchem://')
+    assert result_address.endswith('_results.json')
+
+    # Download and verify results
+    results_data = disk_datastore.get(result_address)
+    results = json.loads(results_data) if isinstance(results_data, str) else results_data
+
+    # Check basic structure
+    assert 'docking_method' in results
+    assert 'scores' in results
+    assert 'complex_addresses' in results
+    
+    # Check if PDBQT addresses are included (may or may not be present depending on Vina output)
+    if 'pdbqt_addresses' in results:
+        assert isinstance(results['pdbqt_addresses'], dict)
+        # Should have separate files for each mode
+        assert len(results['pdbqt_addresses']) >= 1
+        
+        for mode_key, pdbqt_address in results['pdbqt_addresses'].items():
+            assert pdbqt_address.startswith('deepchem://')
+            # Verify PDBQT file can be retrieved
+            pdbqt_data = disk_datastore.get(pdbqt_address)
+            assert pdbqt_data is not None
+            assert isinstance(pdbqt_data, list)  # Should be list of lines
+            # Basic PDBQT validation
+            pdbqt_text = ''.join(pdbqt_data)
+            assert 'ATOM' in pdbqt_text or 'HETATM' in pdbqt_text

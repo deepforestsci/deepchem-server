@@ -94,7 +94,6 @@ class DataCard(Card):
         'dc.data.NumpyDataset',
         'dc.data.DiskDataset',
         'json',
-        'docking results',
         'text/plain',
         'png',
         'binary',
