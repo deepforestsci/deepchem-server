@@ -38,15 +38,13 @@ def test_generate_pose_basic_functionality(disk_datastore):
 
     # Check basic structure
     assert 'docking_method' in results
-    assert 'num_modes' in results
     assert 'scores' in results
-    assert 'complexes_count' in results
     assert 'message' in results
 
     # Check specific values
     assert results['docking_method'] == 'VINA'
-    assert results['num_modes'] >= 0
-    assert results['complexes_count'] >= 0
+    # num_modes removed from results
+    # complexes_count removed from results
     assert 'VINA docking completed successfully' in results['message']
 
     # Check complex addresses if available
@@ -132,7 +130,7 @@ def test_generate_pose_sdf_ligands(disk_datastore):
     results = json.loads(results_data) if isinstance(results_data, str) else results_data
 
     assert results['docking_method'] == 'VINA'
-    assert results['num_modes'] >= 0
+    # num_modes removed from results
 
 
 def test_generate_pose_exhaustiveness_parameter(disk_datastore):
@@ -165,7 +163,7 @@ def test_generate_pose_exhaustiveness_parameter(disk_datastore):
         results = json.loads(results_data) if isinstance(results_data, str) else results_data
 
         assert results['docking_method'] == 'VINA'
-        assert results['num_modes'] >= 0
+        # num_modes removed from results
 
 
 def test_generate_pose_nested_full_address(disk_datastore):
@@ -201,7 +199,7 @@ def test_generate_pose_nested_full_address(disk_datastore):
     results = json.loads(results_data) if isinstance(results_data, str) else results_data
 
     assert results['docking_method'] == 'VINA'
-    assert results['num_modes'] >= 0
+    # num_modes removed from results
 
 
 def test_generate_pose_score_formatting(disk_datastore):
@@ -296,7 +294,7 @@ def test_generate_pose_progress_logging(disk_datastore):
     results = json.loads(results_data) if isinstance(results_data, str) else results_data
 
     assert results['docking_method'] == 'VINA'
-    assert results['num_modes'] >= 0
+    # num_modes removed from results
 
 
 def test_generate_pose_data_card_integration(disk_datastore):
