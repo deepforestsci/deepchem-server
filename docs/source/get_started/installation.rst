@@ -1,18 +1,18 @@
 Installation
 ============
 
-DeepChem Server can be installed and run in several ways. The recommended approach is using Docker for the easiest setup and deployment.
+DeepChem Server can be installed and run using Docker (recommended) or manually from source. Docker provides the simplest setup with all dependencies pre-configured.
 
 Docker Installation (Recommended)
-----------------------------------
+---------------------------------
 
-Docker provides the simplest way to get DeepChem Server running with all dependencies pre-configured.
+Docker provides containerized deployment with all dependencies managed automatically.
 
 Prerequisites
 ~~~~~~~~~~~~~
 
 * Docker installed on your system
-* Docker Compose (usually included with Docker Desktop)
+* Docker Compose (included with Docker Desktop)
 
 Steps
 ~~~~~
@@ -26,34 +26,71 @@ Steps
 
 2. **Start the Server**
 
+   Use the provided helper script for easy setup:
+
    .. code-block:: bash
 
-      bash docker.sh
+      ./docker.sh
 
-   This script will:
-   
-   * Build the Docker image with all required dependencies
-   * Start the server container
-   * Expose the API on port 8000
+   **Available Options:**
+
+   .. code-block:: bash
+
+      ./docker.sh
+
+   **Examples:**
+
+   .. code-block:: bash
+
+      # Use default CPU setup
+      ./docker.sh
+
+      # Use GPU setup
+      ./docker.sh -f Dockerfile.gpu
 
 3. **Verify Installation**
 
-   Open your browser and navigate to:
-   
-   * API Documentation: http://localhost:8000/docs
-   * Health Check: http://localhost:8000/healthcheck
+   Check that the server is running:
+
+   .. code-block:: bash
+
+      curl http://localhost:8000/healthcheck
+
+   Expected response: ``{"status": "ok"}``
+
+   Access the interactiveAPI documentation at: http://localhost:8000/docs
+
+Available Dockerfiles
+~~~~~~~~~~~~~~~~~~~~~~
+
+* **Dockerfile**: CPU-based setup using micromamba base image
+* **Dockerfile.gpu**: GPU-accelerated setup using NVIDIA PyTorch base image
+
+**Dockerfile Features:**
+
+* Uses micromamba for fast package management
+* Includes all DeepChem dependencies
+* Optimized for CPU-based molecular machine learning
+* Health check endpoint configured
+
+**Dockerfile.gpu Features:**
+
+* NVIDIA PyTorch base image with CUDA support
+* GPU-accelerated DeepChem operations
+* Compatible with NVIDIA Docker runtime
+* Optimized for large-scale molecular modeling
 
 Manual Installation
 -------------------
 
-For development or custom deployments, you can install DeepChem Server manually.
+For development or custom deployments, install DeepChem Server manually using micromamba.
 
 Prerequisites
 ~~~~~~~~~~~~~
 
-* Python 3.8 or higher
-* pip package manager
-* Virtual environment (recommended)
+* micromamba package manager (lightweight conda replacement)
+* Python 3.11 (specified in environment file)
+* Git for cloning the repository
 
 Steps
 ~~~~~
@@ -65,61 +102,65 @@ Steps
       git clone <repository-url>
       cd deepchem-server
 
-2. **Create Virtual Environment**
+2. **Create Environment from YAML**
+
+   Use the provided environment file to create a consistent environment:
 
    .. code-block:: bash
 
-      python -m venv venv
-      source venv/bin/activate  # On Windows: venv\Scripts\activate
+      micromamba env create -f deepchem_server/environments/core_environment.yml
 
-3. **Install Dependencies**
+3. **Activate Environment**
 
    .. code-block:: bash
 
-      pip install -r deepchem_server/requirements.txt
+      micromamba activate deepchem-server-env
 
 4. **Start the Server**
 
-   .. code-block:: bash
-
-      bash start-dev-server.sh
-
-   Or manually:
+   For development with auto-reload:
 
    .. code-block:: bash
 
       cd deepchem_server
       uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
-Development Setup
------------------
-
-For developers who want to contribute or customize the server:
-
-1. **Install in Development Mode**
+   Or use the development script:
 
    .. code-block:: bash
 
-      pip install -e .
+      ./start-dev-server.sh
 
-2. **Run Tests**
+Configuration
+-------------
 
-   .. code-block:: bash
+**Environment Management**
 
-      cd pyds/tests
-      python test_upload_featurize.py
+* **Environment File**: ``deepchem_server/environments/core_environment.yml``
+* **Python Version**: 3.11
+* **Package Manager**: micromamba for dependency management
 
-Server Configuration
---------------------
+**Environment Variables**
 
-DeepChem Server is built with FastAPI. For detailed information about server configuration, deployment, and advanced settings, please refer to the `FastAPI documentation <https://fastapi.tiangolo.com/deployment/>`_.
+* ``DATADIR``: Data directory path (default: ``/opt/deepchem_server_app/data`` in Docker)
+* ``PYTHONPATH``: Python path for module imports
 
-For interactive API documentation and testing, visit http://localhost:8000/docs once your server is running.
+**Port Configuration**
+
+Default port is 8000. To change:
+
+.. code-block:: bash
+
+   # Docker
+   docker run -p 8080:8000 deepchem-server
+
+   # Manual
+   uvicorn main:app --port 8080
 
 Verification
 ------------
 
-After installation, verify that everything is working correctly:
+After installation, verify the setup:
 
 1. **Health Check**
 
@@ -127,46 +168,25 @@ After installation, verify that everything is working correctly:
 
       curl http://localhost:8000/healthcheck
 
-   Expected response: ``{"status": "ok"}``
-
 2. **API Documentation**
 
-   Visit http://localhost:8000/docs to see the interactive API documentation.
+   Visit http://localhost:8000/docs for interactive API documentation
 
-3. **Run Test Upload**
+3. **Test Upload**
 
    .. code-block:: bash
 
       cd pyds/tests
       python test_upload_featurize.py
 
-Troubleshooting
----------------
-
-Common Issues
-~~~~~~~~~~~~~
-
-**Port Already in Use**
-   If port 8000 is already in use, either stop the service using it or refer to the `FastAPI documentation <https://fastapi.tiangolo.com/deployment/>`_ for configuration options.
-
-**Docker Issues**
-   Make sure Docker is running and you have sufficient permissions:
-   
-   .. code-block:: bash
-
-      docker --version
-      docker ps
-
-**Memory Issues**
-   DeepChem operations can be memory-intensive. Ensure you have at least 4GB of available RAM.
-
 Getting Help
 ~~~~~~~~~~~~
 
 If you encounter issues:
 
-1. Check the server logs for error messages
-2. Verify all dependencies are correctly installed
-3. Ensure your system meets the minimum requirements
-4. Consult the FastAPI documentation for deployment and configuration questions
-5. Create an issue on the repository for DeepChem Server specific problems 
+1. Check server logs for error messages
+2. Verify micromamba environment is correctly created and activated
+3. Ensure system meets minimum requirements
+4. Verify Python version is 3.11 as specified in environment file
+5. Consult the FastAPI documentation for deployment questions
+6. Check the DeepChem documentation for primitive operations

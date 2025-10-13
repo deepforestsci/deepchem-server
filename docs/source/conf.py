@@ -17,8 +17,8 @@ sys.path.insert(0, os.path.abspath("../../"))
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "DeepChem Server"
-copyright = "2024, DeepChem Server Team"
-author = "DeepChem Server Team"
+copyright = "2024, DeepChem Forest Sciences"
+author = "DeepChem Forest Sciences"
 release = "1.0.0"
 
 # -- General configuration ---------------------------------------------------
@@ -35,6 +35,13 @@ extensions = [
     "sphinx.ext.ifconfig",
     "sphinx.ext.githubpages",
 ]
+
+# Options for autodoc directives
+autodoc_default_options = {
+    "member-order": "bysource",
+    "special-members": True,
+    "exclude-members": "__repr__, __str__, __weakref__, __hash__, __eq__, __call__, __dict__",
+}
 
 # Napoleon settings
 napoleon_google_docstring = True
@@ -68,6 +75,12 @@ html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
 
 # -- Options for autodoc extension -------------------------------------------
+html_logo = "_static/logo.png"
+
+# Customize the sphinx theme
+html_theme_options = {"collapse_navigation": False}
+
+copybutton_remove_prompts = True
 
 # This value selects what content will be inserted into the main body of an autoclass directive.
 autoclass_content = "both"

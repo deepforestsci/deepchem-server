@@ -1,12 +1,9 @@
-Core Primitives
-===============
-
-This section documents the core primitives that form the backbone of DeepChem Server's machine learning workflow. These primitives provide the essential functionality for molecular machine learning pipelines: data featurization, model training, inference, and evaluation.
-
 Overview
 --------
 
-DeepChem Server provides five main primitives that work together to create end-to-end machine learning workflows:
+The core primitives that form the backbone of DeepChem Server's machine learning workflow.
+These primitives provide the essential functionality for molecular machine learning pipelines.
+Currently, Deepchem Server provides the following primitives: (Other primitives are planned to be added soon)
 
 * **Featurize**: Transform raw molecular data into machine learning features
 * **Train**: Build and train machine learning models on featurized datasets
