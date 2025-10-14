@@ -224,11 +224,21 @@ def generate_pose(
                     except Exception as e:
                         log_progress('docking', 76, f'failed to save complex for mode {i + 1}: {e}')
 
+            # Upload a standalone scores JSON and capture its datastore address
+            try:
+                scores_card = DataCard(address='', file_type='json', data_type='json')
+                scores_json_str = json.dumps(scores_formatted)
+                scores_address = datastore.upload_data_from_memory(scores_json_str, f"{output}_scores.json",
+                                                                   scores_card)
+            except Exception as e:
+                scores_address = None
+                log_progress('docking', 72, f'failed to upload scores JSON: {e}')
+
             results = {
                 'docking_method': 'VINA',
                 'exhaustiveness': exhaustiveness,
-                'scores': scores_formatted,
                 'complex_addresses': complex_addresses,
+                'scores_address': scores_address,
                 'message': 'VINA docking completed successfully',
             }
 

@@ -38,7 +38,7 @@ def test_generate_pose_basic_functionality(disk_datastore):
 
     # Check basic structure
     assert 'docking_method' in results
-    assert 'scores' in results
+    assert 'scores_address' in results
     assert 'message' in results
 
     # Check specific values
@@ -85,7 +85,7 @@ def test_generate_pose_multiple_modes(disk_datastore):
     results = json.loads(results_data) if isinstance(results_data, str) else results_data
 
     # Check that we have scores for multiple modes
-    assert 'scores' in results
+    assert 'scores_address' in results
     scores = results['scores']
 
     # Check that scores follow the expected format: 'mode %s' % (i + 1)
@@ -362,7 +362,7 @@ def test_generate_pose_pdbqt_support(disk_datastore):
 
     # Check basic structure
     assert 'docking_method' in results
-    assert 'scores' in results
+    assert 'scores_address' in results
     assert 'complex_addresses' in results
 
     # Check if PDBQT addresses are included (may or may not be present depending on Vina output)
@@ -411,7 +411,7 @@ def test_generate_pose_pdbqt_multiple_modes(disk_datastore):
 
     # Check basic structure
     assert 'docking_method' in results
-    assert 'scores' in results
+    assert 'scores_address' in results
     assert 'complex_addresses' in results
 
     # Check if PDBQT addresses are included (may or may not be present depending on Vina output)
