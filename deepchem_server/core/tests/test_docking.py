@@ -86,7 +86,8 @@ def test_generate_pose_multiple_modes(disk_datastore):
 
     # Check that we have scores for multiple modes
     assert 'scores_address' in results
-    scores = results['scores']
+    scores_data = disk_datastore.get(results['scores_address'])
+    scores = json.loads(scores_data) if isinstance(scores_data, str) else scores_data
 
     # Check that scores follow the expected format: 'mode %s' % (i + 1)
     mode_keys = list(scores.keys())
@@ -228,7 +229,8 @@ def test_generate_pose_score_formatting(disk_datastore):
     results = json.loads(results_data) if isinstance(results_data, str) else results_data
 
     # Check score format: 'mode %s' % (i + 1) for however many modes are present
-    scores = results['scores']
+    scores_data = disk_datastore.get(results['scores_address'])
+    scores = json.loads(scores_data) if isinstance(scores_data, str) else scores_data
 
     # There should be at least one mode
     assert len(scores) >= 1
