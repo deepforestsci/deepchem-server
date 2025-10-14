@@ -61,4 +61,20 @@ The compute module handles computational tasks and job execution.
 .. automodule:: deepchem_server.core.compute
    :members:
    :undoc-members:
+   :show-inheritance:
+
+Molecular Docking
+------------------
+
+The docking module provides molecular docking capabilities using AutoDock VINA.
+
+**Key Features:**
+- Generates protein-ligand binding poses using AutoDock VINA
+- Supports both PDB and PDBQT output formats
+- Automatically splits PDBQT files for multiple binding modes
+- Returns DeepChem addresses to all generated files
+
+.. automodule:: deepchem_server.core.docking
+   :members:
+   :undoc-members:
    :show-inheritance: 

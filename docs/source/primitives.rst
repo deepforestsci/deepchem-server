@@ -6,12 +6,13 @@ This section documents the core primitives that form the backbone of DeepChem Se
 Overview
 --------
 
-DeepChem Server provides four main primitives that work together to create end-to-end machine learning workflows:
+DeepChem Server provides five main primitives that work together to create end-to-end machine learning workflows:
 
 * **Featurize**: Transform raw molecular data into machine learning features
 * **Train**: Build and train machine learning models on featurized datasets
 * **Inference**: Run predictions on new data using trained models
 * **Evaluation**: Assess model performance using various metrics
+* **Docking**: Perform molecular docking to predict protein-ligand binding poses
 
 These primitives are designed to work seamlessly together while also being usable independently for specific tasks.
 
@@ -99,6 +100,13 @@ Supporting Functions
 
 .. autofunction:: deepchem_server.core.evaluator.prc_auc_curve
 
+Molecular Docking
+------------------
+
+The docking primitive performs molecular docking between proteins and ligands using AutoDock VINA to predict binding poses and affinities.
+
+.. autofunction:: deepchem_server.core.docking.generate_pose
+
 Available Metrics
 ~~~~~~~~~~~~~~~~~
 
@@ -124,15 +132,16 @@ These primitives are designed to work together in typical machine learning workf
 3. **Training**: Use ``train()`` to build models on the featurized data
 4. **Inference**: Use ``infer()`` to make predictions on new data
 5. **Evaluation**: Use ``model_evaluator()`` to assess model performance
+6. **Docking**: Use ``generate_pose()`` to predict protein-ligand binding interactions
 
 Example Workflow
 ~~~~~~~~~~~~~~~~
 
-Here's a typical workflow using all four primitives:
+Here's a typical workflow using all five primitives:
 
 .. code-block:: python
 
-   from deepchem_server.core import feat, train, inference, evaluator
+   from deepchem_server.core import feat, train, inference, evaluator, docking
    from deepchem_server.core import config
    from deepchem_server.core.datastore import DiskDataStore
    import tempfile
@@ -171,4 +180,11 @@ Here's a typical workflow using all four primitives:
        model_address=model_address,
        metrics=["roc_auc_score", "accuracy_score"],
        output_key="evaluation_results"
+   )
+
+   # 5. Perform molecular docking
+   docking_address = docking.generate_pose(
+       protein_address="protein_address",
+       ligand_address="ligand_address",
+       output="docking_results"
    ) 

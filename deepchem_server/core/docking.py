@@ -69,25 +69,75 @@ def generate_pose(
     """
     Generate VINA molecular docking poses.
 
+    Performs molecular docking between a protein and ligand using AutoDock VINA
+    to predict binding poses and affinities. Returns DeepChem addresses to all
+    generated files including PDB complexes, optional PDBQT files, and scores.
+
     Parameters
     ----------
-    protein_address: str
+    protein_address : str
         DeepChem address of the protein PDB file
-    ligand_address: str
-        DeepChem address of the ligand file (PDB or SDF)
-    output: str
-        Output name for the docking results
-    exhaustiveness: int
-        Vina exhaustiveness parameter (default: 10)
-    num_modes: int
-        Number of binding modes to generate (default: 9)
-    save_pdbqt: bool
-        Whether to save PDBQT files in addition to PDB complexes (default: False)
+    ligand_address : str
+        DeepChem address of the ligand file (PDB or SDF format)
+    output : str
+        Output name for the docking results (used as prefix for all files)
+    exhaustiveness : int, default=10
+        VINA exhaustiveness parameter (higher = more thorough search)
+    num_modes : int, default=9
+        Number of binding modes to generate (1-20 recommended)
+    save_pdbqt : bool, default=False
+        Whether to save PDBQT files in addition to PDB complexes
 
     Returns
     -------
     str
-        DeepChem address of the docking results
+        DeepChem address to results JSON file containing:
+        - complex_addresses: Dict mapping mode names to PDB complex addresses
+        - scores_address: DeepChem address to scores JSON file
+        - pdbqt_addresses: Dict mapping mode names to PDBQT addresses (if save_pdbqt=True)
+        - docking_method, exhaustiveness, message
+
+    Raises
+    ------
+    ImportError
+        If RDKit or AutoDock VINA are not installed
+    ValueError
+        If protein_address or ligand_address are empty
+        If no valid docking results are generated
+
+    Examples
+    --------
+    Basic docking with default parameters:
+
+    >>> result_address = generate_pose(
+    ...     protein_address="deepchem://user/protein.pdb",
+    ...     ligand_address="deepchem://user/ligand.sdf",
+    ...     output="docking_results"
+    ... )
+    >>> results = json.loads(datastore.get(result_address))
+    >>> print(f"Generated {len(results['complex_addresses'])} binding modes")
+
+    Docking with PDBQT files and custom parameters:
+
+    >>> result_address = generate_pose(
+    ...     protein_address="deepchem://user/protein.pdb",
+    ...     ligand_address="deepchem://user/ligand.pdb",
+    ...     output="thorough_docking",
+    ...     exhaustiveness=20,
+    ...     num_modes=5,
+    ...     save_pdbqt=True
+    ... )
+    >>> results = json.loads(datastore.get(result_address))
+    >>> scores = json.loads(datastore.get(results['scores_address']))
+    >>> print(f"Best binding affinity: {scores['mode 1']['affinity (kcal/mol)']} kcal/mol")
+
+    Notes
+    -----
+    - PDB complexes are always generated (one per binding mode)
+    - PDBQT files are only generated when save_pdbqt=True
+    - For multiple modes, PDBQT files are automatically split per mode
+    - Scores are stored in a separate JSON file for easy access
+    - All files are uploaded to the configured datastore
     """
 
     datastore = config.get_datastore()
