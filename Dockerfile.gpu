@@ -1,19 +1,54 @@
 FROM nvcr.io/nvidia/pytorch:23.08-py3
 
-WORKDIR /app/deepchem_server
+ARG DEEPCHEM_SERVER_HOME=/opt/deepchem_server_app
+ARG MINIFORGE_VERSION=23.3.1-0
 
-COPY deepchem_server/requirements.txt .
+ENV DEEPCHEM_SERVER_HOME=${DEEPCHEM_SERVER_HOME} \
+    PATH=/opt/conda/bin:$PATH \
+    MAMBA_NO_LOW_SPEED_LIMIT=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONHASHSEED=random \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    DEBIAN_FRONTEND=noninteractive \
+    DATADIR=${DEEPCHEM_SERVER_HOME}/data \
+    CUDA_VISIBLE_DEVICES=0
 
-RUN apt-get update && apt-get install -y --no-install-recommends apt-utils
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    curl \
+    ca-certificates \
+    apt-utils \
+    libgomp1 && \
+    cd /tmp && \
+    curl -L -O "https://github.com/conda-forge/miniforge/releases/download/${MINIFORGE_VERSION}/Miniforge3-$(uname)-$(uname -m).sh" && \
+    bash ./Miniforge3-$(uname)-$(uname -m).sh -b -p /opt/conda && \
+    rm -f ./Miniforge3-$(uname)-$(uname -m).sh && \
+    /opt/conda/bin/conda init bash && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-RUN apt-get -y install curl libgomp1
+WORKDIR ${DEEPCHEM_SERVER_HOME}
 
-RUN pip install --no-cache-dir -r requirements.txt
+COPY deepchem_server/environments/gpu_environment.yml /tmp/env.yaml
 
-COPY deepchem_server/ .
+RUN . /opt/conda/etc/profile.d/conda.sh && \
+    . /opt/conda/etc/profile.d/mamba.sh && \
+    mamba env update -n base -f /tmp/env.yaml && \
+    conda clean --all --yes && \
+    rm -f /tmp/env.yaml
+
+RUN mkdir -p ${DATADIR} && \
+    chmod 755 ${DATADIR}
+
+COPY deepchem_server/ ${DEEPCHEM_SERVER_HOME}/deepchem_server/
+
+WORKDIR ${DEEPCHEM_SERVER_HOME}
 
 EXPOSE 8000
 
-WORKDIR /app
+HEALTHCHECK --interval=120s --timeout=10s --start-period=180s --retries=3 \
+    CMD curl -f http://127.0.0.1:8000/healthcheck || exit 1
 
-CMD ["uvicorn", "deepchem_server.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "deepchem_server.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]

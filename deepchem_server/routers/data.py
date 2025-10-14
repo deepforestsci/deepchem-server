@@ -16,8 +16,8 @@ router = APIRouter(prefix="/data", tags=["data"])
 @router.post("/uploaddata")
 async def upload_data(
         file: UploadFile = File(...),
-        profile_name: str = Form(None),
-        project_name: str = Form(None),
+        profile_name: str = Form(...),
+        project_name: str = Form(...),
         filename: str = Form(None),
         description: str = Form(None),
         backend="local",

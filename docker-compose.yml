@@ -1,12 +1,10 @@
 services:
   deepchem-server:
+    image: deepchem-server
+    container_name: deepchem-server
     build:
       context: .
       dockerfile: ${DOCKERFILE:-Dockerfile}
     ports:
       - "8000:8000"
-    volumes:
-      - ${DATA_DIR:-./data}:/data
-    environment:
-      - DATADIR=/data
     restart: always

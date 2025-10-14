@@ -1,4 +1,4 @@
-name: Run Docker Build Check
+name: Run PyDS test on live server
 
 on:
   push:
@@ -7,16 +7,10 @@ on:
   pull_request:
     branches:
       - main
-    paths:
-      - 'deepchem_server/**'
-      - 'Dockerfile'
-      - 'docker-compose.yml'
-      - 'docker.sh'
-      - '.github/workflows/build-check.yml'
   workflow_dispatch:
 
 jobs:
-  check-build-cpu:
+  run-test-pyds:
     runs-on: ubuntu-latest
 
     steps:
@@ -39,14 +33,28 @@ jobs:
 
       - name: Run build and run script
         run: ./docker.sh
-      
-      - name: Healthcheck
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
         run: |
-          if ./docker.sh -s; then
-            echo "Healthcheck passed"
+          python -m pip install --upgrade pip &&
+          pip install --no-cache-dir -r pyds/requirements.txt &&
+          pip install --no-cache-dir -r pyds/tests/requirements.txt
+
+      - name: Make pytest script executable
+        run: chmod +x ./scripts/pytest_pyds.sh
+
+      - name: Run tests
+        run: |
+          if ./scripts/pytest_pyds.sh; then
+            echo "Tests passed"
             exit 0
           else
             ./docker.sh -l
-            echo "Healthcheck failed! Check the logs above for debugging."
+            echo "Tests failed! Check the logs above for debugging."
             exit 1
           fi
