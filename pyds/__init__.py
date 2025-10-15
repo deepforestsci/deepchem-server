@@ -12,6 +12,7 @@ from .data import Data
 from .primitives.base import Primitive
 from .primitives.evaluate import Evaluate
 from .primitives.featurize import Featurize
+from .primitives.docking import Docking
 from .primitives.infer import Infer
 from .primitives.splitter import TVTSplit
 from .primitives.train import Train
@@ -24,6 +25,7 @@ __all__ = [
     "BaseClient",
     "Primitive",
     "Featurize",
+    "Docking",
     "Train",
     "Evaluate",
     "Infer",
