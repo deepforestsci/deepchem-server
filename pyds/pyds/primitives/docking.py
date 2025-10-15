@@ -60,3 +60,5 @@ class Docking(Primitive):
 
         response = self._post("/primitive/generate_pose", json=data)
         return self._validate_response(response)
+
+
