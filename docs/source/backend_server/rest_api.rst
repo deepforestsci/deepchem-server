@@ -50,35 +50,6 @@ For detailed implementation information, the router endpoints are documented usi
    :undoc-members:
    :show-inheritance:
 
-Available Featurizers
----------------------
-
-DeepChem Server supports the following molecular featurizers:
-
-.. list-table::
-   :header-rows: 1
-   :widths: 25 35 40
-
-   * - Featurizer
-     - DeepChem Class
-     - Description
-   * - ``ecfp``
-     - ``CircularFingerprint``
-     - Extended Connectivity Fingerprints (Morgan/ECFP)
-   * - ``graphconv``
-     - ``ConvMolFeaturizer``
-     - Graph convolution molecular featurizer
-   * - ``weave``
-     - ``WeaveFeaturizer``
-     - Weave molecular featurizer for graph networks
-   * - ``molgraphconv``
-     - ``MolGraphConvFeaturizer``
-     - Molecular graph convolution featurizer
-
-For detailed information about these featurizers, including parameters, usage examples, and implementation details, please refer to the `DeepChem Featurizers documentation <https://deepchem.readthedocs.io/en/latest/api_reference/featurizers.html>`_.
-
-Each featurizer accepts different parameters that can be passed in the ``feat_kwargs`` field of your featurization requests. Consult the DeepChem documentation for the specific parameters supported by each featurizer.
-
 Response Formats
 ----------------
 
