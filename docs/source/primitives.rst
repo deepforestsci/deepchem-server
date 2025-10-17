@@ -6,6 +6,7 @@ These primitives provide the essential functionality for molecular machine learn
 Currently, Deepchem Server provides the following primitives: (Other primitives are planned to be added soon)
 
 * **Featurize**: Transform raw molecular data into machine learning features
+* **Train Valid Test Split**: Split the dataset into training, validation, and test sets
 * **Train**: Build and train machine learning models on featurized datasets
 * **Inference**: Run predictions on new data using trained models
 * **Evaluation**: Assess model performance using various metrics

@@ -5,6 +5,7 @@
 
 import os
 import sys
+import datetime
 
 # -- Path setup --------------------------------------------------------------
 
@@ -17,8 +18,8 @@ sys.path.insert(0, os.path.abspath("../../"))
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "DeepChem Server"
-copyright = "2024, DeepChem Forest Sciences"
-author = "DeepChem Forest Sciences"
+copyright = f"{datetime.datetime.now().year}, Deep Forest Sciences"
+author = "Deep Forest Sciences"
 release = "1.0.0"
 
 # -- General configuration ---------------------------------------------------

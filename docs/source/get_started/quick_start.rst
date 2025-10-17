@@ -34,18 +34,21 @@ The typical molecular machine learning workflow involves:
 
 1. **Upload Data**: Submit your molecular dataset to the server
 2. **Featurize**: Transform molecules into machine learning features
-3. **Train**: Build machine learning models on featurized data
-4. **Evaluate**: Assess model performance
-5. **Infer**: Make predictions on new data
+3. **TVTSplit**: Split the dataset into training, validation, and test sets
+4. **Train**: Build machine learning models on featurized data
+5. **Evaluate**: Assess model performance
+6. **Infer**: Make predictions on new data
 
 Available Endpoints
 -------------------
 
 **Data Management**
+
 * ``POST /data/uploaddata``: Upload datasets to the datastore
 * ``GET /data/{dataset_id}/download``: Download processed datasets
 
 **Primitive Operations**
+
 * ``POST /primitive/featurize``: Apply molecular featurization
 * ``POST /primitive/train``: Train machine learning models
 * ``POST /primitive/evaluate``: Evaluate model performance
@@ -53,6 +56,7 @@ Available Endpoints
 * ``POST /primitive/train-valid-test-split``: Split datasets for training
 
 **System**
+
 * ``GET /healthcheck``: Check server health status
 
 
@@ -94,7 +98,7 @@ For programmatic access, use the pyds Python client library:
        model_name="my_model"
    )
 
-For detailed Python client documentation, see :doc:`../py_ds_library/index`.
+For detailed Python client documentation, see :doc:`PyDS library docs /py_ds_library/index`.
 
 Next Steps
 ----------
