@@ -7,6 +7,15 @@ on:
   pull_request:
     branches:
       - main
+    paths:
+      - "pyds/**"
+      - "deepchem_server/**"
+      - "docker.sh"
+      - "docker-compose.yml"
+      - "Dockerfile"
+      - "scripts/pytest_pyds.sh"
+      - ".github/actions/cleanup/action.yml"
+      - ".github/workflows/pyds-test.yml"
   workflow_dispatch:
 
 jobs:
