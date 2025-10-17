@@ -41,7 +41,7 @@ The pyds library includes comprehensive error handling:
 All errors include descriptive messages to help with debugging and troubleshooting.
 
 Integration with DeepChem Server
-================================
+--------------------------------
 
 The pyds library interfaces with the following DeepChem Server endpoints:
 

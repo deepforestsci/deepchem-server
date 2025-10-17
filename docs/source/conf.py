@@ -79,7 +79,17 @@ html_static_path = ["_static"]
 html_logo = "_static/logo.png"
 
 # Customize the sphinx theme
-html_theme_options = {"collapse_navigation": False}
+html_theme_options = {"collapse_navigation": False, "navigation_depth": 3}
+
+# Ensure the global table of contents is shown in the sidebar for all pages
+html_sidebars = {
+    "**": [
+        "globaltoc.html",
+        "relations.html",
+        "sourcelink.html",
+        "searchbox.html",
+    ]
+}
 
 copybutton_remove_prompts = True
 

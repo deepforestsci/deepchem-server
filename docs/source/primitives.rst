@@ -103,7 +103,21 @@ Molecular Docking
 
 The docking primitive performs molecular docking between proteins and ligands using AutoDock VINA to predict binding poses and affinities.
 
+**Key Features:**
+
+* Generates protein-ligand binding poses using AutoDock VINA
+* Supports both PDB and PDBQT output formats
+* Automatically splits PDBQT files for multiple binding modes
+* Returns DeepChem addresses to all generated files
+
+
 .. autofunction:: deepchem_server.core.docking.generate_pose
+
+Supporting Functions
+~~~~~~~~~~~~~~~~~~~~
+
+.. autofunction:: deepchem_server.core.docking.split_pdbqt_docked_ligands
+   :no-index:
 
 Available Metrics
 ~~~~~~~~~~~~~~~~~

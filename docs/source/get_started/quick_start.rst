@@ -98,16 +98,7 @@ For programmatic access, use the pyds Python client library:
        model_name="my_model"
    )
 
-For detailed Python client documentation, see :doc:`PyDS library docs /py_ds_library/index`.
-
-Next Steps
-----------
-
-1. **Explore the API**: Visit http://localhost:8000/docs to test endpoints interactively
-2. **Try Different Featurizers**: Experiment with various molecular representations
-3. **Use the Python Client**: Explore the pyds library for programmatic workflows
-4. **Build ML Pipelines**: Chain operations for complete machine learning workflows
-5. **Consult Documentation**: Review detailed API reference and primitives documentation
+For detailed Python client documentation, see :doc:`PyDS library docs </py_ds_library/getting_started>`.
 
 Troubleshooting
 ---------------
@@ -118,9 +109,6 @@ Troubleshooting
    .. code-block:: bash
 
       curl http://localhost:8000/healthcheck
-
-**Memory Issues**
-   Large datasets may require additional memory. Consider using smaller batches or upgrading system resources
 
 **Need More Information**
    Visit http://localhost:8000/docs for comprehensive API documentation and interactive testing

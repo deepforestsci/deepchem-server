@@ -11,7 +11,7 @@ Utility Functions
    :undoc-members:
    :show-inheritance:
 
-Overview
+Summary
 --------
 
 The utils module provides functions for:

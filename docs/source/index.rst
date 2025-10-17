@@ -28,13 +28,19 @@ installation, server configuration, available computation primitives, and the Py
    :maxdepth: 3
    :caption: Getting Started
 
-   get_started/index
+   get_started/prerequisites
+   get_started/installation
+   get_started/quick_start
+   get_started/next_steps
 
 .. toctree::
    :maxdepth: 3
    :caption: Backend Server
 
-   backend_server/index
+   backend_server/overview
+   backend_server/rest_api
+   backend_server/core_modules
+   backend_server/utils
 
 .. toctree::
    :maxdepth: 3
@@ -46,4 +52,7 @@ installation, server configuration, available computation primitives, and the Py
    :maxdepth: 3
    :caption: PyDS Library
 
-   py_ds_library/index
+   py_ds_library/getting_started
+   py_ds_library/core_modules
+   py_ds_library/primitives
+   py_ds_library/configuration

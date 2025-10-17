@@ -43,12 +43,32 @@ The config module manages server configuration settings.
    :undoc-members:
    :show-inheritance:
 
-Featurization
--------------
+Progress Logger
+---------------
 
-The feat module provides molecular featurization capabilities.
+The progress_logger module logs the progress of the computation.
 
-.. automodule:: deepchem_server.core.feat
+.. automodule:: deepchem_server.core.progress_logger
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Model Mappings
+--------------
+
+The model_mappings module maps model types to their corresponding DeepChem models.
+
+.. automodule:: deepchem_server.core.model_mappings
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Model Config Mapping
+--------------------
+
+The model_config_mapper module maps model types to their corresponding DeepChem models.
+
+.. automodule:: deepchem_server.core.model_config_mapper
    :members:
    :undoc-members:
    :show-inheritance:
@@ -62,19 +82,3 @@ The compute module handles computational tasks and job execution.
    :members:
    :undoc-members:
    :show-inheritance:
-
-Molecular Docking
-------------------
-
-The docking module provides molecular docking capabilities using AutoDock VINA.
-
-**Key Features:**
-- Generates protein-ligand binding poses using AutoDock VINA
-- Supports both PDB and PDBQT output formats
-- Automatically splits PDBQT files for multiple binding modes
-- Returns DeepChem addresses to all generated files
-
-.. automodule:: deepchem_server.core.docking
-   :members:
-   :undoc-members:
-   :show-inheritance: 
