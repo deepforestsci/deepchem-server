@@ -8,7 +8,7 @@ class TestImports:
 
     def test_basic_imports(self):
         """Test basic imports from pyds."""
-        from pyds import Settings, Data, BaseClient
+        from pyds import BaseClient, Data, Settings
 
         assert Settings is not None
         assert Data is not None
@@ -16,7 +16,7 @@ class TestImports:
 
     def test_primitive_imports(self):
         """Test importing primitive classes."""
-        from pyds import Primitive, Featurize, Train, Evaluate, Infer, TVTSplit
+        from pyds import Evaluate, Featurize, Infer, Primitive, Train, TVTSplit
 
         assert Primitive is not None
         assert Featurize is not None
@@ -47,17 +47,17 @@ class TestImports:
 
     def test_package_structure(self):
         """Test that the package structure is as expected."""
-        import pyds
-        import pyds.base
-        import pyds.base.client
-        import pyds.data
-        import pyds.settings
-        import pyds.primitives
-        import pyds.primitives.base
-        import pyds.primitives.featurize
-        import pyds.primitives.train
-        import pyds.primitives.evaluate
-        import pyds.primitives.infer
-        import pyds.primitives.splitter
+        import pyds  # noqa: F401
+        import pyds.base  # noqa: F401
+        import pyds.base.client  # noqa: F401
+        import pyds.data  # noqa: F401
+        import pyds.primitives  # noqa: F401
+        import pyds.primitives.base  # noqa: F401
+        import pyds.primitives.evaluate  # noqa: F401
+        import pyds.primitives.featurize  # noqa: F401
+        import pyds.primitives.infer  # noqa: F401
+        import pyds.primitives.splitter  # noqa: F401
+        import pyds.primitives.train  # noqa: F401
+        import pyds.settings  # noqa: F401
 
         assert True
