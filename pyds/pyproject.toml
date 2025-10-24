@@ -57,7 +57,7 @@ include-package-data = true
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["*"]
+include = ["pyds*"]
 
 # Version is now specified in the [project] section above
 
