@@ -1,4 +1,4 @@
-# mypy: ignore-errors
+                                # mypy: ignore-errors
 # mypy errors ignored because ModelCard yet to added
 from __future__ import annotations
 
@@ -547,13 +547,8 @@ class DiskDataStore(DataStore):
                     df = pd.read_csv(path)
                 return df
             elif card.file_type == 'pdb':
-                try:
-                    out = md.load_pdb(path)
-                    return out
-                except (ImportError, NameError):
-                    # Fallback: return raw PDB file content as text
-                    with open(path, 'r') as f:
-                        return f.read()
+                with open(path, 'r') as f:
+                    return f.read()
             elif card.file_type == 'pdbqt':
                 with open(path, 'r') as f:
                     data = f.readlines()
