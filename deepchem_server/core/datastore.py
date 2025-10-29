@@ -1,4 +1,4 @@
-                                # mypy: ignore-errors
+# mypy: ignore-errors
 # mypy errors ignored because ModelCard yet to added
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ from deepchem_server.core.cards import Card, DataCard, ModelCard  # yapf: disabl
 
 
 try:
-    import mdtraj as md
+    import mdtraj as md  # noqa: F401
 except ModuleNotFoundError:
     pass
 
@@ -516,13 +516,11 @@ class DiskDataStore(DataStore):
         if path.endswith('.cdc'):
             with open(path, 'r') as f:
                 card_data = f.readlines()
-            card = DataCard.from_json(card_data[0])
-            return card
+            return DataCard.from_json(card_data[0])
         if path.endswith('.cmc'):
             with open(path, 'r') as f:
                 card_data = f.readlines()
-            card = ModelCard.from_json(card_data[0])
-            return card
+            return ModelCard.from_json(card_data[0])
         return None
 
     def get_data(self, address, fetch_sample: bool = False):
