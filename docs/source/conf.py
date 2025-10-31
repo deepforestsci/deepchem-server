@@ -166,6 +166,12 @@ autodoc_mock_imports = [
     "openfe",
     "mdtraj",
     "gufe",
+    "pint",
+    "openmm",
+    "pdbfixer",
+    "vina",
+    "ipython3",
+    "csv",
 ]
 
 # -- Options for intersphinx extension ---------------------------------------

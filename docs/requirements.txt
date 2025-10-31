@@ -13,3 +13,7 @@ sphinxcontrib-spelling>=8.0.0
 docutils>=0.18.1,<0.21
 Jinja2>=3.0
 babel>=2.9
+
+# lexers
+ipython-pygments-lexers==1.1.1
+pygments-csv-lexer==0.1.3
