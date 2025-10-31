@@ -18,12 +18,6 @@ from deepchem_server.core import model_mappings
 from deepchem_server.core.address import DeepchemAddress
 from deepchem_server.core.cards import Card, DataCard, ModelCard  # yapf: disable
 
-
-try:
-    import mdtraj as md  # noqa: F401
-except ModuleNotFoundError:
-    pass
-
 logger = logging.getLogger(__name__)
 
 # List of kinds supported by deepchem server, used to determine whether a file is a card or not and to determine the kind of the object
@@ -545,8 +539,15 @@ class DiskDataStore(DataStore):
                     df = pd.read_csv(path)
                 return df
             elif card.file_type == 'pdb':
-                with open(path, 'r') as f:
-                    return f.read()
+                # Default to returning an mdtraj.Trajectory for PDB files.
+                # Import locally so environments without mdtraj fail with a clear error.
+                try:
+                    import mdtraj as md
+                except ModuleNotFoundError as e:
+                    raise RuntimeError(
+                        "mdtraj is required to load PDB files; please install mdtraj"
+                    ) from e
+                return md.load_pdb(path)
             elif card.file_type == 'pdbqt':
                 with open(path, 'r') as f:
                     data = f.readlines()

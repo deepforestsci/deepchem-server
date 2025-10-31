@@ -55,8 +55,24 @@ def test_generate_pose_basic_functionality(disk_datastore):
             # Verify complex file can be retrieved
             complex_data = disk_datastore.get(complex_address)
             assert complex_data is not None
-            assert isinstance(complex_data, str)  # Should be PDB content
-            assert 'ATOM' in complex_data or 'HETATM' in complex_data  # Basic PDB validation
+            # mdtraj trajectory sanity checks
+            assert hasattr(complex_data, 'xyz')
+            assert getattr(complex_data, 'n_atoms', 0) > 0
+
+            # Optional text validation: serialize to PDB temporarily and check content
+            import tempfile
+            import os as _os
+            tmp_file = None
+            try:
+                with tempfile.NamedTemporaryFile(suffix='.pdb', delete=False) as _tmp:
+                    tmp_file = _tmp.name
+                complex_data.save_pdb(tmp_file)
+                with open(tmp_file, 'r') as _f:
+                    _pdb_text = _f.read()
+                assert 'ATOM' in _pdb_text or 'HETATM' in _pdb_text
+            finally:
+                if tmp_file and _os.path.exists(tmp_file):
+                    _os.remove(tmp_file)
 
 
 def test_generate_pose_multiple_modes(disk_datastore):
