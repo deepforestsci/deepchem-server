@@ -544,9 +544,7 @@ class DiskDataStore(DataStore):
                 try:
                     import mdtraj as md
                 except ModuleNotFoundError as e:
-                    raise RuntimeError(
-                        "mdtraj is required to load PDB files; please install mdtraj"
-                    ) from e
+                    raise RuntimeError("mdtraj is required to load PDB files; please install mdtraj") from e
                 return md.load_pdb(path)
             elif card.file_type == 'pdbqt':
                 with open(path, 'r') as f:
