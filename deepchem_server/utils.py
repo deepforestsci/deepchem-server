@@ -1,7 +1,7 @@
 import ast
 import logging
 import os
-from typing import Dict, Tuple
+from typing import Dict, Optional, Tuple
 
 from deepchem_server.core import config
 from deepchem_server.core.compute import ComputeWorkflow
@@ -92,7 +92,11 @@ def _upload_data(profile_name, project_name, datastore_filename, contents, data_
     return dataset_address
 
 
-def _download_data(profile_name: str, project_name: str, address: str, backend: str = "local") -> Tuple[str, bool, str]:
+def _download_data(profile_name: str,
+                   project_name: str,
+                   address: str,
+                   backend: str = "local",
+                   datastore: Optional[DataStore] = None) -> Tuple[str, bool, str]:
     """
     A wrapper method to get file path and metadata for downloading data from DataStore.
 
@@ -106,7 +110,8 @@ def _download_data(profile_name: str, project_name: str, address: str, backend: 
         The deepchem address of the object to download
     backend: str
         Backend to be used (Default: 'local')
-
+    datastore: Optional[DataStore]
+        The datastore to use (Default: None)
     Returns
     -------
     Tuple[str, bool, str]
@@ -120,7 +125,8 @@ def _download_data(profile_name: str, project_name: str, address: str, backend: 
     FileNotFoundError
         If the object doesn't exist in the datastore
     """
-    datastore = _init_datastore(profile_name=profile_name, project_name=project_name, backend=backend)
+    if datastore is None:
+        datastore = _init_datastore(profile_name=profile_name, project_name=project_name, backend=backend)
 
     try:
         info = datastore.get_info(address)
