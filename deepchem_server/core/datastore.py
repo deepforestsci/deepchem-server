@@ -152,6 +152,29 @@ class DataStore:
         """
         raise NotImplementedError
 
+    def get_info(self, deepchem_address: str):
+        """Get information about an object in the datastore.
+
+        Parameters
+        ----------
+        deepchem_address : str
+            Location of object in the datastore.
+
+        Returns
+        -------
+        dict
+            Dictionary containing object information including:
+            - file_path: Full path to the object
+            - is_directory: Whether the object is a directory
+            - object_name: Name of the object
+
+        Raises
+        ------
+        FileNotFoundError
+            If the object doesn't exist in the datastore
+        """
+        raise NotImplementedError
+
 
 class DiskDataStore(DataStore):
     """A concrete datastore that stores objects on the local disk."""
@@ -901,6 +924,33 @@ class DiskDataStore(DataStore):
         """
         key = os.path.join(self.storage_loc, DeepchemAddress.get_key(address))
         return os.path.exists(key)
+
+    def get_info(self, address: str) -> dict:
+        """
+        Get information about an object in the datastore
+
+        Parameters
+        ----------
+        address: str
+          DeepchemAddress of the object
+
+        Returns
+        -------
+        dict
+          Dictionary containing object information including:
+          - file_path: Full path to the object
+          - is_directory: Whether the object is a directory
+          - object_name: Name of the object
+        """
+        key = DeepchemAddress.get_key(address)
+        file_path = os.path.join(self.storage_loc, key)
+        object_name = DeepchemAddress.get_object_name(address)
+
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"Object not found at address: {address}")
+        is_directory = os.path.isdir(file_path)
+
+        return {"file_path": file_path, "is_directory": is_directory, "object_name": object_name}
 
     def __repr__(self) -> str:
         """Return objects in the DiskDataStore.
