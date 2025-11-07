@@ -18,10 +18,13 @@ def test_download_data_file(disk_datastore, tmp_csv):
     )
     data_address = disk_datastore.upload_data("test_download.csv", tmp_csv, data_card)
 
-    file_path, is_directory, object_name = _download_data(profile_name="test",
-                                                          project_name="user",
-                                                          address=data_address,
-                                                          backend="local")
+    file_path, is_directory, object_name = _download_data(
+        profile_name="test",
+        project_name="user",
+        address=data_address,
+        backend="local",
+        datastore=disk_datastore,
+    )
 
     assert object_name == "test_download.csv"
     assert is_directory is False
@@ -41,22 +44,31 @@ def test_download_data_directory(disk_datastore):
     data = dc.data.NumpyDataset(X, y)
     data_address = disk_datastore.upload_data_from_memory(data, "test_download_dataset", data_card)
 
-    file_path, is_directory, object_name = _download_data(profile_name="test",
-                                                          project_name="user",
-                                                          address=data_address,
-                                                          backend="local")
+    file_path, is_directory, object_name = _download_data(
+        profile_name="test",
+        project_name="user",
+        address=data_address,
+        backend="local",
+        datastore=disk_datastore,
+    )
 
     assert object_name == "test_download_dataset"
     assert is_directory is True
     assert os.path.isdir(file_path)
 
 
-def test_download_data_not_found():
+def test_download_data_not_found(disk_datastore):
     """Test _download_data helper for non-existent object."""
     non_existent_address = "deepchem://test/user/non_existent.csv"
 
     with pytest.raises(FileNotFoundError) as exc_info:
-        _download_data(profile_name="test", project_name="user", address=non_existent_address, backend="local")
+        _download_data(
+            profile_name="test",
+            project_name="user",
+            address=non_existent_address,
+            backend="local",
+            datastore=disk_datastore,
+        )
 
     assert "Object not found at address" in str(exc_info.value)
 
@@ -71,10 +83,13 @@ def test_download_data_nested_path(disk_datastore, tmp_csv):
     )
     data_address = disk_datastore.upload_data("nested/path/test.csv", tmp_csv, data_card)
 
-    file_path, is_directory, object_name = _download_data(profile_name="test",
-                                                          project_name="user",
-                                                          address=data_address,
-                                                          backend="local")
+    file_path, is_directory, object_name = _download_data(
+        profile_name="test",
+        project_name="user",
+        address=data_address,
+        backend="local",
+        datastore=disk_datastore,
+    )
 
     assert object_name == "test.csv"
     assert is_directory is False

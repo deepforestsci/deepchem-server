@@ -1,19 +1,19 @@
 import pandas as pd
 import pytest
 
-from deepchem_server.utils import _init_datastore
+from deepchem_server.core.datastore import DiskDataStore
 
 
 @pytest.fixture
-def disk_datastore():
-    datastore = _init_datastore(profile_name="test", project_name="user", backend="local")
-    return datastore
+def disk_datastore(tmp_path):
+    fds = DiskDataStore(profile_name="test", project_name="user", basedir=str(tmp_path))
+    return fds
 
 
 @pytest.fixture
-def alternate_disk_datastore():
-    datastore = _init_datastore(profile_name="alternate-test", project_name="alternate-user", backend="local")
-    return datastore
+def alternate_disk_datastore(tmp_path):
+    fds = DiskDataStore(profile_name="alternate-test", project_name="alternate-user", basedir=str(tmp_path))
+    return fds
 
 
 @pytest.fixture
