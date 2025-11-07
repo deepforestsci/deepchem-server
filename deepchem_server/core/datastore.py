@@ -18,6 +18,7 @@ from deepchem_server.core import model_mappings
 from deepchem_server.core.address import DeepchemAddress
 from deepchem_server.core.cards import Card, DataCard, ModelCard  # yapf: disable
 
+
 logger = logging.getLogger(__name__)
 
 # List of kinds supported by deepchem server, used to determine whether a file is a card or not and to determine the kind of the object
