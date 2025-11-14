@@ -1,14 +1,15 @@
 """This file contains utilities to merge datasets."""
 
-import os
 import ast
 import csv
+import os
 import pathlib
 import tempfile
 from typing import List
+
 from deepchem_server.core import config
-from deepchem_server.core.cards import DataCard
 from deepchem_server.core.address import DeepchemAddress
+from deepchem_server.core.cards import DataCard
 
 
 def _merge_csv(dataset_addresses: List[str], output_key: str):
