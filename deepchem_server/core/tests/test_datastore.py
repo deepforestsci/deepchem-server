@@ -454,3 +454,69 @@ def test_disk_datastore_exists(disk_datastore: DiskDataStore, tmp_csv: str):
     disk_datastore.delete_object(data_address, kind="data")
     assert not disk_datastore.exists(data_address)
     assert not disk_datastore.exists(data_address + ".cdc")
+
+
+def test_disk_datastore_get_info_file(disk_datastore, tmp_csv):
+    """Test get_info method for a file."""
+    data_card = DataCard(
+        address="",
+        file_type="csv",
+        data_type="pandas.DataFrame",
+        description="this is a pandas dataframe",
+    )
+    data_address = disk_datastore.upload_data("test_info.csv", tmp_csv, data_card)
+
+    info = disk_datastore.get_info(data_address)
+
+    assert info["object_name"] == "test_info.csv"
+    assert info["is_directory"] is False
+    assert "file_path" in info
+    assert os.path.isfile(info["file_path"])
+
+
+def test_disk_datastore_get_info_directory(disk_datastore):
+    """Test get_info method for a directory."""
+    X = np.random.rand(10, 10)
+    y = np.random.rand(10)
+    data_card = DataCard(
+        address="",
+        file_type="dir",
+        data_type="dc.data.DiskDataset",
+        description="this is a disk dataset",
+    )
+    data = dc.data.NumpyDataset(X, y)
+    data_address = disk_datastore.upload_data_from_memory(data, "test_dataset", data_card)
+
+    info = disk_datastore.get_info(data_address)
+
+    assert info["object_name"] == "test_dataset"
+    assert info["is_directory"] is True
+    assert "file_path" in info
+    assert os.path.isdir(info["file_path"])
+
+
+def test_disk_datastore_get_info_not_found(disk_datastore):
+    """Test get_info method for a non-existent object."""
+    non_existent_address = "deepchem://test/user/non_existent.csv"
+
+    with pytest.raises(FileNotFoundError) as exc_info:
+        disk_datastore.get_info(non_existent_address)
+
+    assert "Object not found at address" in str(exc_info.value)
+
+
+def test_disk_datastore_get_info_nested_path(disk_datastore, tmp_csv):
+    """Test get_info method for nested path."""
+    data_card = DataCard(
+        address="",
+        file_type="csv",
+        data_type="pandas.DataFrame",
+        description="this is a pandas dataframe",
+    )
+    data_address = disk_datastore.upload_data("nested/folder/test.csv", tmp_csv, data_card)
+
+    info = disk_datastore.get_info(data_address)
+
+    assert info["object_name"] == "test.csv"
+    assert info["is_directory"] is False
+    assert "file_path" in info

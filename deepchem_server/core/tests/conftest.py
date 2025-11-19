@@ -6,13 +6,13 @@ from deepchem_server.core.datastore import DiskDataStore
 
 @pytest.fixture
 def disk_datastore(tmp_path):
-    fds = DiskDataStore(profile_name='test', project_name='user', basedir=str(tmp_path))
+    fds = DiskDataStore(profile_name="test", project_name="user", basedir=str(tmp_path))
     return fds
 
 
 @pytest.fixture
 def alternate_disk_datastore(tmp_path):
-    fds = DiskDataStore(profile_name='alternate-test', project_name='alternate-user', basedir=str(tmp_path))
+    fds = DiskDataStore(profile_name="alternate-test", project_name="alternate-user", basedir=str(tmp_path))
     return fds
 
 

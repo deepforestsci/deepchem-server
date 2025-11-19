@@ -18,6 +18,7 @@ from deepchem_server.core import model_mappings
 from deepchem_server.core.address import DeepchemAddress
 from deepchem_server.core.cards import Card, DataCard, ModelCard  # yapf: disable
 
+
 logger = logging.getLogger(__name__)
 
 # List of kinds supported by deepchem server, used to determine whether a file is a card or not and to determine the kind of the object
@@ -149,6 +150,29 @@ class DataStore:
         -------
         Any
             Representation of available data in the datastore.
+        """
+        raise NotImplementedError
+
+    def get_info(self, deepchem_address: str):
+        """Get information about an object in the datastore.
+
+        Parameters
+        ----------
+        deepchem_address : str
+            Location of object in the datastore.
+
+        Returns
+        -------
+        dict
+            Dictionary containing object information including:
+            - file_path: Full path to the object
+            - is_directory: Whether the object is a directory
+            - object_name: Name of the object
+
+        Raises
+        ------
+        FileNotFoundError
+            If the object doesn't exist in the datastore
         """
         raise NotImplementedError
 
@@ -901,6 +925,33 @@ class DiskDataStore(DataStore):
         """
         key = os.path.join(self.storage_loc, DeepchemAddress.get_key(address))
         return os.path.exists(key)
+
+    def get_info(self, address: str) -> dict:
+        """
+        Get information about an object in the datastore
+
+        Parameters
+        ----------
+        address: str
+          DeepchemAddress of the object
+
+        Returns
+        -------
+        dict
+          Dictionary containing object information including:
+          - file_path: Full path to the object
+          - is_directory: Whether the object is a directory
+          - object_name: Name of the object
+        """
+        key = DeepchemAddress.get_key(address)
+        file_path = os.path.join(self.storage_loc, key)
+        object_name = DeepchemAddress.get_object_name(address)
+
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"Object not found at address: {address}")
+        is_directory = os.path.isdir(file_path)
+
+        return {"file_path": file_path, "is_directory": is_directory, "object_name": object_name}
 
     def __repr__(self) -> str:
         """Return objects in the DiskDataStore.

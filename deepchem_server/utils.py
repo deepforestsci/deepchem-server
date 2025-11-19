@@ -1,7 +1,7 @@
 import ast
 import logging
 import os
-from typing import Dict
+from typing import Dict, Optional, Tuple
 
 from deepchem_server.core import config
 from deepchem_server.core.compute import ComputeWorkflow
@@ -90,6 +90,50 @@ def _upload_data(profile_name, project_name, datastore_filename, contents, data_
         f.write(contents)
     dataset_address = datastore.upload_data(datastore_filename=datastore_filename, filename=temppath, card=data_card)
     return dataset_address
+
+
+def _download_data(profile_name: str,
+                   project_name: str,
+                   address: str,
+                   backend: str = "local",
+                   datastore: Optional[DataStore] = None) -> Tuple[str, bool, str]:
+    """
+    A wrapper method to get file path and metadata for downloading data from DataStore.
+
+    Parameters
+    ----------
+    profile_name: str
+        Name of the Profile where the job is run
+    project_name: str
+        Name of the Project where the job is run
+    address: str
+        The deepchem address of the object to download
+    backend: str
+        Backend to be used (Default: 'local')
+    datastore: Optional[DataStore]
+        The datastore to use (Default: None)
+    Returns
+    -------
+    Tuple[str, bool, str]
+        A tuple containing:
+        - file_path: Full path to the object in the datastore
+        - is_directory: Whether the object is a directory
+        - object_name: Name of the object
+
+    Raises
+    ------
+    FileNotFoundError
+        If the object doesn't exist in the datastore
+    """
+    if datastore is None:
+        datastore = _init_datastore(profile_name=profile_name, project_name=project_name, backend=backend)
+
+    try:
+        info = datastore.get_info(address)
+    except FileNotFoundError as e:
+        raise e
+
+    return info["file_path"], info["is_directory"], info["object_name"]
 
 
 def parse_boolean_none_values_from_kwargs(kwargs: Dict) -> Dict:
