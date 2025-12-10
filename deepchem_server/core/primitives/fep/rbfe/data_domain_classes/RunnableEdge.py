@@ -1,6 +1,7 @@
-from openfe import SmallMoleculeComponent  # type: ignore
-from gufe.protocols.protocoldag import ProtocolDAG  # type: ignore
 from typing import Type
+
+from gufe.protocols.protocoldag import ProtocolDAG  # type: ignore
+from openfe import SmallMoleculeComponent  # type: ignore
 
 
 class RunnableEdge:

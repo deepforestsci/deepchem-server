@@ -9,7 +9,7 @@ from PIL.PngImagePlugin import PngImageFile
 import pytest
 
 from deepchem_server.core import cards
-from deepchem_server.core.cards import DataCard, ModelCard
+from deepchem_server.core.common.cards import DataCard, ModelCard
 from deepchem_server.core.datastore import DiskDataStore
 
 

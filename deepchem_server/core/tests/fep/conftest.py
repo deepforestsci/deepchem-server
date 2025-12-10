@@ -1,7 +1,9 @@
-from deepchem_server.core.cards import DataCard
-from deepchem_server.core import config
 from pathlib import Path
+
 import pytest  # type: ignore
+
+from deepchem_server.core import config
+from deepchem_server.core.common.cards import DataCard
 
 
 ASSETS_DIR = Path(__file__).resolve().parent.parent / "assets"

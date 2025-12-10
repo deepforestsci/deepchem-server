@@ -2,7 +2,7 @@ import os
 import tempfile
 import unittest
 
-from deepchem_server.core.cards import DataCard, ModelCard
+from deepchem_server.core.common.cards import DataCard, ModelCard
 
 
 class TestCards(unittest.TestCase):

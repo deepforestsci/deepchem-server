@@ -5,10 +5,10 @@ from typing import Dict, Optional
 
 from deepchem.models.torch_models import TorchModel
 
-from deepchem_server.core import config, model_mappings
-from deepchem_server.core.address import DeepchemAddress
-from deepchem_server.core.cards import ModelCard
-from deepchem_server.core.progress_logger import log_progress
+from deepchem_server.core.common import config, model_mappings
+from deepchem_server.core.common.address import DeepchemAddress
+from deepchem_server.core.common.cards import ModelCard
+from deepchem_server.core.common.progress_logger import log_progress
 
 
 logger = logging.getLogger(__name__)

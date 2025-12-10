@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 from deepchem_server.core import cards, config, featurize, splitter
-from deepchem_server.core.cards import DataCard
+from deepchem_server.core.common.cards import DataCard
 
 
 def test_k_fold_split_deepchem_dataset(disk_datastore):

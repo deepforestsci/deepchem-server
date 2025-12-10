@@ -1,8 +1,9 @@
-from deepchem_server.core.fep.rbfe.utils.rbfe_utils import RBFESettingsUtils
-from openff.units import unit  # type: ignore
-import pytest  # type: ignore
 from openfe import SolventComponent  # type: ignore
 from openfe.protocols.openmm_rfe import RelativeHybridTopologyProtocol  # type: ignore
+from openff.units import unit  # type: ignore
+import pytest  # type: ignore
+
+from deepchem_server.core.primitives.fep.rbfe.utils.rbfe_utils import RBFESettingsUtils
 
 
 def test_rbfe_utils_loads_NoneType_input():

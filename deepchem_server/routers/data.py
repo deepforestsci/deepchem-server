@@ -3,7 +3,7 @@ from typing import Dict
 
 from fastapi import APIRouter, File, Form, UploadFile
 
-from deepchem_server.core.cards import DataCard
+from deepchem_server.core.common.cards import DataCard
 from deepchem_server.utils import _upload_data
 
 

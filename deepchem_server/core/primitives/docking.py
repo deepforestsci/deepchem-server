@@ -1,10 +1,13 @@
-import os
 import json
+import os
 import tempfile
-from deepchem_server.core import config
-from deepchem_server.core.cards import DataCard
-from deepchem_server.core.progress_logger import log_progress
+
 from deepchem.dock.pose_generation import VinaPoseGenerator
+
+from deepchem_server.core.common import config
+from deepchem_server.core.common.cards import DataCard
+
+from deepchem_server.core.common.progress_logger import log_progress  # isort:skip
 
 # Import RDKit at module level
 try:

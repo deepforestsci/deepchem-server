@@ -1,9 +1,11 @@
-import pint  # type: ignore
 import json
 from typing import Type
+
 from openfe import SolventComponent  # type: ignore
 from openfe.protocols.openmm_rfe.equil_rfe_settings import RelativeHybridTopologyProtocolSettings  # type: ignore
-from deepchem_server.core.fep.rbfe.system_setup import get_default_RBFE_simulation_settings
+import pint  # type: ignore
+
+from deepchem_server.core.primitives.fep.rbfe.system_setup import get_default_RBFE_simulation_settings
 
 
 PINT_QUANTITY_TYPE = type(pint.Quantity("1.0 kcal/mol"))  # type: ignore

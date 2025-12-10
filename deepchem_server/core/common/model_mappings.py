@@ -7,7 +7,7 @@ import deepchem as dc
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.linear_model import LinearRegression
 
-from deepchem_server.core.model_config_mapper import DeepChemModelConfigMapper, ModelAddressWrapper
+from deepchem_server.core.common.model_config_mapper import DeepChemModelConfigMapper, ModelAddressWrapper
 
 
 logger = logging.getLogger(__name__)

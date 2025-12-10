@@ -5,9 +5,9 @@ import deepchem as dc
 import numpy as np
 import pandas as pd
 
-from deepchem_server.core import config
-from deepchem_server.core.address import DeepchemAddress
-from deepchem_server.core.cards import DataCard
+from deepchem_server.core.common import config
+from deepchem_server.core.common.address import DeepchemAddress
+from deepchem_server.core.common.cards import DataCard
 
 
 splitter_map = {

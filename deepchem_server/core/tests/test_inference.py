@@ -1,10 +1,10 @@
 import os
 
-from deepchem_server.core import config
-from deepchem_server.core.cards import DataCard
-from deepchem_server.core.feat import featurize
-from deepchem_server.core.inference import infer
-from deepchem_server.core.train import train
+from deepchem_server.core.common import config
+from deepchem_server.core.common.cards import DataCard
+from deepchem_server.core.primitives.feat import featurize
+from deepchem_server.core.primitives.inference import infer
+from deepchem_server.core.primitives.train import train
 
 
 def test_inference(disk_datastore):

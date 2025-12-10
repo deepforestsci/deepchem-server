@@ -1,6 +1,7 @@
 import logging
-import pint
 from typing import Union
+
+import pint
 
 
 class ExperimentalMeasurement:

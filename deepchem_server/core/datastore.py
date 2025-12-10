@@ -14,9 +14,10 @@ import pandas as pd
 from PIL import Image
 from PIL.PngImagePlugin import PngImageFile
 
-from deepchem_server.core import model_mappings
-from deepchem_server.core.address import DeepchemAddress
-from deepchem_server.core.cards import Card, DataCard, ModelCard  # yapf: disable
+from deepchem_server.core.common import model_mappings
+from deepchem_server.core.common.address import DeepchemAddress
+from deepchem_server.core.common.cards import Card, DataCard, ModelCard  # yapf: disable
+
 
 logger = logging.getLogger(__name__)
 
@@ -55,8 +56,6 @@ def _get_csv_or_dataframe_shape(*,
     ValueError
         If neither filename nor dataframe is provided.
     """
-    if filename is None and dataframe is None:
-        raise ValueError("Either one of filepath or dataframe should be set")
     if filename is not None:
         numrows = sum(1 for line in open(filename)) - 1
         with open(filename, 'r') as f:
@@ -66,6 +65,8 @@ def _get_csv_or_dataframe_shape(*,
     elif dataframe is not None:
         numrows = dataframe.shape[0]
         numcols = dataframe.shape[1]
+    else:
+        raise ValueError("Either one of filepath or dataframe should be set")
     return (numrows, numcols)
 
 

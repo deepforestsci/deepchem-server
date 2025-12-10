@@ -1,8 +1,6 @@
 import os
 from typing import Optional
 
-from deepchem_server.core import config
-
 
 DEEPCHEM_ADDRESS_PREFIX = 'deepchem://'
 
@@ -72,6 +70,8 @@ class DeepchemAddress(object):
         >>> DeepchemAddress.make_deepchem_address_from_filename('temp.txt')
         deepchem://test_company/test_user/working_dir/temp.txt
         """
+        # Lazy import to avoid circular dependency
+        from deepchem_server.core.common import config
         datastore = config.get_datastore()
         if datastore is None:
             raise ValueError("No datastore configured")

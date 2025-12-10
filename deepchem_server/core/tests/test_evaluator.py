@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 
 from deepchem_server.core import cards, config, evaluator
-from deepchem_server.core.train import train
+from deepchem_server.core.primitives.train import train
 
 
 def test_model_evaluator(disk_datastore):

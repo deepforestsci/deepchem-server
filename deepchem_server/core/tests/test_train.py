@@ -2,7 +2,7 @@ import deepchem as dc
 import pandas as pd
 
 from deepchem_server.core import config, featurize, train
-from deepchem_server.core.cards import DataCard
+from deepchem_server.core.common.cards import DataCard
 
 
 def test_train(disk_datastore):

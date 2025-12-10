@@ -1,7 +1,25 @@
+import multiprocessing as mp
+
 import pandas as pd
 import pytest
 
 from deepchem_server.core.datastore import DiskDataStore
+
+
+@pytest.fixture(scope="session", autouse=True)
+def set_multiprocessing_start_method():
+    """Set multiprocessing start method to 'fork' for the test session.
+
+    On macOS, the default is 'spawn' which creates fresh Python processes
+    that don't inherit global state. This causes 'Datastore not set' errors
+    in multicore featurization tests. Using 'fork' ensures child processes
+    inherit the global datastore configuration.
+    """
+    try:
+        mp.set_start_method('fork', force=True)
+    except RuntimeError:
+        # Already set, ignore
+        pass
 
 
 @pytest.fixture

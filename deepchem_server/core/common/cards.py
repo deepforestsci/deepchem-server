@@ -3,7 +3,7 @@ import datetime
 import json
 from typing import Dict, Optional
 
-from deepchem_server.core import model_mappings
+from deepchem_server.core.common import model_mappings
 
 
 class Card:

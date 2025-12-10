@@ -1,17 +1,24 @@
 from typing import Any, Dict
 
-import deepchem_server.core as core
+from deepchem_server.core.primitives.docking import generate_pose
+from deepchem_server.core.primitives.evaluator import model_evaluator
+from deepchem_server.core.primitives.feat import featurize
+from deepchem_server.core.primitives.fep.rbfe.collate_rbfe_results import collate_rbfe_results
+from deepchem_server.core.primitives.fep.rbfe.run_rbfe import run_rbfe
+from deepchem_server.core.primitives.inference import infer
+from deepchem_server.core.primitives.splitter import train_valid_test_split
+from deepchem_server.core.primitives.train import train
 
 
 program_map = {
-    "featurize": core.featurize,
-    "train": core.train,
-    "evaluate": core.model_evaluator,
-    "infer": core.infer,
-    "train_valid_test_split": core.train_valid_test_split,
-    "generate_pose": core.generate_pose,
-    "relative_binding_free_energy": core.run_rbfe,
-    "collate_rbfe_results": core.collate_rbfe_results,
+    "featurize": featurize,
+    "train": train,
+    "evaluate": model_evaluator,
+    "infer": infer,
+    "train_valid_test_split": train_valid_test_split,
+    "generate_pose": generate_pose,
+    "relative_binding_free_energy": run_rbfe,
+    "collate_rbfe_results": collate_rbfe_results,
 }
 
 

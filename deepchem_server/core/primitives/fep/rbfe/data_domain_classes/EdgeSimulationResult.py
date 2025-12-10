@@ -1,5 +1,6 @@
+from typing import Type, Union
+
 import pint  # type: ignore
-from typing import Union, Type
 
 
 class EdgeSimulationResult:

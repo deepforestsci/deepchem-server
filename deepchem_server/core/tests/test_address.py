@@ -3,7 +3,7 @@ import unittest
 
 import pytest
 
-from deepchem_server.core.address import DeepchemAddress
+from deepchem_server.core.common.address import DeepchemAddress
 
 
 class TestDeepchemAddress(unittest.TestCase):

@@ -1,25 +1,37 @@
 import os
-import tempfile
 from pathlib import Path
-from rdkit import Chem  # type: ignore
-from openff.units import unit  # type: ignore
-from openfe import lomap_scorers
-from typing import Optional, Type, Tuple
-import numpy as np  # type: ignore
-import pandas as pd  # type: ignore
-from deepchem_server.core import config
-from deepchem_server.core.fep.rbfe.data_domain_classes.EdgeSimulationResult import EdgeSimulationResult
-from gufe.protocols import execute_DAG  # type: ignore
-from openfe import (  # type: ignore
-    ChemicalSystem, ProteinComponent, SmallMoleculeComponent, SolventComponent,
-)
-from deepchem_server.core.fep.rbfe.data_domain_classes.RunnableEdge import RunnableEdge
-from openfe.protocols.openmm_rfe import RelativeHybridTopologyProtocol  # type: ignore
-from openfe.setup import LomapAtomMapper  # type: ignore
-from openfe.setup.ligand_network_planning import generate_radial_network, generate_maximal_network, generate_minimal_spanning_network  # type: ignore
-from openfe.protocols.openmm_rfe.equil_rfe_settings import RelativeHybridTopologyProtocolSettings  # type: ignore
+import tempfile
+from typing import Optional, Tuple, Type
+
 from gufe.ligandnetwork import LigandNetwork  # type: ignore
-from deepchem_server.core.fep.rbfe.utils.constants import SAMPLER, DEBUG, SUCCESS, FAILURE, LIGAND, SOLVENT, PROTEIN, NetworkPlanningConstants
+from gufe.protocols import execute_DAG  # type: ignore
+import numpy as np  # type: ignore
+from openfe import (  # type: ignore
+    ChemicalSystem, lomap_scorers, ProteinComponent, SmallMoleculeComponent, SolventComponent,
+)
+from openfe.protocols.openmm_rfe import RelativeHybridTopologyProtocol  # type: ignore
+from openfe.protocols.openmm_rfe.equil_rfe_settings import RelativeHybridTopologyProtocolSettings  # type: ignore
+from openfe.setup import LomapAtomMapper  # type: ignore
+from openfe.setup.ligand_network_planning import (  # type: ignore
+    generate_maximal_network, generate_minimal_spanning_network, generate_radial_network,
+)
+from openff.units import unit  # type: ignore
+import pandas as pd  # type: ignore
+from rdkit import Chem  # type: ignore
+
+from deepchem_server.core.common import config
+from deepchem_server.core.primitives.fep.rbfe.data_domain_classes.EdgeSimulationResult import EdgeSimulationResult
+from deepchem_server.core.primitives.fep.rbfe.data_domain_classes.RunnableEdge import RunnableEdge
+from deepchem_server.core.primitives.fep.rbfe.utils.constants import (
+    DEBUG,
+    FAILURE,
+    LIGAND,
+    NetworkPlanningConstants,
+    PROTEIN,
+    SAMPLER,
+    SOLVENT,
+    SUCCESS,
+)
 
 
 def load_ligands(sdf_datastore_address: str) -> list[SmallMoleculeComponent]:

@@ -1,15 +1,16 @@
-from deepchem_server.core import config
-from deepchem_server.core.fep.rbfe.run_rbfe import run_rbfe
-from openfe import (  # type: ignore
-    SolventComponent,)
-from openff.units import unit  # type: ignore
-import tempfile  # noqa
 import os
+import tempfile  # noqa
 from unittest.mock import patch
-import pytest
-from deepchem_server.core.fep.rbfe.data_domain_classes.EdgeSimulationResult import EdgeSimulationResult
-from deepchem_server.core.fep.rbfe.utils.constants import NetworkPlanningConstants
+
+from openfe import SolventComponent  # type: ignore
+from openff.units import unit  # type: ignore
 import pint
+import pytest
+
+from deepchem_server.core import config
+from deepchem_server.core.primitives.fep.rbfe.data_domain_classes.EdgeSimulationResult import EdgeSimulationResult
+from deepchem_server.core.primitives.fep.rbfe.run_rbfe import run_rbfe
+from deepchem_server.core.primitives.fep.rbfe.utils.constants import NetworkPlanningConstants
 
 
 mocked_result = EdgeSimulationResult(
@@ -83,7 +84,7 @@ def run_rbfe_nested_kwargs(ligands_nested_large_datastore_address, protein_neste
     }
 
 
-@patch('deepchem_server.core.fep.rbfe.run_rbfe.system_setup.dry_run_edge', return_value=mocked_result)
+@patch('deepchem_server.core.primitives.fep.rbfe.run_rbfe.system_setup.dry_run_edge', return_value=mocked_result)
 def test_run_rbfe_dry_run(patched_run_edge, caplog, protein_datastore_address, ligands_large_datastore_address,
                           run_rbfe_kwargs):
     """Tests RBFE dry run
@@ -123,7 +124,7 @@ def test_run_rbfe_dry_run(patched_run_edge, caplog, protein_datastore_address, l
     assert "Found AWS_BATCH_JOB_ARRAY_INDEX in the environment. Running edge 3" in caplog.text
 
 
-@patch('deepchem_server.core.fep.rbfe.run_rbfe.system_setup.dry_run_edge', return_value=mocked_result)
+@patch('deepchem_server.core.primitives.fep.rbfe.run_rbfe.system_setup.dry_run_edge', return_value=mocked_result)
 def test_run_rbfe_dry_run_nested_full_address(patched_run_edge, caplog, protein_nested_datastore_address,
                                               ligands_nested_large_datastore_address, run_rbfe_nested_kwargs):
     """Tests RBFE dry run
@@ -141,7 +142,7 @@ def test_run_rbfe_dry_run_nested_full_address(patched_run_edge, caplog, protein_
     assert 'deepchem://test/user/test rbfe/rbfe-benzene-phenol.json' in result_datastore_addresses
 
 
-@patch('deepchem_server.core.fep.rbfe.run_rbfe.system_setup.run_edge', return_value=mocked_result)
+@patch('deepchem_server.core.primitives.fep.rbfe.run_rbfe.system_setup.run_edge', return_value=mocked_result)
 def test_run_rbfe(patched_run_edge, caplog, protein_datastore_address, ligands_large_datastore_address,
                   run_rbfe_kwargs):
     """Tests RBFE dry run
@@ -181,7 +182,7 @@ def test_run_rbfe(patched_run_edge, caplog, protein_datastore_address, ligands_l
     assert "Found AWS_BATCH_JOB_ARRAY_INDEX in the environment. Running edge 3" in caplog.text
 
 
-@patch('deepchem_server.core.fep.rbfe.run_rbfe.system_setup.run_edge', return_value=mocked_result)
+@patch('deepchem_server.core.primitives.fep.rbfe.run_rbfe.system_setup.run_edge', return_value=mocked_result)
 def test_run_rbfe_single_dir_output_key(patched_run_edge,
                                         caplog,
                                         protein_datastore_address,
@@ -223,7 +224,7 @@ def test_run_rbfe_single_dir_output_key(patched_run_edge,
         "output_key not in address"
 
 
-@patch('deepchem_server.core.fep.rbfe.run_rbfe.system_setup.run_edge', return_value=mocked_result)
+@patch('deepchem_server.core.primitives.fep.rbfe.run_rbfe.system_setup.run_edge', return_value=mocked_result)
 def test_run_rbfe_nested_dir_output_key(patched_run_edge,
                                         caplog,
                                         protein_datastore_address,

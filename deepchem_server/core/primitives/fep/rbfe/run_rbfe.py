@@ -1,14 +1,15 @@
-import os
 import ast
 import json
 import logging
-from typing import Optional, Dict
-from deepchem_server.core import config
-from deepchem_server.core.cards import DataCard
-from deepchem_server.core.address import DeepchemAddress
-from deepchem_server.core.fep.rbfe import system_setup
-from deepchem_server.core.fep.rbfe.utils.rbfe_utils import RBFESettingsUtils, SolventComponentUtils
-from deepchem_server.core.fep.rbfe.utils.constants import NetworkPlanningConstants
+import os
+from typing import Dict, Optional
+
+from deepchem_server.core.common import config
+from deepchem_server.core.common.address import DeepchemAddress
+from deepchem_server.core.common.cards import DataCard
+from deepchem_server.core.primitives.fep.rbfe import system_setup
+from deepchem_server.core.primitives.fep.rbfe.utils.constants import NetworkPlanningConstants
+from deepchem_server.core.primitives.fep.rbfe.utils.rbfe_utils import RBFESettingsUtils, SolventComponentUtils
 
 
 def run_rbfe(ligands_sdf_address: str,
