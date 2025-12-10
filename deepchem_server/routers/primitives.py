@@ -1,14 +1,14 @@
 import ast
 import json
 import math
-from typing import Annotated, Dict, List, Optional, Union, Any
+from typing import Annotated, Any, Dict, List, Optional, Union
 
 from fastapi import APIRouter, HTTPException
 from fastapi.params import Body
 
-from deepchem_server.core import model_mappings
-from deepchem_server.core.feat import featurizer_map
-from deepchem_server.utils import parse_boolean_none_values_from_kwargs, run_job, parse_dict_with_datatypes
+from deepchem_server.core.common import model_mappings
+from deepchem_server.core.common.utils import parse_boolean_none_values_from_kwargs, parse_dict_with_datatypes, run_job
+from deepchem_server.core.primitives.feat import featurizer_map
 
 
 router = APIRouter(
@@ -452,7 +452,7 @@ async def relative_binding_free_energy(
     dict
         Dictionary containing the address of the relative binding free energy results.
     """
-    from deepchem_server.core.fep.rbfe.utils.constants import NetworkPlanningConstants
+    from deepchem_server.core.primitives.fep.rbfe.utils.constants import NetworkPlanningConstants
 
     if overridden_rbfe_settings is not None:
         try:
@@ -562,14 +562,15 @@ async def collate_rbfe_results(
         Dictionary containing the address of the collated relative binding free energy results.
     """
     import pint
-    from deepchem_server.core.fep.rbfe.collate_rbfe_results import (
-        process_input_files,
+
+    from deepchem_server.core.primitives.fep.rbfe.collate_rbfe_results import (
         get_ligands_from_results,
+        process_input_files,
     )
 
     try:
         if reference_ligand_dg_value:
-            pint.Quantity(reference_ligand_dg_value)  # type: ignore
+            pint.Quantity(reference_ligand_dg_value)
     except Exception:
         raise HTTPException(
             status_code=422,
