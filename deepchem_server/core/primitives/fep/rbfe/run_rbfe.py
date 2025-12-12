@@ -45,7 +45,7 @@ def run_rbfe(ligands_sdf_address: str,
 
     Example
     -------
-    >>> from deepchem_server.core.fep.rbfe.run_rbfe import run_rbfe
+    >>> from deepchem_server.core.primitives.fep.rbfe.run_rbfe import run_rbfe
     >>> ligands_sdf_address = "deepchem://test/test-starter/ligands.sdf"
     >>> cleaned_protein_pdb_address = "deepchem://test/test-starter/cleaned-protein.pdb"
     >>> network_type = "RADIAL"

@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Optional
 
 import httpx
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -65,7 +66,7 @@ class DatastoreClient:
     def _parse_address(self, address: str) -> tuple:
         """Parse a deepchem address into profile, project, key."""
         if address.startswith("deepchem://"):
-            address = address[len("deepchem://") :]
+            address = address[len("deepchem://"):]
         parts = address.split("/", 2)
         if len(parts) < 3:
             raise ValueError(f"Invalid address format: {address}")
@@ -182,9 +183,7 @@ class DatastoreClient:
         list of str
             List of keys
         """
-        response = self._get_client().get(
-            f"{self.base_url}/list/{profile}/{project}",
-        )
+        response = self._get_client().get(f"{self.base_url}/list/{profile}/{project}",)
         response.raise_for_status()
         return response.json()["keys"]
 
@@ -231,9 +230,7 @@ class DatastoreClient:
         """
         profile, project, key = self._parse_address(address)
 
-        response = self._get_client().get(
-            f"{self.base_url}/exists/{profile}/{project}/{key}",
-        )
+        response = self._get_client().get(f"{self.base_url}/exists/{profile}/{project}/{key}",)
         response.raise_for_status()
         return response.json()["exists"]
 
@@ -252,9 +249,7 @@ class DatastoreClient:
         """
         profile, project, key = self._parse_address(address)
 
-        response = self._get_client().get(
-            f"{self.base_url}/size/{profile}/{project}/{key}",
-        )
+        response = self._get_client().get(f"{self.base_url}/size/{profile}/{project}/{key}",)
         response.raise_for_status()
         return response.json()["size"]
 

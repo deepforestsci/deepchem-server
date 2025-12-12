@@ -8,6 +8,7 @@ from typing import Optional
 from fastapi import HTTPException, Security, status
 from fastapi.security import APIKeyHeader
 
+
 API_KEY_ENV = "DATASTORE_API_KEY"
 API_KEY_HEADER = "X-API-Key"
 
@@ -16,7 +17,10 @@ api_key_header = APIKeyHeader(name=API_KEY_HEADER, auto_error=False)
 
 def get_api_key() -> str:
     """Get the configured API key from environment or use default."""
-    return os.getenv(API_KEY_ENV)
+    api_key = os.getenv(API_KEY_ENV)
+    if api_key is None:
+        raise ValueError(f"API key not found in environment variable {API_KEY_ENV}")
+    return api_key
 
 
 async def verify_api_key(api_key: Optional[str] = Security(api_key_header)) -> str:

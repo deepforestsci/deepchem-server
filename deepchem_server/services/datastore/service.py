@@ -12,6 +12,7 @@ import threading
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -122,9 +123,7 @@ class DatastoreService:
 
         if storage_path.is_dir():
             # For directories, return a JSON list of contents
-            contents = [
-                str(p.relative_to(storage_path)) for p in storage_path.rglob("*") if p.is_file()
-            ]
+            contents = [str(p.relative_to(storage_path)) for p in storage_path.rglob("*") if p.is_file()]
             return json.dumps(contents).encode()
 
         return storage_path.read_bytes()
@@ -189,14 +188,12 @@ class DatastoreService:
 
         keys = []
         for path in project_path.rglob("*"):
-            if path.is_file() and not path.suffix in (".cdc", ".cmc"):
+            if path.is_file() and path.suffix not in (".cdc", ".cmc"):
                 keys.append(str(path.relative_to(project_path)))
 
         return sorted(keys)
 
-    def get_card(
-        self, profile: str, project: str, key: str, kind: str = "data"
-    ) -> Optional[Dict[str, Any]]:
+    def get_card(self, profile: str, project: str, key: str, kind: str = "data") -> Optional[Dict[str, Any]]:
         """Get the metadata card for an object.
 
         Parameters

@@ -8,12 +8,13 @@ import logging
 import os
 from typing import Any, Dict, Optional
 
-from fastapi import Depends, FastAPI, File, Form, HTTPException, Query, UploadFile
+from fastapi import APIRouter, Depends, FastAPI, File, Form, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 
 from deepchem_server.services.datastore.auth import verify_api_key
 from deepchem_server.services.datastore.service import DatastoreService
+
 
 logger = logging.getLogger(__name__)
 
@@ -71,9 +72,6 @@ def create_app(base_dir: Optional[str] = None) -> FastAPI:
     return app
 
 
-# API Router
-from fastapi import APIRouter
-
 router = APIRouter(prefix="/api/v1", tags=["datastore"])
 
 
@@ -85,14 +83,14 @@ async def healthcheck() -> Dict[str, str]:
 
 @router.post("/data/{profile}/{project}/{key:path}")
 async def upload_data(
-    profile: str,
-    project: str,
-    key: str,
-    file: UploadFile = File(...),
-    card: Optional[str] = Form(None),
-    kind: str = Form("data"),
-    _: str = Depends(verify_api_key),
-    service: DatastoreService = Depends(get_datastore_service),
+        profile: str,
+        project: str,
+        key: str,
+        file: UploadFile = File(...),
+        card: Optional[str] = Form(None),
+        kind: str = Form("data"),
+        _: str = Depends(verify_api_key),
+        service: DatastoreService = Depends(get_datastore_service),
 ) -> Dict[str, Any]:
     """Upload data to the datastore.
 
@@ -145,12 +143,12 @@ async def upload_data(
 
 @router.get("/data/{profile}/{project}/{key:path}")
 async def get_data(
-    profile: str,
-    project: str,
-    key: str,
-    fetch_sample: bool = Query(False),
-    _: str = Depends(verify_api_key),
-    service: DatastoreService = Depends(get_datastore_service),
+        profile: str,
+        project: str,
+        key: str,
+        fetch_sample: bool = Query(False),
+        _: str = Depends(verify_api_key),
+        service: DatastoreService = Depends(get_datastore_service),
 ) -> Response:
     """Get data from the datastore.
 
@@ -197,12 +195,12 @@ async def get_data(
 
 @router.delete("/data/{profile}/{project}/{key:path}")
 async def delete_data(
-    profile: str,
-    project: str,
-    key: str,
-    kind: str = Query("data"),
-    _: str = Depends(verify_api_key),
-    service: DatastoreService = Depends(get_datastore_service),
+        profile: str,
+        project: str,
+        key: str,
+        kind: str = Query("data"),
+        _: str = Depends(verify_api_key),
+        service: DatastoreService = Depends(get_datastore_service),
 ) -> Dict[str, Any]:
     """Delete data from the datastore.
 
@@ -239,10 +237,10 @@ async def delete_data(
 
 @router.get("/list/{profile}/{project}")
 async def list_data(
-    profile: str,
-    project: str,
-    _: str = Depends(verify_api_key),
-    service: DatastoreService = Depends(get_datastore_service),
+        profile: str,
+        project: str,
+        _: str = Depends(verify_api_key),
+        service: DatastoreService = Depends(get_datastore_service),
 ) -> Dict[str, Any]:
     """List all data keys in a profile/project.
 
@@ -268,12 +266,12 @@ async def list_data(
 
 @router.get("/card/{profile}/{project}/{key:path}")
 async def get_card(
-    profile: str,
-    project: str,
-    key: str,
-    kind: str = Query("data"),
-    _: str = Depends(verify_api_key),
-    service: DatastoreService = Depends(get_datastore_service),
+        profile: str,
+        project: str,
+        key: str,
+        kind: str = Query("data"),
+        _: str = Depends(verify_api_key),
+        service: DatastoreService = Depends(get_datastore_service),
 ) -> Dict[str, Any]:
     """Get the metadata card for an object.
 
@@ -308,11 +306,11 @@ async def get_card(
 
 @router.get("/exists/{profile}/{project}/{key:path}")
 async def check_exists(
-    profile: str,
-    project: str,
-    key: str,
-    _: str = Depends(verify_api_key),
-    service: DatastoreService = Depends(get_datastore_service),
+        profile: str,
+        project: str,
+        key: str,
+        _: str = Depends(verify_api_key),
+        service: DatastoreService = Depends(get_datastore_service),
 ) -> Dict[str, Any]:
     """Check if an object exists.
 
@@ -336,11 +334,11 @@ async def check_exists(
 
 @router.get("/size/{profile}/{project}/{key:path}")
 async def get_size(
-    profile: str,
-    project: str,
-    key: str,
-    _: str = Depends(verify_api_key),
-    service: DatastoreService = Depends(get_datastore_service),
+        profile: str,
+        project: str,
+        key: str,
+        _: str = Depends(verify_api_key),
+        service: DatastoreService = Depends(get_datastore_service),
 ) -> Dict[str, Any]:
     """Get the size of an object.
 
