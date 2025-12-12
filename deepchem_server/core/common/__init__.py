@@ -1,25 +1,22 @@
-# Common utilities package for deepchem_server
-# Contains shared modules used across the application
-
-from deepchem_server.core.common import config
-from deepchem_server.core.common.address import DeepchemAddress
+# flake8: noqa
+from deepchem_server.core.common.config import set_datastore, get_datastore, refresh
+from deepchem_server.core.common.address import DeepchemAddress, DEEPCHEM_ADDRESS_PREFIX
 from deepchem_server.core.common.cards import Card, DataCard, ModelCard
-from deepchem_server.core.common.config import get_datastore, refresh, set_datastore
-from deepchem_server.core.common.model_config_mapper import DeepChemModelConfigMapper
-from deepchem_server.core.common.model_mappings import model_address_map
 from deepchem_server.core.common.progress_logger import log_progress
+from deepchem_server.core.common import model_mappings
+from deepchem_server.core.common.model_config_mapper import DeepChemModelConfigMapper
 
 
 __all__ = [
-    'config',
-    'DeepchemAddress',
-    'Card',
-    'DataCard',
-    'ModelCard',
-    'get_datastore',
-    'set_datastore',
-    'refresh',
-    'log_progress',
-    'model_address_map',
-    'DeepChemModelConfigMapper',
+    "set_datastore",
+    "get_datastore",
+    "refresh",
+    "DeepchemAddress",
+    "DEEPCHEM_ADDRESS_PREFIX",
+    "Card",
+    "DataCard",
+    "ModelCard",
+    "log_progress",
+    "model_mappings",
+    "DeepChemModelConfigMapper",
 ]

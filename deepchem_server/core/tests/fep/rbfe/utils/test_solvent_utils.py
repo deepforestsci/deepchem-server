@@ -1,8 +1,7 @@
-from openfe import SolventComponent  # type: ignore
+from deepchem_server.core.primitives.fep.rbfe.utils.rbfe_utils import SolventComponentUtils
 from openff.units import unit  # type: ignore
 import pytest  # type: ignore
-
-from deepchem_server.core.primitives.fep.rbfe.utils.rbfe_utils import SolventComponentUtils
+from openfe import SolventComponent  # type: ignore
 
 
 def test_solvent_utils_loads_NoneType_input():
