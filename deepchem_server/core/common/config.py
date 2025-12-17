@@ -1,6 +1,8 @@
-from typing import Union
+from __future__ import annotations
+from typing import TYPE_CHECKING, Union
 
-from deepchem_server.core.datastore import DiskDataStore
+if TYPE_CHECKING:
+    from deepchem_server.core.datastore import DiskDataStore
 
 
 _DATASTORE = None
