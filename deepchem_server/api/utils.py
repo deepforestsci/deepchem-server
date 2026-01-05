@@ -8,10 +8,10 @@ This module contains utility functions used by API routers for:
 import ast
 import json
 import logging
-import os
 from typing import Dict
 
 from deepchem_server.core.common import config
+
 
 logger = logging.getLogger(__name__)
 
@@ -44,15 +44,13 @@ def upload_data(profile_name, project_name, datastore_filename, contents, data_c
     """
     client = config.get_datastore_client()
     if client is None:
-        raise RuntimeError(
-            "DATASTORE_URL environment variable must be set. "
-            "All operations require a running datastore service."
-        )
-    
+        raise RuntimeError("DATASTORE_URL environment variable must be set. "
+                           "All operations require a running datastore service.")
+
     address = f"deepchem://{profile_name}/{project_name}/{datastore_filename}"
     data_card.address = address
     card_dict = json.loads(data_card.to_json())
-    
+
     return client.upload_data(address, contents, card_dict, kind="data")
 
 

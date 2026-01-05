@@ -13,6 +13,7 @@ from deepchem_server.core.common import config
 from deepchem_server.core.common.address import DeepchemAddress
 from deepchem_server.core.common.cards import DataCard
 
+
 featurizer_map = {
     "ecfp": dc.feat.CircularFingerprint,
     "graphconv": dc.feat.ConvMolFeaturizer,

@@ -11,6 +11,7 @@ from fastapi.responses import StreamingResponse
 from deepchem_server.api.utils import upload_data as _upload_data
 from deepchem_server.core.common.cards import DataCard
 
+
 logger = logging.getLogger("backend_logs")
 logger.setLevel(logging.INFO)
 
@@ -82,10 +83,10 @@ async def upload_data(
 
 @router.get("/download")
 async def download_data(
-        profile_name: str,
-        project_name: str,
-        address: str,
-        format: str = "auto",
+    profile_name: str,
+    project_name: str,
+    address: str,
+    format: str = "auto",
 ):
     """
     Download data from datastore
@@ -134,10 +135,10 @@ async def download_data(
     async def stream_response():
         async with httpx.AsyncClient() as client:
             async with client.stream(
-                "GET",
-                download_url,
-                params={"format": format},
-                headers={"X-API-Key": api_key},
+                    "GET",
+                    download_url,
+                    params={"format": format},
+                    headers={"X-API-Key": api_key},
             ) as response:
                 async for chunk in response.aiter_bytes():
                     yield chunk

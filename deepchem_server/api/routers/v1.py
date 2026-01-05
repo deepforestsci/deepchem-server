@@ -12,6 +12,7 @@ from deepchem_server.api.routers.data import router as data_router
 from deepchem_server.api.routers.jobs import router as jobs_router
 from deepchem_server.api.routers.primitives import router as primitives_router
 
+
 router = APIRouter(prefix="/v1")
 
 router.include_router(data_router)

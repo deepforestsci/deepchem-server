@@ -53,7 +53,7 @@ def get_datastore_client():
     """
     if not DATASTORE_URL:
         return None
-    
+
     from deepchem_server.services.datastore.client import DatastoreClient
     return DatastoreClient(url=DATASTORE_URL, api_key=DATASTORE_API_KEY)
 

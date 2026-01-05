@@ -18,7 +18,6 @@ from deepchem_server.services.jobs import run_job
 # NOTE: featurizer_map and model_mappings removed to avoid deepchem import.
 # Validation is now done in workers.
 
-
 router = APIRouter(
     prefix="/primitive",
     tags=["primitive"],
@@ -151,7 +150,6 @@ async def train(
 
     # NOTE: Model type validation moved to worker
     # Invalid model types will fail during job execution
-
 
     if isinstance(init_kwargs, str):
         init_kwargs = json.loads(init_kwargs)
@@ -460,8 +458,7 @@ async def relative_binding_free_energy(
         Dictionary containing the address of the relative binding free energy results.
     """
     from deepchem_server.core.primitives.fep.rbfe.utils.constants import (
-        NetworkPlanningConstants,
-    )
+        NetworkPlanningConstants,)
 
     if overridden_rbfe_settings is not None:
         try:

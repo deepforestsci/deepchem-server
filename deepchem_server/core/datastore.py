@@ -20,6 +20,7 @@ For tests, either:
 """
 import warnings
 
+
 warnings.warn(
     "deepchem_server.core.datastore is deprecated and will be removed. "
     "Use deepchem_server.services.datastore.client instead. "
@@ -28,10 +29,9 @@ warnings.warn(
     stacklevel=2,
 )
 
-# Re-export for minimal backward compatibility during transition
-from deepchem_server.services.datastore.client import DeepchemDatastore
+from deepchem_server.services.datastore.client import DeepchemDatastore  # noqa: E402
 
-# Alias for code that might reference the old name
+
 DiskDataStore = DeepchemDatastore
 DataStore = DeepchemDatastore
 

@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 
 from deepchem_server.services.jobs import JobQueue, JobStatus
 
+
 logger = logging.getLogger(__name__)
 
 # Singleton queue instance
