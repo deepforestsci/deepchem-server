@@ -1,3 +1,6 @@
+"""
+Primitives Router - Endpoints for ML primitives (featurize, train, evaluate, infer).
+"""
 import ast
 import json
 import math
@@ -6,9 +9,14 @@ from typing import Annotated, Any, Dict, List, Optional, Union
 from fastapi import APIRouter, HTTPException
 from fastapi.params import Body
 
-from deepchem_server.core.common import model_mappings
-from deepchem_server.core.primitives.feat import featurizer_map
-from deepchem_server.utils import parse_boolean_none_values_from_kwargs, parse_dict_with_datatypes, run_job
+from deepchem_server.api.utils import (
+    parse_boolean_none_values_from_kwargs,
+    parse_dict_with_datatypes,
+)
+from deepchem_server.services.jobs import run_job
+
+# NOTE: featurizer_map and model_mappings removed to avoid deepchem import.
+# Validation is now done in workers.
 
 
 router = APIRouter(
@@ -63,9 +71,8 @@ async def featurize(
     if not feat_kwargs:
         feat_kwargs = {'feat_kwargs': {}}
 
-    if featurizer not in featurizer_map.keys():
-        message = f"Invalid featurizer: {featurizer}. Use one of {list(featurizer_map.keys())}."
-        raise HTTPException(status_code=404, detail=message)
+    # NOTE: Featurizer validation moved to worker
+    # Invalid featurizers will fail during job execution
 
     if isinstance(feat_kwargs['feat_kwargs'], str):
         feat_kwargs['feat_kwargs'] = json.loads(feat_kwargs['feat_kwargs'])
@@ -90,11 +97,11 @@ async def featurize(
     }
 
     try:
-        result = run_job(profile_name=profile_name, project_name=project_name, program=program)
+        job_id = run_job(profile_name=profile_name, project_name=project_name, program=program)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Featurization failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Job submission failed: {str(e)}")
 
-    return {"featurized_file_address": str(result)}
+    return {"job_id": job_id, "status": "queued"}
 
 
 @router.post("/train")
@@ -142,9 +149,9 @@ async def train(
     if not train_kwargs:
         train_kwargs = {}
 
-    if model_type not in model_mappings.model_address_map.keys():
-        message = f"Invalid model type: {model_type}. Use one of {list(model_mappings.model_address_map.keys())}."
-        raise HTTPException(status_code=404, detail=message)
+    # NOTE: Model type validation moved to worker
+    # Invalid model types will fail during job execution
+
 
     if isinstance(init_kwargs, str):
         init_kwargs = json.loads(init_kwargs)
@@ -167,11 +174,11 @@ async def train(
     }
 
     try:
-        result = run_job(profile_name=profile_name, project_name=project_name, program=program)
+        job_id = run_job(profile_name=profile_name, project_name=project_name, program=program)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Training failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Job submission failed: {str(e)}")
 
-    return {"trained_model_address": str(result)}
+    return {"job_id": job_id, "status": "queued"}
 
 
 @router.post("/evaluate")
@@ -215,11 +222,11 @@ async def evaluate(
     }
 
     try:
-        result = run_job(profile_name=profile_name, project_name=project_name, program=program)
+        job_id = run_job(profile_name=profile_name, project_name=project_name, program=program)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Evaluation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Job submission failed: {str(e)}")
 
-    return {"evaluation_result_address": str(result)}
+    return {"job_id": job_id, "status": "queued"}
 
 
 @router.post("/infer")
@@ -298,11 +305,11 @@ async def infer(
     }
 
     try:
-        result = run_job(profile_name=profile_name, project_name=project_name, program=program)
+        job_id = run_job(profile_name=profile_name, project_name=project_name, program=program)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Inference failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Job submission failed: {str(e)}")
 
-    return {"inference_results_address": str(result)}
+    return {"job_id": job_id, "status": "queued"}
 
 
 @router.post("/train-valid-test-split")
@@ -345,11 +352,11 @@ async def train_valid_test_split(
     if not math.isclose(frac_valid + frac_test + frac_train, 1.0, rel_tol=1e-9, abs_tol=1e-9):
         raise HTTPException(status_code=400, detail=f"Invalid fractions: {frac_train}, {frac_test}, {frac_valid}")
     try:
-        result = run_job(profile_name=profile_name, project_name=project_name, program=program)
+        job_id = run_job(profile_name=profile_name, project_name=project_name, program=program)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Train valid test split failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Job submission failed: {str(e)}")
 
-    return {"train_valid_test_split_results_address": result}
+    return {"job_id": job_id, "status": "queued"}
 
 
 @router.post("/generate_pose")
@@ -452,7 +459,9 @@ async def relative_binding_free_energy(
     dict
         Dictionary containing the address of the relative binding free energy results.
     """
-    from deepchem_server.core.fep.rbfe.utils.constants import NetworkPlanningConstants
+    from deepchem_server.core.primitives.fep.rbfe.utils.constants import (
+        NetworkPlanningConstants,
+    )
 
     if overridden_rbfe_settings is not None:
         try:
@@ -563,7 +572,10 @@ async def collate_rbfe_results(
     """
     import pint
 
-    from deepchem_server.core.fep.rbfe.collate_rbfe_results import get_ligands_from_results, process_input_files
+    from deepchem_server.core.primitives.fep.rbfe.collate_rbfe_results import (
+        get_ligands_from_results,
+        process_input_files,
+    )
 
     try:
         if reference_ligand_dg_value:
