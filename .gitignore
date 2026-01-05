@@ -19,4 +19,5 @@ pyds/pyds.egg-info/
 
 *.settings.json
 
-.venv/.deepchem/
+.venv/
+.deepchem/
