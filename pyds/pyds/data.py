@@ -10,6 +10,7 @@ from typing import Any, Dict, Optional, Union
 from requests_toolbelt import MultipartEncoder
 
 from .base import BaseClient
+from .models import DeepchemData
 from .settings import Settings
 
 
@@ -38,7 +39,7 @@ class Data(BaseClient):
         profile_name: Optional[str] = None,
         project_name: Optional[str] = None,
         backend: str = "local",
-    ) -> Dict[str, Any]:
+    ) -> DeepchemData:
         """
         Upload data to datastore.
 
@@ -51,7 +52,7 @@ class Data(BaseClient):
             backend: Backend to be used to run the job (Default: local)
 
         Returns:
-            Response containing the dataset address
+            DeepchemData object representing the uploaded data
 
         Raises:
             ValueError: If required settings are missing or file doesn't exist
@@ -84,12 +85,13 @@ class Data(BaseClient):
 
         try:
             response = self._post(
-                "/data/uploaddata",
+                "/v1/data/uploaddata",
                 data=multipart_data,
                 headers={"Content-Type": multipart_data.content_type},
             )
             fields["file"][1].close()
-            return self._validate_response(response)
+            response_data = self._validate_response(response)
+            return DeepchemData.from_dict(response_data, self)
         except Exception as e:
             fields["file"][1].close()
             raise ValueError(f"Failed to upload data: {str(e)}") from e

@@ -4,8 +4,9 @@ Docking primitive module for DeepChem Server.
 Contains the Docking class for VINA pose generation tasks.
 """
 
-from typing import Any, Dict, Optional
+from typing import Optional
 
+from ..models import Job
 from .base import Primitive
 
 
@@ -26,7 +27,7 @@ class Docking(Primitive):
         num_modes: int = 9,
         profile_name: Optional[str] = None,
         project_name: Optional[str] = None,
-    ) -> Dict[str, Any]:
+    ) -> Job:
         """
         Run the docking primitive.
 
@@ -40,7 +41,7 @@ class Docking(Primitive):
             project_name: Project name (uses settings if not provided)
 
         Returns:
-            Response containing the docking results address as {"docking_results_address": str}
+            Job object representing the submitted docking job
 
         Raises:
             ValueError: If required settings are missing
@@ -58,5 +59,10 @@ class Docking(Primitive):
             "num_modes": num_modes,
         }
 
-        response = self._post("/primitive/generate_pose", json=data)
-        return self._validate_response(response)
+        response = self._post("/v1/primitive/generate_pose", json=data)
+        response_data = self._validate_response(response)
+        job = Job.from_dict(response_data, self)
+        job.profile = profile
+        job.project = project
+        job.program_name = "generate_pose"
+        return job

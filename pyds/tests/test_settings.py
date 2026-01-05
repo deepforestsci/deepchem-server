@@ -4,8 +4,8 @@ Unit tests for Settings class.
 
 import json
 import os
-from pathlib import Path
 import tempfile
+from pathlib import Path
 from typing import Any
 from unittest.mock import mock_open, patch
 

@@ -4,8 +4,9 @@ Evaluate primitive module for DeepChem Server.
 Contains the EvaluatePrimitive class for evaluation tasks.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
+from ..models import Job
 from .base import Primitive
 
 
@@ -25,7 +26,7 @@ class Evaluate(Primitive):
         is_metric_plots: bool = False,
         profile_name: Optional[str] = None,
         project_name: Optional[str] = None,
-    ) -> Dict[str, Any]:
+    ) -> Job:
         """
         Run the evaluation primitive.
 
@@ -39,7 +40,7 @@ class Evaluate(Primitive):
             project_name: Project name (uses settings if not provided)
 
         Returns:
-            Response containing the evaluation result address
+            Job object representing the submitted evaluation job
 
         Raises:
             ValueError: If required settings are missing
@@ -57,5 +58,10 @@ class Evaluate(Primitive):
             "is_metric_plots": is_metric_plots,
         }
 
-        response = self._post("/primitive/evaluate", json=data)
-        return self._validate_response(response)
+        response = self._post("/v1/primitive/evaluate", json=data)
+        response_data = self._validate_response(response)
+        job = Job.from_dict(response_data, self)
+        job.profile = profile
+        job.project = project
+        job.program_name = "evaluate"
+        return job

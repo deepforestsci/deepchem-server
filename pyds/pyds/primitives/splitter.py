@@ -2,8 +2,9 @@
 Train-Valid-Test Split primitive module for DeepChem Server.
 """
 
-from typing import Dict, Optional
+from typing import Optional
 
+from ..models import Job
 from .base import Primitive
 
 
@@ -22,7 +23,7 @@ class TVTSplit(Primitive):
         frac_valid: float = 0.1,
         profile_name: Optional[str] = None,
         project_name: Optional[str] = None,
-    ) -> Dict:
+    ) -> Job:
         """
         Performs train-validation-test split on a dataset
 
@@ -32,10 +33,11 @@ class TVTSplit(Primitive):
             frac_train: Fraction of training dataset
             frac_test: Fraction of testing dataset
             frac_valid: Fraction of validation dataset
-            job_config_id: Job configuriton id
+            profile_name: Profile name (uses settings if not provided)
+            project_name: Project name (uses settings if not provided)
 
         Returns:
-            Response containing the split result address
+            Job object representing the submitted split job
 
         Raises:
             ValueError: If required settings are missing
@@ -51,6 +53,11 @@ class TVTSplit(Primitive):
             'frac_valid': frac_valid,
             'frac_test': frac_test,
         }
-        api_path = "/primitive/train-valid-test-split"
+        api_path = "/v1/primitive/train-valid-test-split"
         response = self._post(api_path, json=data)
-        return self._validate_response(response)
+        response_data = self._validate_response(response)
+        job = Job.from_dict(response_data, self)
+        job.profile = profile
+        job.project = project
+        job.program_name = "train_valid_test_split"
+        return job

@@ -6,6 +6,7 @@ Contains the TrainPrimitive class for training tasks.
 
 from typing import Any, Dict, Optional
 
+from ..models import Job
 from .base import Primitive
 
 
@@ -25,7 +26,7 @@ class Train(Primitive):
         train_kwargs: Optional[Dict[str, Any]] = None,
         profile_name: Optional[str] = None,
         project_name: Optional[str] = None,
-    ) -> Dict[str, Any]:
+    ) -> Job:
         """
         Run the training primitive.
 
@@ -39,7 +40,7 @@ class Train(Primitive):
             project_name: Project name (uses settings if not provided)
 
         Returns:
-            Response containing the trained model address
+            Job object representing the submitted training job
 
         Raises:
             ValueError: If required settings are missing
@@ -62,5 +63,10 @@ class Train(Primitive):
             "train_kwargs": train_kwargs,
         }
 
-        response = self._post("/primitive/train", json=data)
-        return self._validate_response(response)
+        response = self._post("/v1/primitive/train", json=data)
+        response_data = self._validate_response(response)
+        job = Job.from_dict(response_data, self)
+        job.profile = profile
+        job.project = project
+        job.program_name = "train"
+        return job
