@@ -3,8 +3,9 @@ import os
 
 import pytest
 
-from deepchem_server.core import config, generate_pose
+from deepchem_server.core import config
 from deepchem_server.core.common.cards import DataCard
+from deepchem_server.core.primitives.docking import generate_pose
 
 
 def test_generate_pose_basic_functionality(disk_datastore):

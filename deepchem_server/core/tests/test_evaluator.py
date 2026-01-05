@@ -2,7 +2,8 @@ import deepchem as dc
 import numpy as np
 import pandas as pd
 
-from deepchem_server.core import cards, config, evaluator
+from deepchem_server.core import cards, config
+from deepchem_server.core.primitives import evaluator
 from deepchem_server.core.primitives.train import train
 
 

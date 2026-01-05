@@ -13,7 +13,6 @@ from deepchem_server.core.common import config
 from deepchem_server.core.common.address import DeepchemAddress
 from deepchem_server.core.common.cards import DataCard
 
-
 featurizer_map = {
     "ecfp": dc.feat.CircularFingerprint,
     "graphconv": dc.feat.ConvMolFeaturizer,
@@ -312,7 +311,7 @@ def featurize(
     # TODO: Handle parsing of dictionary via parser
     featurizer = featurizer.lower()
     if featurizer not in featurizer_map:
-        raise ValueError(f"Featurizer not recognized.\nAvailable featurizers: {featurizer_map}")
+        raise ValueError(f"Featurizer not recognized.\nAvailable featurizers: {list(featurizer_map.keys())}")
     if dataset_address.endswith('csv'):
         if dataset_column == 'None' or dataset_column is None:
             raise ValueError("Please specify input column.")

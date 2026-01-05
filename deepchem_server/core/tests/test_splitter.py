@@ -4,8 +4,10 @@ import deepchem as dc
 import numpy as np
 import pandas as pd
 
-from deepchem_server.core import cards, config, featurize, splitter
+from deepchem_server.core import cards, config
 from deepchem_server.core.common.cards import DataCard
+from deepchem_server.core.primitives import splitter
+from deepchem_server.core.primitives.feat import featurize
 
 
 def test_k_fold_split_deepchem_dataset(disk_datastore):

@@ -4,8 +4,9 @@ import shutil
 import deepchem as dc
 import pandas as pd
 
-from deepchem_server.core import config, featurize
+from deepchem_server.core import config
 from deepchem_server.core.common.cards import DataCard
+from deepchem_server.core.primitives.feat import featurize
 
 
 def test_featurize(disk_datastore):

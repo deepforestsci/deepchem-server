@@ -1,4 +1,17 @@
 # flake8: noqa
+"""
+DeepChem Server Core Package.
+
+This package contains:
+- common: Shared utilities (cards, address, config) - NO ML DEPENDENCIES
+- primitives: ML operations (train, evaluate, featurize) - REQUIRES DEEPCHEM
+
+Note: primitives are NOT imported here to avoid loading deepchem at import time.
+Import them explicitly where needed:
+    from deepchem_server.core.primitives import train, evaluate, etc.
+"""
+
+# Common utilities - safe to import, no ML deps
 from deepchem_server.core.common import config
 from deepchem_server.core.common import cards
 from deepchem_server.core.common.cards import Card, DataCard, ModelCard
@@ -7,13 +20,7 @@ from deepchem_server.core.common.config import set_datastore, get_datastore
 from deepchem_server.core.common.progress_logger import log_progress
 from deepchem_server.core.common.model_mappings import model_address_map
 
-from deepchem_server.core.primitives import evaluator
-from deepchem_server.core.primitives import splitter
-from deepchem_server.core.primitives.evaluator import model_evaluator
-from deepchem_server.core.primitives.feat import featurize, featurizer_map
-from deepchem_server.core.primitives.inference import infer
-from deepchem_server.core.primitives.splitter import train_valid_test_split
-from deepchem_server.core.primitives.train import train
-from deepchem_server.core.primitives.docking import generate_pose
-from deepchem_server.core.primitives.fep.rbfe.run_rbfe import run_rbfe
-from deepchem_server.core.primitives.fep.rbfe.collate_rbfe_results import collate_rbfe_results
+# NOTE: primitives are NOT imported here to keep gateway lightweight
+# Workers should import primitives explicitly:
+#   from deepchem_server.core.primitives import evaluator, splitter, train, etc.
+
