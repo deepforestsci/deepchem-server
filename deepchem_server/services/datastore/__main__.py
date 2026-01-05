@@ -59,7 +59,7 @@ def main() -> None:
     logger.info(f"  Base Dir: {args.base_dir}")
 
     uvicorn.run(
-        "deepchem_server.services.datastore.api:app",
+        "deepchem_server.services.datastore.server.api:app",
         host=args.host,
         port=args.port,
         reload=args.reload,

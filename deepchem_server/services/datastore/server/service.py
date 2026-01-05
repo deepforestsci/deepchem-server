@@ -167,7 +167,7 @@ class DatastoreService:
             return True
 
     def list_data(self, profile: str, project: str) -> List[str]:
-        """List all data keys in a profile/project.
+        """List all data keys in a profile/project (excludes card files).
 
         Parameters
         ----------
@@ -179,7 +179,7 @@ class DatastoreService:
         Returns
         -------
         list of str
-            List of keys in the project
+            List of keys in the project (without .cdc/.cmc files)
         """
         project_path = self.base_dir / profile / project
 
@@ -192,6 +192,36 @@ class DatastoreService:
                 keys.append(str(path.relative_to(project_path)))
 
         return sorted(keys)
+
+    def list_all_objects(self, profile: str, project: str) -> List[str]:
+        """List all objects including card files (.cdc, .cmc).
+
+        This is used by DeepchemDatastore._get_datastore_objects() for
+        checkpoint scanning during multicore featurization restart.
+
+        Parameters
+        ----------
+        profile : str
+            Profile name
+        project : str
+            Project name
+
+        Returns
+        -------
+        list of str
+            List of all file paths relative to project (including cards)
+        """
+        project_path = self.base_dir / profile / project
+
+        if not project_path.exists():
+            return []
+
+        objects = []
+        for path in project_path.rglob("*"):
+            if path.is_file():
+                objects.append(str(path.relative_to(project_path)))
+
+        return sorted(objects)
 
     def get_card(self, profile: str, project: str, key: str, kind: str = "data") -> Optional[Dict[str, Any]]:
         """Get the metadata card for an object.
@@ -270,3 +300,126 @@ class DatastoreService:
             if path.is_file():
                 total_size += path.stat().st_size
         return total_size
+
+    def upload_directory_files(
+        self,
+        profile: str,
+        project: str,
+        key: str,
+        files: List[tuple],
+        card: Optional[Dict[str, Any]] = None,
+        kind: str = "data",
+    ) -> str:
+        """Upload multiple files as a directory structure.
+
+        Parameters
+        ----------
+        profile : str
+            Profile name
+        project : str
+            Project name
+        key : str
+            Directory key/name (base path for all files)
+        files : list of tuples
+            List of (relative_path, data_bytes) tuples
+        card : dict, optional
+            Metadata card for the directory
+        kind : str
+            Type of object ('data' or 'model')
+
+        Returns
+        -------
+        str
+            DeepchemAddress of the uploaded directory
+        """
+        with self._lock:
+            base_path = self._get_storage_path(profile, project, key)
+            base_path.mkdir(parents=True, exist_ok=True)
+
+            for relative_path, data in files:
+                file_path = base_path / relative_path
+                file_path.parent.mkdir(parents=True, exist_ok=True)
+                file_path.write_bytes(data)
+                logger.debug(f"Uploaded file: {file_path}")
+
+            logger.info(f"Uploaded directory with {len(files)} files to: {base_path}")
+
+            # Write card if provided
+            if card is not None:
+                card_path = self._get_card_path(profile, project, key, kind)
+                card_path.write_text(json.dumps(card, indent=2))
+                logger.debug(f"Wrote card to: {card_path}")
+
+            return f"deepchem://{profile}/{project}/{key}"
+
+    def list_directory_contents(self, profile: str, project: str, key: str) -> List[str]:
+        """List all files in a directory.
+
+        Parameters
+        ----------
+        profile : str
+            Profile name
+        project : str
+            Project name
+        key : str
+            Directory key/name
+
+        Returns
+        -------
+        list of str
+            List of relative file paths within the directory
+        """
+        storage_path = self._get_storage_path(profile, project, key)
+
+        if not storage_path.exists():
+            raise FileNotFoundError(f"Directory not found: {storage_path}")
+
+        if not storage_path.is_dir():
+            raise ValueError(f"Path is not a directory: {storage_path}")
+
+        files = []
+        for path in storage_path.rglob("*"):
+            if path.is_file():
+                files.append(str(path.relative_to(storage_path)))
+
+        return sorted(files)
+
+    def download_directory_as_zip(self, profile: str, project: str, key: str) -> bytes:
+        """Download a directory as a ZIP archive.
+
+        Creates the ZIP on-demand for user downloads.
+
+        Parameters
+        ----------
+        profile : str
+            Profile name
+        project : str
+            Project name
+        key : str
+            Directory key/name
+
+        Returns
+        -------
+        bytes
+            ZIP archive content
+        """
+        import io
+        import zipfile
+
+        storage_path = self._get_storage_path(profile, project, key)
+
+        if not storage_path.exists():
+            raise FileNotFoundError(f"Directory not found: {storage_path}")
+
+        if not storage_path.is_dir():
+            raise ValueError(f"Path is not a directory: {storage_path}")
+
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+            for file_path in storage_path.rglob("*"):
+                if file_path.is_file():
+                    arcname = str(file_path.relative_to(storage_path))
+                    zf.write(file_path, arcname)
+
+        logger.info(f"Created ZIP archive for directory: {storage_path}")
+        return zip_buffer.getvalue()
