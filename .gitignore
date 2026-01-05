@@ -1,6 +1,6 @@
 *.pyc
 *.idea/
-*.__pycache__/
+*__pycache__/
 
 
 *.mypy_cache/
@@ -18,3 +18,5 @@ pyds/build/
 pyds/pyds.egg-info/
 
 *.settings.json
+
+.venv/.deepchem/

@@ -5,6 +5,7 @@ dependencies:
   - conda-forge::vina
   - conda-forge::openfe=1.1.0
   - conda-forge::openmm=8.0
+  - conda-forge::pymbar
   - pip
   - pip:
       - pandas
@@ -25,3 +26,7 @@ dependencies:
       - dgllife
       - torch_geometric
       - importlib_resources
+      - redis
+      - rq
+      - sqlalchemy
+      - pymysql

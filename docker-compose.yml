@@ -1,10 +1,98 @@
+# DeepChem Server - Docker Compose Configuration
+# Orchestrates all services for local development and production
+
 services:
-  deepchem-server:
-    image: deepchem-server
-    container_name: deepchem-server
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mysql:
+    image: mysql:8.0
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: deepchem_root
+      MYSQL_DATABASE: deepchem_jobs
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  datastore:
     build:
       context: .
-      dockerfile: ${DOCKERFILE:-Dockerfile}
+      dockerfile: deepchem_server/services/datastore/Dockerfile
+    ports:
+      - "8081:8081"
+    environment:
+      - DATASTORE_BASE_DIR=/data
+      - DATASTORE_API_KEY=${DATASTORE_API_KEY:-dev-api-key}
+    volumes:
+      - datastore_data:/data
+    healthcheck:
+      test: [ "CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8081/api/v1/healthcheck').raise_for_status()" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile.gateway
     ports:
       - "8000:8000"
-    restart: always
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - JOBS_DATABASE_URL=mysql+pymysql://root:deepchem_root@mysql:3306/deepchem_jobs
+      - DATASTORE_URL=http://datastore:8081
+      - DATASTORE_API_KEY=${DATASTORE_API_KEY:-dev-api-key}
+    depends_on:
+      datastore:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    command: uvicorn deepchem_server.api.main:app --host 0.0.0.0 --port 8000
+
+  worker:
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - JOBS_DATABASE_URL=mysql+pymysql://root:deepchem_root@mysql:3306/deepchem_jobs
+      - DATASTORE_URL=http://datastore:8081
+      - DATASTORE_API_KEY=${DATASTORE_API_KEY:-dev-api-key}
+      - DATADIR=/data
+    volumes:
+      - worker_data:/data
+    depends_on:
+      datastore:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    command: python -m deepchem_server.services.jobs.run_worker --recover
+    deploy:
+      replicas: 4
+
+volumes:
+  redis_data:
+  mysql_data:
+  datastore_data:
+  worker_data:

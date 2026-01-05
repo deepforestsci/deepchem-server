@@ -1,0 +1,45 @@
+# Lightweight Gateway Dockerfile
+# Uses python:slim for minimal image size (~200MB vs ~8GB worker)
+# Installs only base dependencies (no ML stack)
+
+FROM python:3.11-slim
+
+ARG DEEPCHEM_SERVER_HOME=/opt/deepchem_server_app
+
+ENV DEEPCHEM_SERVER_HOME=${DEEPCHEM_SERVER_HOME} \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONHASHSEED=random \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    DATADIR=${DEEPCHEM_SERVER_HOME}/data
+
+# Install system dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    curl \
+    ca-certificates && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+WORKDIR ${DEEPCHEM_SERVER_HOME}
+
+# Copy requirements first for better layer caching
+COPY requirements-gateway.txt ${DEEPCHEM_SERVER_HOME}/
+
+# Install Python dependencies (minimal, no ML)
+RUN pip install --no-cache-dir -r requirements-gateway.txt
+
+# Create data directory
+RUN mkdir -p ${DATADIR} && \
+    chmod 755 ${DATADIR}
+
+# Copy application code
+COPY deepchem_server/ ${DEEPCHEM_SERVER_HOME}/deepchem_server/
+
+EXPOSE 8000
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://127.0.0.1:8000/healthcheck || exit 1
+
+CMD ["uvicorn", "deepchem_server.api.main:app", "--host", "0.0.0.0", "--port", "8000"]

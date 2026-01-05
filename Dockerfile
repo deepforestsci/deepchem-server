@@ -31,8 +31,10 @@ RUN micromamba install -y -n base -f /tmp/env.yaml && \
     micromamba clean --all --yes && \
     rm -f /tmp/env.yaml
 
-RUN mkdir -p ${DATADIR} && \
-    chmod 755 ${DATADIR}
+USER root
+RUN mkdir -p /data && \
+    chmod 777 /data
+USER $MAMBA_USER
 
 COPY --chown=$MAMBA_USER:$MAMBA_USER deepchem_server/ ${DEEPCHEM_SERVER_HOME}/deepchem_server/
 
@@ -42,5 +44,3 @@ EXPOSE 8000
 
 HEALTHCHECK --interval=120s --timeout=10s --start-period=180s --retries=3 \
     CMD curl -f http://127.0.0.1:8000/healthcheck || exit 1
-
-CMD ["uvicorn", "deepchem_server.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
