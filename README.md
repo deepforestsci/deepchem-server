@@ -80,7 +80,7 @@ $ source venv/bin/activate  # Windows: venv\Scripts\activate
 $ pip install -r deepchem_server/requirements.txt
 
 # 4. Run the server (development mode)
-$ bash start-dev-server.sh  # or uvicorn deepchem_server.main:app --reload
+$ bash start-dev-server.sh  # or uvicorn deepchem_server.api.main:app --reload
 ```
 
 ---
