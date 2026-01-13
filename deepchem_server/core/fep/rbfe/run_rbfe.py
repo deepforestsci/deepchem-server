@@ -2,7 +2,7 @@ import os
 import ast
 import json
 import logging
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 from deepchem_server.core import config
 from deepchem_server.core.cards import DataCard
 from deepchem_server.core.address import DeepchemAddress
@@ -19,7 +19,7 @@ def run_rbfe(ligands_sdf_address: str,
              overridden_rbfe_settings: str,
              dry_run: bool = False,
              radial_network_central_ligand: Optional[str] = None,
-             output_key: Optional[str] = None) -> list[str]:
+             output_key: Optional[str] = None) -> List[str]:
     """A FEP utility to run RBFE calculations for a protein-solvent-ligand system, for a list of ligands.
 
     If run as an Array Job, Each edge in the perturbation network is run as an independent job within the same AWS Batch array job.

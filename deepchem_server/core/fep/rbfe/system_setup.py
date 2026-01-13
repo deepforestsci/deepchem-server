@@ -1,28 +1,28 @@
 import os
 import tempfile
 from pathlib import Path
-from rdkit import Chem  # type: ignore
-from openff.units import unit  # type: ignore
+from rdkit import Chem
+from openff.units import unit
 from openfe import lomap_scorers
-from typing import Optional, Type, Tuple
-import numpy as np  # type: ignore
-import pandas as pd  # type: ignore
+from typing import Optional, Type, Tuple, List
+import numpy as np
+import pandas as pd
 from deepchem_server.core import config
 from deepchem_server.core.fep.rbfe.data_domain_classes.EdgeSimulationResult import EdgeSimulationResult
-from gufe.protocols import execute_DAG  # type: ignore
-from openfe import (  # type: ignore
+from gufe.protocols import execute_DAG
+from openfe import (
     ChemicalSystem, ProteinComponent, SmallMoleculeComponent, SolventComponent,
 )
 from deepchem_server.core.fep.rbfe.data_domain_classes.RunnableEdge import RunnableEdge
-from openfe.protocols.openmm_rfe import RelativeHybridTopologyProtocol  # type: ignore
-from openfe.setup import LomapAtomMapper  # type: ignore
-from openfe.setup.ligand_network_planning import generate_radial_network, generate_maximal_network, generate_minimal_spanning_network  # type: ignore
-from openfe.protocols.openmm_rfe.equil_rfe_settings import RelativeHybridTopologyProtocolSettings  # type: ignore
-from gufe.ligandnetwork import LigandNetwork  # type: ignore
+from openfe.protocols.openmm_rfe import RelativeHybridTopologyProtocol
+from openfe.setup import LomapAtomMapper
+from openfe.setup.ligand_network_planning import generate_radial_network, generate_maximal_network, generate_minimal_spanning_network
+from openfe.protocols.openmm_rfe.equil_rfe_settings import RelativeHybridTopologyProtocolSettings
+from gufe.ligandnetwork import LigandNetwork
 from deepchem_server.core.fep.rbfe.utils.constants import SAMPLER, DEBUG, SUCCESS, FAILURE, LIGAND, SOLVENT, PROTEIN, NetworkPlanningConstants
 
 
-def load_ligands(sdf_datastore_address: str) -> list[SmallMoleculeComponent]:
+def load_ligands(sdf_datastore_address: str) -> List[SmallMoleculeComponent]:
     """Loads a .sdf file from the datastore.
 
     This function loads a ligands.sdf file from the datastore and returns a corresponding list of
@@ -58,14 +58,14 @@ def load_ligands(sdf_datastore_address: str) -> list[SmallMoleculeComponent]:
     return ligand_mols
 
 
-def calculate_lomap_similarity(ligand_mols: list[SmallMoleculeComponent]) -> Type[np.ndarray]:
+def calculate_lomap_similarity(ligand_mols: List[SmallMoleculeComponent]) -> Type[np.ndarray]:
     """Calculates the LOMAP similarity among all possible pairs of ligands in a list of ligands.
 
     This can be used to determine the reference(central) ligand for radial ligand network generation.
 
     Parameters
     ----------
-    ligand_mols : list[SmallMoleculeComponent]
+    ligand_mols : List[SmallMoleculeComponent]
         List of OpenFE SmallMoleculeComponent ligands.
 
     Returns
@@ -95,7 +95,7 @@ def calculate_lomap_similarity(ligand_mols: list[SmallMoleculeComponent]) -> Typ
     return similarity_array  # type: ignore
 
 
-def get_reference_ligand(ligand_mols: list[SmallMoleculeComponent]) -> int:
+def get_reference_ligand(ligand_mols: List[SmallMoleculeComponent]) -> int:
     """Returns the index of the Ligand in ligand_mols, most suitable to
     be the reference ligand for the radial network.
 
@@ -107,7 +107,7 @@ def get_reference_ligand(ligand_mols: list[SmallMoleculeComponent]) -> int:
     similarity_array : Type[numpy.ndarray]
         2D array of LOMAP similarity scores where a score of 1 indicates identity and
         0 indicates no alchemical similarity.
-    ligand_mols : list[SmallMoleculeComponent]
+    ligand_mols : List[SmallMoleculeComponent]
         List of OpenFE SmallMoleculeComponent ligands for simulation.
 
     Returns
@@ -132,7 +132,7 @@ def get_reference_ligand(ligand_mols: list[SmallMoleculeComponent]) -> int:
     return ref_idx
 
 
-def get_perturbation_network(ligand_mols: list[SmallMoleculeComponent],
+def get_perturbation_network(ligand_mols: List[SmallMoleculeComponent],
                              network_type: NetworkPlanningConstants.PerturbationNetworkType,
                              scorer: Optional[NetworkPlanningConstants.ScorerType] = None,
                              **kwargs) -> Type[LigandNetwork]:
@@ -140,7 +140,7 @@ def get_perturbation_network(ligand_mols: list[SmallMoleculeComponent],
 
     Parameters
     ----------
-    ligand_mols : list[SmallMoleculeComponent]
+    ligand_mols : List[SmallMoleculeComponent]
         List of OpenFE SmallMoleculeComponent ligands.
     network_type : PerturbationNetworkType
         The type of network to be generated.
@@ -197,7 +197,7 @@ def get_perturbation_network(ligand_mols: list[SmallMoleculeComponent],
     return network
 
 
-def get_reference_ligand_index(ligand_mols: list[SmallMoleculeComponent],
+def get_reference_ligand_index(ligand_mols: List[SmallMoleculeComponent],
                                reference_ligand: Optional[str] = None) -> int:
     """Returns the index of the reference Ligand in ligand_mols.
 
@@ -208,7 +208,7 @@ def get_reference_ligand_index(ligand_mols: list[SmallMoleculeComponent],
 
     Parameters
     ----------
-    ligand_mols : list[SmallMoleculeComponent]
+    ligand_mols : List[SmallMoleculeComponent]
         The list of OpenFE SmallMoleculeComponent ligands.
     reference_ligand : Optional[str], optional
         The name of the reference ligand, by default None
@@ -294,7 +294,7 @@ def setup_transformations(
     solvent: Type[SolventComponent],
     protein: Type[ProteinComponent],
     rbfe_settings: Type[RelativeHybridTopologyProtocolSettings],
-) -> Tuple[list[RunnableEdge], Type[RelativeHybridTopologyProtocol]]:
+) -> Tuple[List[RunnableEdge], Type[RelativeHybridTopologyProtocol]]:
     """Constructs the chemical systems and other components necessary to run the simulation for the given network.
 
     Parameters
@@ -312,7 +312,7 @@ def setup_transformations(
 
     Returns
     -------
-    runnable_edges : list[RunnableEdge]
+    runnable_edges : List[RunnableEdge]
         A list of RunnableEdge objects containing
             - componentA
             - componentB
