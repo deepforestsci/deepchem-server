@@ -7,6 +7,7 @@ follows the DeepchemAddress pattern (deepchem://profile/project/key).
 
 import json
 import logging
+import os
 import shutil
 import threading
 from pathlib import Path
@@ -92,6 +93,91 @@ class DatastoreService:
 
             return f"deepchem://{profile}/{project}/{key}"
 
+    def create_directory(self, profile: str, project: str, dirname: str) -> str:
+        """Create a directory in the datastore."""
+        with self._lock:
+            directory_path = self._get_storage_path(profile, project, dirname)
+            directory_path.mkdir(parents=True, exist_ok=True)
+            logger.info(f"Created directory: {directory_path}")
+            return f"deepchem://{profile}/{project}/{dirname}"
+
+    def move_object(self, profile: str, project: str, key: str, destination: str) -> str:
+        """Move an object to a new location.
+
+        Parameters
+        ----------
+        profile : str
+            Profile name
+        project : str
+            Project name
+        key : str
+            File key/name
+        destination : str
+            New location address
+        """
+        with self._lock:
+            storage_path = self._get_storage_path(profile, project, key)
+
+            if not self.exists(profile, project, key):
+                raise FileNotFoundError(f"Object not found: {storage_path}")
+
+            prefix = "deepchem://"
+            destination_profile = destination.replace(prefix, "").split("/")[0]
+            destination_project = destination.replace(prefix, "").split("/")[1]
+            destination_key = destination.replace(
+                prefix + destination_profile + "/" + destination_project + "/", ""
+            )
+
+            destination_path = self._get_storage_path(
+                destination_profile, destination_project, destination_key
+            )
+
+            card = self.get_card(profile, project, key)
+            if card:
+                kind = "data" if "data_type" in card else "model" if "model_type" in card else "dir"
+            else:
+                kind = "dir"
+
+            if (kind == "data" and card["file_type"] == "dir") or kind == "dir":
+                self.create_directory(destination_profile, destination_project, destination_key)
+                for file in self.list_directory_contents(profile, project, key):
+                    self.move_object(
+                        f"deepchem://{profile}/{project}/{file}",
+                        f"deepchem://{destination_profile}/{destination_project}/{file}",
+                    )
+            elif kind == "model":
+                # move all the model files to the destination
+                base_path = self._get_storage_path(profile, project, key)
+                os.makedirs(destination_path, exist_ok=True)
+                for file in os.listdir(base_path):
+                    file_path = base_path / file
+                    if file_path.is_file():
+                        self.move_object(
+                            f"deepchem://{profile}/{project}/{file_path}",
+                            f"deepchem://{destination_profile}/{destination_project}/{file_path}",
+                        )
+            else:
+                self.upload_data(
+                    destination_profile,
+                    destination_project,
+                    destination_key,
+                    self.get_data(profile, project, key),
+                )
+
+            # move the card
+            if card:
+                card_path = self._get_card_path(profile, project, key, kind)
+                card_path.rename(
+                    self._get_card_path(
+                        destination_profile, destination_project, destination_key, kind
+                    )
+                )
+
+            self.delete_object(profile, project, key, kind)
+
+            logger.info(f"Moved object from {storage_path} to {destination_path}")
+            return destination
+
     def get_data(self, profile: str, project: str, key: str, fetch_sample: bool = False) -> bytes:
         """Get data from the datastore.
 
@@ -166,7 +252,7 @@ class DatastoreService:
             logger.info(f"Deleted object: {storage_path}")
             return True
 
-    def list_data(self, profile: str, project: str) -> List[str]:
+    def list_data(self, profile: str, project: str, include_card_files: bool = False) -> List[str]:
         """List all data keys in a profile/project (excludes card files).
 
         Parameters
@@ -175,7 +261,8 @@ class DatastoreService:
             Profile name
         project : str
             Project name
-
+        include_card_files : bool
+            Whether to include card files (.cdc, .cmc)
         Returns
         -------
         list of str
@@ -188,12 +275,14 @@ class DatastoreService:
 
         keys = []
         for path in project_path.rglob("*"):
-            if path.is_file() and path.suffix not in (".cdc", ".cmc"):
+            if path.is_file() and (include_card_files or path.suffix not in (".cdc", ".cmc")):
                 keys.append(str(path.relative_to(project_path)))
+            elif path.is_dir():
+                keys.append(str(path.relative_to(project_path)) + "/")
 
         return sorted(keys)
 
-    def list_all_objects(self, profile: str, project: str) -> List[str]:
+    def list_all_objects(self, profile: str, project: str, prefix: str = "") -> List[str]:
         """List all objects including card files (.cdc, .cmc).
 
         This is used by DeepchemDatastore._get_datastore_objects() for
@@ -218,9 +307,10 @@ class DatastoreService:
 
         objects = []
         for path in project_path.rglob("*"):
-            if path.is_file():
+            if path.is_file() and path.name.startswith(prefix):
                 objects.append(str(path.relative_to(project_path)))
-
+            elif path.is_dir():
+                objects.append(str(path.relative_to(project_path)) + "/")
         return sorted(objects)
 
     def get_card(self, profile: str, project: str, key: str, kind: str = "data") -> Optional[Dict[str, Any]]:

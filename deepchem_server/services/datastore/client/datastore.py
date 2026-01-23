@@ -16,6 +16,7 @@ import shutil
 import tempfile
 from typing import Any, BinaryIO, List, Optional, Union
 
+from httpx import HTTPStatusError
 import pandas as pd
 
 # DeepChem imports - lazy loaded to avoid import errors if not installed
@@ -96,25 +97,23 @@ class DeepchemDatastore:
     def __init__(
         self,
         client: DatastoreClient,
-        profile: str,
-        project: str,
-        temp_dir: Optional[str] = None,
+        profile_name: str,
+        project_name: str,
+        basedir: Optional[str] = None,
     ) -> None:
         self.client = client
-        self.profile = profile
-        self.project = project
-        self.address_prefix = f"{profile}/{project}/"
-        self.storage_loc = temp_dir or tempfile.mkdtemp(prefix="datastore_")
+        self.profile = profile_name
+        self.project = project_name
+        self.address_prefix = f"{profile_name}/{project_name}/"
+        self.storage_loc = basedir or tempfile.mkdtemp(prefix="datastore_")
         os.makedirs(self.storage_loc, exist_ok=True)
         self.sample_rows = 100
 
     def _make_address(self, key: str) -> str:
         """Create a deepchem address from a key."""
+        if key.startswith("deepchem://"):
+            return key
         return f"deepchem://{self.profile}/{self.project}/{key}"
-
-    # =========================================================================
-    # Upload operations
-    # =========================================================================
 
     def upload_data(
         self,
@@ -251,18 +250,18 @@ class DeepchemDatastore:
             data.save(buffer, format='PNG')
             data_bytes = buffer.getvalue()
             card_dict = json.loads(card.to_json()) if card else None
-            return self.client.upload_data(address, data_bytes, card_dict, kind)
+            return self.client.upload_data(self._make_address(address), data_bytes, card_dict, kind)
 
         # Handle string (text file)
         if isinstance(data, str):
             data_bytes = data.encode("utf-8")
             card_dict = json.loads(card.to_json()) if card else None
-            return self.client.upload_data(address, data_bytes, card_dict, kind)
+            return self.client.upload_data(self._make_address(address), data_bytes, card_dict, kind)
 
         # Handle bytes (binary file)
         if isinstance(data, bytes):
             card_dict = json.loads(card.to_json()) if card else None
-            return self.client.upload_data(address, data, card_dict, kind)
+            return self.client.upload_data(self._make_address(address), data, card_dict, kind)
 
         # Unsupported type
         raise ValueError(f"Unsupported data type: {type(data)}. "
@@ -296,7 +295,9 @@ class DeepchemDatastore:
         card_dict = json.loads(card.to_json())
 
         # Models are directories - ZIP and upload
-        return self.client.upload_directory(address, model.model_dir, card_dict, "model")
+        return self.client.upload_directory(
+            self._make_address(address), model.model_dir, card_dict, "model"
+        )
 
     def upload_model_from_memory(
         self,
@@ -340,13 +341,11 @@ class DeepchemDatastore:
                     f.write(file_handle.read())
 
             card_dict = json.loads(card.to_json())
-            return self.client.upload_directory(address, model_dir, card_dict, "model")
+            return self.client.upload_directory(
+                self._make_address(address), model_dir, card_dict, "model"
+            )
         finally:
             shutil.rmtree(temp_dir, ignore_errors=True)
-
-    # =========================================================================
-    # Get operations
-    # =========================================================================
 
     def get(
         self,
@@ -397,35 +396,57 @@ class DeepchemDatastore:
             The data object (DataFrame, DiskDataset, etc.)
         """
         card = self.get_card(address, kind="data")
-        data_bytes = self.client.get_data(address, fetch_sample)
-
         if card and isinstance(card, DataCard):
-            if card.file_type == "csv":
-                if fetch_sample:
-                    return pd.read_csv(io.BytesIO(data_bytes), nrows=self.sample_rows)
-                return pd.read_csv(io.BytesIO(data_bytes))
-            elif card.file_type == "json":
-                return json.loads(data_bytes.decode("utf-8"))
-            elif card.file_type == "txt":
-                return data_bytes.decode("utf-8").splitlines(keepends=True)
-            elif card.file_type == "xml":
-                return data_bytes.decode("utf-8").splitlines(keepends=True)
-            elif card.file_type == "png":
-                if HAS_PIL:
-                    from PIL import Image
-                    return Image.open(io.BytesIO(data_bytes))
-                return data_bytes
-            elif card.file_type == "dir" or card.data_type == "dc.data.DiskDataset":
-                # Download and extract directory
+            if card.file_type == "dir" or card.data_type == "dc.data.DiskDataset":
                 if not HAS_DEEPCHEM:
                     raise ImportError("deepchem is required to load DiskDataset")
                 key = DeepchemAddress.get_key(address)
                 dest_dir = os.path.join(self.storage_loc, key)
-                self.client.download_directory(address, dest_dir)
+
+                try:
+                    self.client.download_directory(self._make_address(address), dest_dir)
+                except HTTPStatusError as e:
+                    if e.response.status_code == 404:
+                        raise FileNotFoundError(f"Object not found: {address}")
+                    else:
+                        raise ValueError(f"Error downloading directory: {e}")
+                except Exception as e:
+                    raise ValueError(f"Error downloading directory: {e}")
+
                 return dc.data.DiskDataset(data_dir=dest_dir)
 
-        # Default: return raw bytes
-        return data_bytes
+            else:
+                try:
+                    data_bytes = self.client.get_data(self._make_address(address), fetch_sample)
+                except HTTPStatusError as e:
+                    if e.response.status_code == 404:
+                        raise FileNotFoundError(f"Object not found: {address}")
+                    else:
+                        raise ValueError(f"Error downloading file: {e}")
+                except Exception as e:
+                    raise ValueError(f"Error downloading file: {e}")
+
+                if card.file_type == "csv":
+                    if fetch_sample:
+                        return pd.read_csv(io.BytesIO(data_bytes), nrows=self.sample_rows)
+                    return pd.read_csv(io.BytesIO(data_bytes))
+                elif card.file_type == "json":
+                    return json.loads(data_bytes.decode("utf-8"))
+                elif card.file_type == "txt":
+                    return data_bytes.decode("utf-8").splitlines(keepends=True)
+                elif card.file_type == "xml":
+                    return data_bytes.decode("utf-8").splitlines(keepends=True)
+                elif card.file_type == "png":
+                    if HAS_PIL:
+                        from PIL import Image
+
+                        return Image.open(io.BytesIO(data_bytes))
+                    return data_bytes
+
+                # Default: return raw bytes
+                return data_bytes
+
+        raise FileNotFoundError(f"Object not found: {address}")
 
     def get_model(self, address: str) -> Any:
         """Fetch and load a model from datastore.
@@ -449,7 +470,7 @@ class DeepchemDatastore:
         # Download model directory
         key = DeepchemAddress.get_key(address)
         dest_dir = os.path.join(self.storage_loc, key)
-        self.client.download_directory(address, dest_dir)
+        self.client.download_directory(self._make_address(address), dest_dir)
 
         # Load model
         model = model_mappings.model_address_map[card.model_type](model_dir=dest_dir, **card.init_kwargs)
@@ -479,7 +500,7 @@ class DeepchemDatastore:
         DataCard, ModelCard, or None
             The card object
         """
-        card_dict = self.client.get_card(address, kind or "data")
+        card_dict = self.client.get_card(self._make_address(address), kind or "data")
 
         if card_dict is None:
             return None
@@ -505,30 +526,31 @@ class DeepchemDatastore:
         """
         key = DeepchemAddress.get_key(address)
         dest_dir = os.path.join(self.storage_loc, key)
-        self.client.download_directory(address, dest_dir)
+        self.client.download_directory(self._make_address(address), dest_dir)
         return dest_dir
-
-    # =========================================================================
-    # Status/Info operations
-    # =========================================================================
 
     def exists(self, address: str) -> bool:
         """Check if an object exists."""
-        if not address.startswith("deepchem://"):
-            address = self._make_address(address)
-        return self.client.exists(address)
+        return self.client.exists(self._make_address(address))
 
     def get_file_size(self, address: str) -> int:
         """Get size of an object."""
-        return self.client.get_size(address)
+        return self.client.get_size(self._make_address(address))
 
-    def list_data(self) -> List[str]:
-        """List all data in the datastore."""
-        return self.client.list_data(self.profile, self.project)
+    def list_data(self, include_card_files: bool = False) -> List[str]:
+        """List all data in the datastore.
 
-    # =========================================================================
-    # Delete operations
-    # =========================================================================
+        Parameters
+        ----------
+        include_card_files : bool
+            Whether to include card files (.cdc, .cmc)
+
+        Returns
+        -------
+        List[str]
+            List of data keys
+        """
+        return self.client.list_data(self.profile, self.project, include_card_files)
 
     def delete_object(self, address: str, kind: str = "data") -> bool:
         """Delete an object from datastore.
@@ -545,11 +567,7 @@ class DeepchemDatastore:
         bool
             True if successful
         """
-        return self.client.delete_object(address, kind)
-
-    # =========================================================================
-    # Download operations
-    # =========================================================================
+        return self.client.delete_object(self._make_address(address), kind)
 
     def download_object(
         self,
@@ -568,16 +586,11 @@ class DeepchemDatastore:
         if not filename:
             raise ValueError("filename must be specified")
 
-        # Check if it's a directory (DiskDataset, model, etc.)
-        card = self.get_card(address)
+        card = self.get_card(self._make_address(address))
         if card and hasattr(card, "data_type") and card.data_type == "dc.data.DiskDataset":
-            self.client.download_directory(address, filename)
+            self.client.download_directory(self._make_address(address), filename)
         else:
-            self.client.download_file(address, filename)
-
-    # =========================================================================
-    # Internal/Advanced operations
-    # =========================================================================
+            self.client.download_file(self._make_address(address), filename)
 
     def _get_datastore_objects(self, directory: str) -> List[str]:
         """Walk datastore and collect all objects as paths.
@@ -595,22 +608,39 @@ class DeepchemDatastore:
         list of str
             List of full paths including card files (.cdc, .cmc)
         """
-        # Get all objects from remote service
-        objects = self.client.list_all_objects(self.profile, self.project)
-
-        # Format as full paths matching expected pattern
-        # feat.py expects: "storage_loc/checkpoint_output_key/_checkpoint/part_0_of_3.cdc"
-        entries = []
-        for obj in objects:
-            full_path = f"{directory}/{obj}"
-            entries.append(full_path)
-
-        return entries
+        return self.client.list_all_objects(self.profile, self.project, prefix=directory)
 
     def add_dir(self, dir_name: str) -> None:
         """Create a directory marker in the datastore.
-        
-        For HTTP-based datastore, directories are created implicitly
-        when uploading files. This is a no-op for compatibility.
+
+        Parameters
+        ----------
+        dir_name : str
+            The name of the directory to create
+
+        Returns
+        -------
+        str
+            The assigned address
         """
-        pass
+        return self.client.create_directory(self._make_address(dir_name))
+
+    def move_object(self, address: str, destination: str) -> str:
+        """Move an object to a new location.
+
+        Parameters
+        ----------
+        address : str
+            DeepchemAddress
+        destination : str
+            New location address
+            If only the key is provided, then the client will assume
+            the profile and project are the same as the original address,
+            so this method can be assumed as mv command in the shell.
+
+        Returns
+        -------
+        str
+            The assigned address
+        """
+        return self.client.move_object(self._make_address(address), self._make_address(destination))

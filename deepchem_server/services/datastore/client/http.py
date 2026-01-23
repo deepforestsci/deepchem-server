@@ -87,10 +87,6 @@ class DatastoreClient:
         """Create a deepchem address from components."""
         return f"deepchem://{profile}/{project}/{key}"
 
-    # =========================================================================
-    # Basic CRUD operations
-    # =========================================================================
-
     def upload_data(
         self,
         address: str,
@@ -127,6 +123,42 @@ class DatastoreClient:
             f"{self.base_url}/data/{profile}/{project}/{key}",
             files=files,
             data=form_data,
+        )
+        response.raise_for_status()
+        return response.json()["address"]
+
+    def create_directory(
+        self,
+        address: str,
+    ) -> str:
+        """Create a directory in the datastore."""
+        profile, project, key = self._parse_address(address)
+        response = self._get_client().post(f"{self.base_url}/dir/{profile}/{project}/{key}")
+        response.raise_for_status()
+        return response.json()["address"]
+
+    def move_object(
+        self,
+        address: str,
+        destination: str,
+    ) -> str:
+        """Move an object to a new location.
+
+        Parameters
+        ----------
+        address : str
+            DeepchemAddress
+        destination : str
+            New location address
+
+        Returns
+        -------
+        str
+            The assigned address
+        """
+        profile, project, key = self._parse_address(address)
+        response = self._get_client().post(
+            f"{self.base_url}/move/{profile}/{project}/{key}", json={"destination": destination}
         )
         response.raise_for_status()
         return response.json()["address"]
@@ -174,13 +206,26 @@ class DatastoreClient:
         response.raise_for_status()
         return response.json()["status"] == "success"
 
-    def list_data(self, profile: str, project: str) -> List[str]:
-        """List all keys in a profile/project (excludes card files)."""
-        response = self._get_client().get(f"{self.base_url}/list/{profile}/{project}")
+    def list_data(self, profile: str, project: str, include_card_files: bool = False) -> List[str]:
+        """List all keys in a profile/project (excludes card files).
+
+        Parameters
+        ----------
+        profile : str
+            Profile name
+        project : str
+            Project name
+        include_card_files : bool
+            Whether to include card files (.cdc, .cmc)
+        """
+        response = self._get_client().get(
+            f"{self.base_url}/list/{profile}/{project}",
+            params={"include_card_files": include_card_files},
+        )
         response.raise_for_status()
         return response.json()["keys"]
 
-    def list_all_objects(self, profile: str, project: str) -> List[str]:
+    def list_all_objects(self, profile: str, project: str, prefix: str = "") -> List[str]:
         """List all objects including card files (.cdc, .cmc).
 
         This is used by DeepchemDatastore._get_datastore_objects() for
@@ -192,13 +237,14 @@ class DatastoreClient:
             Profile name
         project : str
             Project name
-
+        prefix : str
+            Prefix to filter objects
         Returns
         -------
         list of str
             All objects including .cdc and .cmc files
         """
-        response = self._get_client().get(f"{self.base_url}/list-all/{profile}/{project}")
+        response = self._get_client().get(f"{self.base_url}/list-all/{profile}/{project}", params={"prefix": prefix})
         response.raise_for_status()
         return response.json()["objects"]
 
@@ -240,10 +286,6 @@ class DatastoreClient:
             return response.status_code == 200
         except Exception:
             return False
-
-    # =========================================================================
-    # File operations (disk-based)
-    # =========================================================================
 
     def upload_file(
         self,
@@ -304,10 +346,6 @@ class DatastoreClient:
         with open(dest_path, "wb") as f:
             f.write(data)
         return dest_path
-
-    # =========================================================================
-    # Directory operations (direct file-based)
-    # =========================================================================
 
     def upload_directory(
         self,
@@ -464,10 +502,6 @@ class DatastoreClient:
         response = self._get_client().get(f"{self.base_url}/directory-contents/{profile}/{project}/{key}")
         response.raise_for_status()
         return response.json()["files"]
-
-    # =========================================================================
-    # Convenience methods for common patterns
-    # =========================================================================
 
     def upload_from_profile_project(
         self,

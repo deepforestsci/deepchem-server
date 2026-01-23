@@ -58,12 +58,20 @@ def main() -> None:
     logger.info(f"  Port: {args.port}")
     logger.info(f"  Base Dir: {args.base_dir}")
 
-    uvicorn.run(
-        "deepchem_server.services.datastore.server.api:app",
-        host=args.host,
-        port=args.port,
-        reload=args.reload,
-    )
+    if args.reload:
+        uvicorn.run(
+            "deepchem_server.services.datastore.server.api:app",
+            host=args.host,
+            port=args.port,
+            reload=True,
+            reload_dirs=[os.path.join(os.path.dirname(__file__), "server")],
+        )
+    else:
+        uvicorn.run(
+            "deepchem_server.services.datastore.server.api:app",
+            host=args.host,
+            port=args.port,
+        )
 
 
 if __name__ == "__main__":

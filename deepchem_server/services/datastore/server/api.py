@@ -3,10 +3,10 @@ FastAPI REST API for DeepchemDatastore service.
 
 Provides HTTP endpoints for CRUD operations on the datastore.
 """
-
+import json
 import logging
 import os
-from typing import Any, Dict, List, Optional
+from typing import Annotated, Any, Dict, List, Optional
 
 from fastapi import (
     APIRouter,
@@ -16,6 +16,7 @@ from fastapi import (
     Form,
     HTTPException,
     Query,
+    Body,
     UploadFile,
 )
 from fastapi.middleware.cors import CORSMiddleware
@@ -150,6 +151,27 @@ async def upload_data(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.post("/dir/{profile}/{project}/{dirname}")
+async def upload_directory(
+    profile: str,
+    project: str,
+    dirname: str,
+    _: str = Depends(verify_api_key),
+    service: DatastoreService = Depends(get_datastore_service),
+) -> Dict[str, Any]:
+    """Create a directory in the datastore."""
+    try:
+        address = service.create_directory(
+            profile=profile,
+            project=project,
+            dirname=dirname,
+        )
+        return {"status": "success", "address": address}
+    except Exception as e:
+        logger.exception(f"Error creating directory: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/data/{profile}/{project}/{key:path}")
 async def get_data(
         profile: str,
@@ -202,6 +224,46 @@ async def get_data(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.post("/move/{profile}/{project}/{key:path}")
+async def move_object(
+    profile: str,
+    project: str,
+    key: str,
+    destination: Annotated[str, Body(embed=True)],
+    _: str = Depends(verify_api_key),
+    service: DatastoreService = Depends(get_datastore_service),
+) -> Dict[str, Any]:
+    """Move an object to a new location.
+
+    Parameters
+    ----------
+    profile : str
+        Profile name
+    project : str
+        Project name
+    key : str
+        File key/path
+    destination : str
+        New location address
+
+    Returns
+    -------
+    dict
+        Response with status and new address
+    """
+    try:
+        address = service.move_object(
+            profile=profile,
+            project=project,
+            key=key,
+            destination=destination,
+        )
+        return {"status": "success", "address": address}
+    except Exception as e:
+        logger.exception(f"Error moving object: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.delete("/data/{profile}/{project}/{key:path}")
 async def delete_data(
         profile: str,
@@ -248,6 +310,7 @@ async def delete_data(
 async def list_data(
         profile: str,
         project: str,
+        include_card_files: bool = Query(False),
         _: str = Depends(verify_api_key),
         service: DatastoreService = Depends(get_datastore_service),
 ) -> Dict[str, Any]:
@@ -259,14 +322,15 @@ async def list_data(
         Profile name
     project : str
         Project name
-
+    include_card_files : bool
+        Whether to include card files (.cdc, .cmc)
     Returns
     -------
     dict
         Response with list of keys
     """
     try:
-        keys = service.list_data(profile=profile, project=project)
+        keys = service.list_data(profile=profile, project=project, include_card_files=include_card_files)
         return {"status": "success", "keys": keys, "count": len(keys)}
     except Exception as e:
         logger.exception(f"Error listing data: {e}")
@@ -277,6 +341,7 @@ async def list_data(
 async def list_all_objects(
         profile: str,
         project: str,
+        prefix: str = Query(""),
         _: str = Depends(verify_api_key),
         service: DatastoreService = Depends(get_datastore_service),
 ) -> Dict[str, Any]:
@@ -298,7 +363,7 @@ async def list_all_objects(
         Response with list of all objects including card files
     """
     try:
-        objects = service.list_all_objects(profile=profile, project=project)
+        objects = service.list_all_objects(profile=profile, project=project, prefix=prefix)
         return {"status": "success", "objects": objects, "count": len(objects)}
     except Exception as e:
         logger.exception(f"Error listing all objects: {e}")
@@ -442,15 +507,14 @@ async def upload_directory(
     """
     try:
         file_tuples = []
-        for f in files:
+        for idx, f in enumerate(files):
             data = await f.read()
             # Use filename as relative path (client sends relative paths as filenames)
-            relative_path = f.filename or "unknown"
+            relative_path = f.filename or f"file_{idx}"
             file_tuples.append((relative_path, data))
 
         card_dict = None
         if card:
-            import json
             card_dict = json.loads(card)
 
         address = service.upload_directory_files(
