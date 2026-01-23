@@ -1,12 +1,24 @@
 import os
-import shutil
+import time
 
 import deepchem as dc
 import pandas as pd
-
+import pytest
 from deepchem_server.core import config
 from deepchem_server.core.common.cards import DataCard
 from deepchem_server.core.primitives.feat import featurize
+
+
+@pytest.fixture()
+def zinc5k_dataset(disk_datastore):
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    dataset_path = os.path.join(current_dir, "assets/zinc5k.csv")
+    card = DataCard(address="", file_type="csv", data_type="pandas.DataFrame")
+    try:
+        data_address = disk_datastore.upload_data("zinc5k.csv", dataset_path, card)
+    except FileExistsError:
+        data_address = disk_datastore.get("zinc5k.csv")
+    return data_address
 
 
 def test_featurize(disk_datastore):
@@ -43,18 +55,13 @@ def test_featurize_nested_full_address(disk_datastore):
     assert card.featurizer == 'ecfp'
 
 
-def test_featurize_multicore(disk_datastore):
+def test_featurize_multicore(disk_datastore, zinc5k_dataset):
     """
     Test basic multicore featurization functionality with csv file.
     """
     config.set_datastore(disk_datastore)
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    dataset_path = os.path.join(current_dir, "assets/zinc5k.csv")
-    df = pd.read_csv(dataset_path)
-    card = DataCard(address='', file_type='csv', data_type='pandas.DataFrame')
-    data_address = disk_datastore.upload_data_from_memory(df, "zinc.csv", card)
     dataset_address = featurize(
-        data_address,
+        zinc5k_dataset,
         featurizer="ecfp",
         output="feat_test",
         dataset_column="smiles",
@@ -68,29 +75,33 @@ def test_featurize_multicore(disk_datastore):
     assert card.featurizer == 'ecfp'
 
 
-def test_featurize_multicore_restart(disk_datastore):
+def test_featurize_multicore_restart(disk_datastore, zinc5k_dataset):
     """
     Test restart functionality of multicore featurization with csv file.
     """
     config.set_datastore(disk_datastore)
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    dataset_path = os.path.join(current_dir, "assets/zinc5k.csv")
     partial_checkpoints_dir_path = os.path.join(current_dir, "assets/feat_test.partial")
-    df = pd.read_csv(dataset_path)
-    card = DataCard(address='', file_type='csv', data_type='pandas.DataFrame')
-    data_address = disk_datastore.upload_data_from_memory(df, "zinc.csv", card)
 
-    output_key = "feat_test"
+    output_key = f"feat_test_{time.time()}"
     checkpoint_output_key = output_key + ".partial"
-    shutil.copytree(partial_checkpoints_dir_path, disk_datastore.storage_loc + "/" + checkpoint_output_key)
+    card = DataCard(
+        address="",
+        file_type="dir",
+        data_type="dc.data.DiskDataset",
+        description="partial checkpoints",
+    )
+    disk_datastore.upload_data(checkpoint_output_key, partial_checkpoints_dir_path, card)
 
-    assert "deepchem://" + disk_datastore.storage_loc + "/" + checkpoint_output_key + "/_checkpoint/part_0_of_3.cdc" in disk_datastore.list_data(
-    ).split('\n')
-    assert "deepchem://" + disk_datastore.storage_loc + "/" + checkpoint_output_key + "/_checkpoint/part_1_of_3.cdc" in disk_datastore.list_data(
-    ).split('\n')
+    assert f"{checkpoint_output_key}/_checkpoint/part_0_of_3.cdc" in disk_datastore.list_data(
+        include_card_files=True
+    )
+    assert f"{checkpoint_output_key}/_checkpoint/part_1_of_3.cdc" in disk_datastore.list_data(
+        include_card_files=True
+    )
 
     dataset_address = featurize(
-        data_address,
+        zinc5k_dataset,
         featurizer="ecfp",
         output=output_key,
         dataset_column="smiles",

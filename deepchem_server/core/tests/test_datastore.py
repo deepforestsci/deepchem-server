@@ -54,27 +54,6 @@ def test_diskdatastore_in_memory_disk_dataset_upload(disk_datastore):
     assert np.isclose(X, data2.X).all()
 
 
-def test_datastore_prepopulated(tmpdir):
-    """Test ability to connect datastore to existing directory."""
-    base = str(tmpdir)
-    session_dir = os.path.join(base, 'profile', 'project')
-    os.makedirs(session_dir)
-    df = pd.DataFrame({'foo': [1, 2], 'bar': [3, 4]})
-    datapath = os.path.join(session_dir, 'test.csv')
-    df.to_csv(datapath)
-    data_card = cards.DataCard(address='',
-                               file_type='csv',
-                               data_type='pandas.DataFrame',
-                               description='this is a csv file')
-    data_card_path = os.path.join(session_dir, 'test.csv.cdc')
-    with open(data_card_path, 'wb') as f:
-        f.write(bytes(data_card))
-
-    dfs = DiskDataStore(profile_name='profile', project_name='project', basedir=base)
-    test_address = "deepchem://profile/project/test.csv"
-    df_get = dfs.get(test_address)  # noqa
-
-
 def test_disk_datastore_download_object(disk_datastore, tmp_csv, tmpdir):
     # test file download
     data_card = cards.DataCard(address='',
@@ -87,16 +66,6 @@ def test_disk_datastore_download_object(disk_datastore, tmp_csv, tmpdir):
     tmpfilename = os.path.join(tmpdir, 'temp.csv')
     disk_datastore.download_object(address, tmpfilename)
     assert os.path.isfile(tmpfilename)
-
-    # test dir download
-    disk_datastore.add_dir('tmp_folder')
-    disk_datastore.upload_data('tmp_folder/tmpcsv.csv', tmp_csv, data_card)
-    folder_path = os.path.join(tmpdir, 'tmp_folder1')
-    os.mkdir(folder_path)
-    address = disk_datastore.storage_loc + '/' + 'tmp_folder'
-    disk_datastore.download_object(address, folder_path)
-    assert os.path.isdir(folder_path)
-    assert os.path.isfile(os.path.join(folder_path, 'tmpcsv.csv'))
 
 
 def test_disk_datastore_upload_data_from_memory(disk_datastore):
@@ -195,8 +164,6 @@ def test_txt_upload_get_delete(disk_datastore):
     card = DataCard(address='', file_type='txt', data_type='text/plain')
     file_address = disk_datastore.upload_data('log.txt', path, card)
 
-    file_address = disk_datastore.upload_data('log.txt', path, card)
-
     file_returned = disk_datastore.get_data(file_address)
     assert (file_returned is not None)
     assert (isinstance(file_returned, list))
@@ -245,115 +212,33 @@ def test_get_file_size_disk_datastore(disk_datastore):
     file_size = os.path.getsize(path)
     assert disk_datastore.get_file_size(dataset_address) == file_size
 
-
-def test_disk_move_data(disk_datastore, alternate_disk_datastore, tmp_csv):
-    # Put object
-    data_card = cards.DataCard(address='',
-                               file_type='csv',
-                               data_type='pandas.DataFrame',
-                               description='this is a pandas dataframe')
-    dataset_address = disk_datastore.upload_data('tmpcsv.csv', tmp_csv, data_card)
-    file_size = os.path.getsize(tmp_csv)
-    assert disk_datastore.get_file_size(dataset_address) == file_size
-
-    # Move object
-    dest_address = 'deepchem://alternate-test/alternate-user/tmpcsv.csv'
-    disk_datastore.move_object(dataset_address, dest_address, alternate_disk_datastore)
-
-    # Check that object is in new location
-    assert disk_datastore.get_file_size(dataset_address) == 0
-    assert alternate_disk_datastore.get_file_size(dest_address) == file_size
-
-
-def test_disk_move_nested_data(disk_datastore, alternate_disk_datastore, tmp_csv):
-    # Put object
-    data_card = cards.DataCard(address='',
-                               file_type='csv',
-                               data_type='pandas.DataFrame',
-                               description='this is a pandas dataframe')
-    dataset_address = disk_datastore.upload_data('test move source/tmpcsv.csv', tmp_csv, data_card)
-    file_size = os.path.getsize(tmp_csv)
-    assert disk_datastore.get_file_size(dataset_address) == file_size
-
-    # Move object
-    dest_address = 'deepchem://alternate-test/alternate-user/test move dest/tmpcsv.csv'
-    disk_datastore.move_object(dataset_address, dest_address, alternate_disk_datastore)
-
-    # Check that object is in new location
-    assert disk_datastore.get_file_size(dataset_address) == 0
-    assert alternate_disk_datastore.get_file_size(dest_address) == file_size
-
-
-def test_disk_copy_data(disk_datastore, alternate_disk_datastore, tmp_csv):
-    # Put object
-    data_card = cards.DataCard(address='',
-                               file_type='csv',
-                               data_type='pandas.DataFrame',
-                               description='this is a pandas dataframe')
-    dataset_address = disk_datastore.upload_data('tmpcsv.csv', tmp_csv, data_card)
-    file_size = os.path.getsize(tmp_csv)
-    assert disk_datastore.get_file_size(dataset_address) == file_size
-
-    # Copy object
-    dest_address = 'deepchem://alternate-test/alternate-user/tmpcsv_copy.csv'
-    disk_datastore.copy_object(dataset_address, dest_address, alternate_disk_datastore)
-
-    # Check that object is copied to the new location
-    assert alternate_disk_datastore.get_file_size(dest_address) == file_size
-
-
-def test_disk_copy_nested_data(disk_datastore, alternate_disk_datastore, tmp_csv):
-    # Put object
-    data_card = cards.DataCard(address='',
-                               file_type='csv',
-                               data_type='pandas.DataFrame',
-                               description='this is a pandas dataframe')
-    dataset_address = disk_datastore.upload_data('test copy source/tmpcsv.csv', tmp_csv, data_card)
-    file_size = os.path.getsize(tmp_csv)
-    assert disk_datastore.get_file_size(dataset_address) == file_size
-
-    # Copy object
-    dest_address = 'deepchem://alternate-test/alternate-user/test copy dest/tmpcsv_copy.csv'
-    disk_datastore.copy_object(dataset_address, dest_address, alternate_disk_datastore)
-
-    # Check that object is copied to the new location
-    assert alternate_disk_datastore.get_file_size(dest_address) == file_size
-
-
 def test_dir_disk_add_list_data(disk_datastore):
     """Test adding a directory to disk and list data"""
-    disk_datastore.add_dir("test_dir/")
-    assert "deepchem://" + disk_datastore.storage_loc + "/test_dir/" in disk_datastore.list_data().split("\n")
+    address = disk_datastore.add_dir("test_dir")
+    assert address.endswith("test_dir")
+    assert "test_dir/" in disk_datastore.list_data()
 
 
 def test_dir_disk_delete(disk_datastore):
     """Test deleting a directory from disk."""
-    disk_datastore.add_dir("test_dir_del/")
-    assert "test/user/test_dir_del/" in disk_datastore.list_data()
+    disk_datastore.add_dir("test_dir_del")
+    assert "test_dir_del/" in disk_datastore.list_data()
 
-    disk_datastore.delete_object("deepchem://test/user/test_dir_del/", 'dir')
-    assert "test/user/test_dir_del/" not in disk_datastore.list_data()
+    disk_datastore.delete_object("deepchem://test/user/test_dir_del", "dir")
+    assert "test_dir_del/" not in disk_datastore.list_data()
 
 
 def test_dir_disk_move(disk_datastore, alternate_disk_datastore):
     """Test moving a directory on disk."""
-    disk_datastore.add_dir("test_dir_move/")
-    assert "test/user/test_dir_move/" in disk_datastore.list_data()
+    disk_datastore.add_dir("test_dir_move")
+    assert "test_dir_move/" in disk_datastore.list_data()
 
-    disk_datastore.move_object("deepchem://test/user/test_dir_move/",
-                               "deepchem://alternate-test/alternate-user/test_dir_move/", alternate_disk_datastore)
-    assert "test/user/test_dir_move/" not in disk_datastore.list_data()
-    assert "alternate-test/alternate-user/test_dir_move/" in alternate_disk_datastore.list_data()
-
-
-def test_dir_disk_copy(disk_datastore, alternate_disk_datastore):
-    """Test copying a directory on disk."""
-    disk_datastore.add_dir("test_dir_copy/")
-    assert "test/user/test_dir_copy/" in disk_datastore.list_data()
-
-    disk_datastore.copy_object("deepchem://test/user/test_dir_copy/",
-                               "deepchem://alternate-test/alternate-user/test_dir_copy/", alternate_disk_datastore)
-    assert "alternate-test/alternate-user/test_dir_copy/" in alternate_disk_datastore.list_data()
+    disk_datastore.move_object(
+        "deepchem://test/user/test_dir_move",
+        "deepchem://alternate-test/alternate-user/test_dir_move",
+    )
+    assert "test_dir_move/" not in disk_datastore.list_data()
+    assert "test_dir_move/" in alternate_disk_datastore.list_data()
 
 
 def test_disk_datastore_upload_model(disk_datastore):

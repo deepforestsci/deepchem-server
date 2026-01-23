@@ -1,3 +1,4 @@
+import time
 import deepchem as dc
 import numpy as np
 import pandas as pd
@@ -60,9 +61,11 @@ def test_model_evaluator_prc_auc(disk_datastore):
     card = cards.DataCard(address='', file_type='dir', data_type='DiskDataset', description='a disk dataset')
     dataset_address = disk_datastore.upload_data_from_memory(dataset, 'test_dataset', card)
 
-    model_address = train(model_type='random_forest_classifier',
-                          dataset_address=dataset_address,
-                          model_name='test_model')
+    model_address = train(
+        model_type="random_forest_classifier",
+        dataset_address=dataset_address,
+        model_name=f"test_model_{time.time()}",
+    )
 
     output_address = evaluator.model_evaluator(dataset_addresses=[dataset_address],
                                                model_address=model_address,
@@ -90,26 +93,32 @@ def test_model_evaluator_error_check(disk_datastore):
     card = cards.DataCard(address='', file_type='dir', data_type='DiskDataset', description='a disk dataset')
     dataset_address = disk_datastore.upload_data_from_memory(dataset, 'test_dataset', card)
 
-    model_address = train(model_type='random_forest_classifier',
-                          dataset_address=dataset_address,
-                          model_name='test_model')
+    model_address = train(
+        model_type="random_forest_classifier",
+        dataset_address=dataset_address,
+        model_name=f"test_model_{time.time()}",
+    )
 
     try:
-        evaluator.model_evaluator(dataset_addresses=[dataset_address],
-                                  model_address=model_address,
-                                  metrics=['prc_auc_curve'],
-                                  output_key='model_eval_prc',
-                                  is_metric_plots=False)
+        evaluator.model_evaluator(
+            dataset_addresses=[dataset_address],
+            model_address=model_address,
+            metrics=["prc_auc_curve"],
+            output_key=f"model_eval_prc_{time.time()}",
+            is_metric_plots=False,
+        )
         raise Exception("Evaluator exception on non plot metric failed")
     except ValueError as e:
         assert e.__str__() == "No non-plot metric provided to evaluate"
 
     try:
-        evaluator.model_evaluator(dataset_addresses=[dataset_address],
-                                  model_address=model_address,
-                                  metrics=['pearson_r2_score'],
-                                  output_key='model_eval_prc',
-                                  is_metric_plots=True)
+        evaluator.model_evaluator(
+            dataset_addresses=[dataset_address],
+            model_address=model_address,
+            metrics=["pearson_r2_score"],
+            output_key=f"model_eval_prc_{time.time()}",
+            is_metric_plots=True,
+        )
         raise Exception("Evaluator exception on plot metric failed")
     except ValueError as e:
         assert e.__str__() == "No plot metric provided to evaluate"
