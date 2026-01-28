@@ -153,11 +153,11 @@ async def upload_data(
 
 @router.post("/dir/{profile}/{project}/{dirname}")
 async def create_directory(
-    profile: str,
-    project: str,
-    dirname: str,
-    _: str = Depends(verify_api_key),
-    service: DatastoreService = Depends(get_datastore_service),
+        profile: str,
+        project: str,
+        dirname: str,
+        _: str = Depends(verify_api_key),
+        service: DatastoreService = Depends(get_datastore_service),
 ) -> Dict[str, Any]:
     """Create a directory in the datastore."""
     try:
@@ -226,12 +226,12 @@ async def get_data(
 
 @router.post("/move/{profile}/{project}/{key:path}")
 async def move_object(
-    profile: str,
-    project: str,
-    key: str,
-    destination: Annotated[str, Body(embed=True)],
-    _: str = Depends(verify_api_key),
-    service: DatastoreService = Depends(get_datastore_service),
+        profile: str,
+        project: str,
+        key: str,
+        destination: Annotated[str, Body(embed=True)],
+        _: str = Depends(verify_api_key),
+        service: DatastoreService = Depends(get_datastore_service),
 ) -> Dict[str, Any]:
     """Move an object to a new location.
 

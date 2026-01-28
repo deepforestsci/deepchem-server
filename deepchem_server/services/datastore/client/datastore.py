@@ -619,7 +619,10 @@ class DeepchemDatastore:
         str
             The assigned address
         """
-        return self.client.create_directory(self._make_address(dir_name))
+        try:
+            self.client.create_directory(self._make_address(dir_name))
+        except Exception as e:
+            raise ValueError(f"Error creating directory: {e}")
 
     def move_object(self, address: str, destination: str) -> str:
         """Move an object to a new location.

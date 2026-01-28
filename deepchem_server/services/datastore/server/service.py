@@ -134,10 +134,13 @@ class DatastoreService:
             else:
                 kind = "dir"
 
-            if (kind == "data" and card["file_type"] == "dir") or kind == "dir":
+            is_dir_object = (kind == "dir" or (kind == "data" and card is not None and card.get("file_type") == "dir"))
+            if is_dir_object:
                 self.create_directory(destination_profile, destination_project, destination_key)
                 for file in self.list_directory_contents(profile, project, key):
                     self.move_object(
+                        profile,
+                        project,
                         f"deepchem://{profile}/{project}/{file}",
                         f"deepchem://{destination_profile}/{destination_project}/{file}",
                     )
@@ -149,6 +152,8 @@ class DatastoreService:
                     file_path = base_path / file
                     if file_path.is_file():
                         self.move_object(
+                            profile,
+                            project,
                             f"deepchem://{profile}/{project}/{file_path}",
                             f"deepchem://{destination_profile}/{destination_project}/{file_path}",
                         )
