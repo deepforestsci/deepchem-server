@@ -19,7 +19,7 @@ class Featurize(Primitive):
 
     def run(
         self,
-        dataset_address: DeepchemData,
+        dataset_address: DeepchemData | str,
         featurizer: str,
         output: str,
         dataset_column: str,
@@ -32,7 +32,7 @@ class Featurize(Primitive):
         Run the featurization primitive.
 
         Args:
-            dataset_address: DeepchemData object of dataset to featurize
+            dataset_address: DeepchemData object or string of dataset to featurize
             featurizer: Featurizer to use
             output: Name of the featurized dataset
             dataset_column: Column containing the input for featurizer
@@ -60,7 +60,7 @@ class Featurize(Primitive):
         data = {
             "profile_name": profile,
             "project_name": project,
-            "dataset_address": dataset_address.address,
+            "dataset_address": (dataset_address if isinstance(dataset_address, str) else dataset_address.address),
             "featurizer": featurizer,
             "output": output,
             "dataset_column": dataset_column,

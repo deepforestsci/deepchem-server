@@ -5,7 +5,7 @@ Contains the Data class for all data management operations.
 """
 
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
+from typing import Any, Optional, Union
 
 from requests_toolbelt import MultipartEncoder
 

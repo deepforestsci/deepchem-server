@@ -164,18 +164,18 @@ class TestFeaturize:
 
     def test_run_api_error(self, live_featurize_client: Featurize) -> None:
         """Test featurize run with API error on live server."""
-        # Note: Server now queues job even with invalid featurizer
-        # The job will fail during execution, so we just verify a Job is returned
+        invalid_featurizer = "InvalidFeaturizer"
         job = live_featurize_client.run(
             dataset_address="test/dataset",
-            featurizer="InvalidFeaturizer",
+            featurizer=invalid_featurizer,
             output="featurized_output",
             dataset_column="smiles",
         )
-        # Job is created but will fail during worker execution
         assert isinstance(job, Job)
         assert job.id is not None and job.id != ""
 
-        # wait for job to fail - should raise exception with error message
-        with pytest.raises(Exception, match="Featurizer not recognized"):
+        expected_error_message = (
+            f"Job {job.id} failed: Featurizer {invalid_featurizer.lower()} not recognized"
+        )
+        with pytest.raises(Exception, match=expected_error_message):
             job.wait()

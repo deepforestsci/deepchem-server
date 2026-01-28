@@ -226,10 +226,10 @@ class Job:
         """
         if not self.result:
             return None
-        
+
         # Server may return result with surrounding quotes, strip them
         result = self.result.strip('"').strip("'")
-        
+
         if result.startswith("deepchem://"):
             return DeepchemData.from_address(result, self._client)
         return None
