@@ -4,8 +4,9 @@ Infer primitive module for DeepChem Server.
 Contains the InferPrimitive class for inference tasks.
 """
 
-from typing import Any, Dict, Optional, Union
+from typing import Optional, Union
 
+from ..models import Job
 from .base import Primitive
 
 
@@ -26,7 +27,7 @@ class Infer(Primitive):
         threshold: Optional[Union[int, float]] = None,
         profile_name: Optional[str] = None,
         project_name: Optional[str] = None,
-    ) -> Dict[str, Any]:
+    ) -> Job:
         """
         Run the inference primitive.
 
@@ -41,7 +42,7 @@ class Infer(Primitive):
             project_name: Project name (uses settings if not provided)
 
         Returns:
-            Response containing the inference results address
+            Job object representing the submitted inference job
 
         Raises:
             ValueError: If required settings are missing
@@ -62,5 +63,10 @@ class Infer(Primitive):
 
         data = {k: v for k, v in data.items() if v is not None}
 
-        response = self._post("/primitive/infer", json=data)
-        return self._validate_response(response)
+        response = self._post("/v1/primitive/infer", json=data)
+        response_data = self._validate_response(response)
+        job = Job.from_dict(response_data, self)
+        job.profile = profile
+        job.project = project
+        job.program_name = "infer"
+        return job

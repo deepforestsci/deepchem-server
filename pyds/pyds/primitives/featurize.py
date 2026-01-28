@@ -6,6 +6,7 @@ Contains the FeaturizePrimitive class for featurization tasks.
 
 from typing import Any, Dict, Optional
 
+from ..models import Job, DeepchemData
 from .base import Primitive
 
 
@@ -18,7 +19,7 @@ class Featurize(Primitive):
 
     def run(
         self,
-        dataset_address: str,
+        dataset_address: DeepchemData | str,
         featurizer: str,
         output: str,
         dataset_column: str,
@@ -26,12 +27,12 @@ class Featurize(Primitive):
         label_column: Optional[str] = None,
         profile_name: Optional[str] = None,
         project_name: Optional[str] = None,
-    ) -> Dict[str, Any]:
+    ) -> Job:
         """
         Run the featurization primitive.
 
         Args:
-            dataset_address: Datastore address of dataset to featurize
+            dataset_address: DeepchemData object or string of dataset to featurize
             featurizer: Featurizer to use
             output: Name of the featurized dataset
             dataset_column: Column containing the input for featurizer
@@ -41,7 +42,7 @@ class Featurize(Primitive):
             project_name: Project name (uses settings if not provided)
 
         Returns:
-            Response containing the featurized file address
+            Job object representing the submitted featurization job
 
         Raises:
             ValueError: If required settings are missing
@@ -59,7 +60,7 @@ class Featurize(Primitive):
         data = {
             "profile_name": profile,
             "project_name": project,
-            "dataset_address": dataset_address,
+            "dataset_address": (dataset_address if isinstance(dataset_address, str) else dataset_address.address),
             "featurizer": featurizer,
             "output": output,
             "dataset_column": dataset_column,
@@ -69,5 +70,10 @@ class Featurize(Primitive):
         if label_column is not None:
             data["label_column"] = label_column
 
-        response = self._post("/primitive/featurize", json=data, headers={"Content-Type": "application/json"})
-        return self._validate_response(response)
+        response = self._post("/v1/primitive/featurize", json=data, headers={"Content-Type": "application/json"})
+        response_data = self._validate_response(response)
+        job = Job.from_dict(response_data, self)
+        job.profile = profile
+        job.project = project
+        job.program_name = "featurize"
+        return job

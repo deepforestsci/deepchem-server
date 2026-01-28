@@ -1,4 +1,4 @@
-from deepchem_server.core.fep.rbfe.utils.rbfe_utils import SolventComponentUtils
+from deepchem_server.core.primitives.fep.rbfe.utils.rbfe_utils import SolventComponentUtils
 from openff.units import unit  # type: ignore
 import pytest  # type: ignore
 from openfe import SolventComponent  # type: ignore

@@ -40,12 +40,20 @@ Router Module Documentation
 
 For detailed implementation information, the router endpoints are documented using auto-generated docstrings:
 
-.. automodule:: deepchem_server.routers.data
+.. automodule:: deepchem_server.api.routers.data
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: deepchem_server.routers.primitives
+.. automodule:: deepchem_server.api.routers.primitives
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. automodule:: deepchem_server.api.routers.jobs
+   :members:
+   :undoc-members:
+   :show-inheritance:
    :members:
    :undoc-members:
    :show-inheritance:

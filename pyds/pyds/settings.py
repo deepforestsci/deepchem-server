@@ -39,7 +39,7 @@ class Settings:
         # Initialize defaults
         self.profile = None
         self.project = None
-        self.base_url = "http://localhost:8000"
+        self.base_url = "http://localhost:8000/v1"
         self._additional_settings = {}
 
         if not os.path.exists(settings_file):

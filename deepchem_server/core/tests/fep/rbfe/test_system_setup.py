@@ -1,13 +1,13 @@
-from deepchem_server.core.fep.rbfe import system_setup
+from deepchem_server.core.primitives.fep.rbfe import system_setup
 import pytest  # type: ignore
 from openfe import (  # type: ignore
     ProteinComponent, SmallMoleculeComponent, SolventComponent,
 )
-from deepchem_server.core.fep.rbfe.data_domain_classes.RunnableEdge import RunnableEdge
+from deepchem_server.core.primitives.fep.rbfe.data_domain_classes.RunnableEdge import RunnableEdge
 from openff.units import unit  # type: ignore
 from gufe.ligandnetwork import LigandNetwork  # noqa
-from deepchem_server.core.fep.rbfe.data_domain_classes.EdgeSimulationResult import EdgeSimulationResult
-from deepchem_server.core.fep.rbfe.utils.constants import EMPTY_STRING, SUCCESS, TOLUENE, BENZENE, NetworkPlanningConstants  # noqa
+from deepchem_server.core.primitives.fep.rbfe.data_domain_classes.EdgeSimulationResult import EdgeSimulationResult
+from deepchem_server.core.primitives.fep.rbfe.utils.constants import EMPTY_STRING, SUCCESS, TOLUENE, BENZENE, NetworkPlanningConstants  # noqa
 
 
 def test_load_ligands(ligands_datastore_address):

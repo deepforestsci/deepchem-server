@@ -4,6 +4,7 @@ Unit tests for Infer primitive using live server.
 
 import pytest
 
+from pyds.models import Job
 from pyds.primitives import Infer
 from pyds.settings import Settings
 
@@ -20,13 +21,16 @@ class TestInfer:
 
     def test_run_basic_validation(self, live_infer_client: Infer) -> None:
         """Test basic parameter validation on live server."""
-        # Test with missing model to validate API communication
-        with pytest.raises(Exception):
-            live_infer_client.run(
-                model_address="non_existent_model",
-                data_address="non_existent_data",
-                output="test_inference",
-            )
+        # Note: Server now queues job even with invalid parameters
+        # The job will fail during execution, so we just verify a Job is returned
+        job = live_infer_client.run(
+            model_address="non_existent_model",
+            data_address="non_existent_data",
+            output="test_inference",
+        )
+        # Job is created but will fail during worker execution
+        assert isinstance(job, Job)
+        assert job.id is not None and job.id != ""
 
     def test_run_missing_settings(self, test_settings_not_configured: Settings) -> None:
         """Test infer run with missing settings."""

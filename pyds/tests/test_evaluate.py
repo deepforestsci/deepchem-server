@@ -4,6 +4,7 @@ Unit tests for Evaluate primitive using live server.
 
 import pytest
 
+from pyds.models import Job
 from pyds.primitives import Evaluate
 from pyds.settings import Settings
 
@@ -20,13 +21,17 @@ class TestEvaluate:
 
     def test_run_basic_validation(self, live_evaluate_client: Evaluate) -> None:
         """Test basic parameter validation on live server."""
-        with pytest.raises(Exception):
-            live_evaluate_client.run(
-                dataset_addresses=["non_existent_dataset"],
-                model_address="non_existent_model",
-                metrics=["accuracy"],
-                output_key="test_evaluation",
-            )
+        # Note: Server now queues job even with invalid parameters
+        # The job will fail during execution, so we just verify a Job is returned
+        job = live_evaluate_client.run(
+            dataset_addresses=["non_existent_dataset"],
+            model_address="non_existent_model",
+            metrics=["accuracy"],
+            output_key="test_evaluation",
+        )
+        # Job is created but will fail during worker execution
+        assert isinstance(job, Job)
+        assert job.id is not None and job.id != ""
 
     def test_run_missing_settings(self, test_settings_not_configured: Settings) -> None:
         """Test evaluate run with missing settings."""

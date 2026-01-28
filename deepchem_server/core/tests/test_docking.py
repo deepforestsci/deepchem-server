@@ -1,8 +1,11 @@
-from deepchem_server.core.cards import DataCard
-from deepchem_server.core import config, generate_pose
-import os
 import json
+import os
+
 import pytest
+
+from deepchem_server.core import config
+from deepchem_server.core.common.cards import DataCard
+from deepchem_server.core.primitives.docking import generate_pose
 
 
 def test_generate_pose_basic_functionality(disk_datastore):
@@ -60,8 +63,8 @@ def test_generate_pose_basic_functionality(disk_datastore):
             assert getattr(complex_data, 'n_atoms', 0) > 0
 
             # Optional text validation: serialize to PDB temporarily and check content
-            import tempfile
             import os as _os
+            import tempfile
             tmp_file = None
             try:
                 with tempfile.NamedTemporaryFile(suffix='.pdb', delete=False) as _tmp:

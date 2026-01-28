@@ -2,12 +2,14 @@
 Unit tests for Featurize primitive using live server.
 """
 
+import re
 import time
 import uuid
 
 import pytest
 
 from pyds.data import Data
+from pyds.models import DeepchemData, Job
 from pyds.primitives import Featurize
 from pyds.settings import Settings
 
@@ -40,10 +42,11 @@ class TestFeaturize:
             filename=f"test_featurize_{test_id}_{timestamp}.csv",
             description="Test data for featurization",
         )
-        dataset_address = upload_result["dataset_address"]
+        # Use .address instead of ["dataset_address"]
+        dataset_address = upload_result.address
 
-        # Test featurization
-        result = live_featurize_client.run(
+        # Test featurization - returns Job object
+        job = live_featurize_client.run(
             dataset_address=dataset_address,
             featurizer="ecfp",
             output=f"test_featurized_output_{test_id}_{timestamp}",
@@ -55,7 +58,16 @@ class TestFeaturize:
             label_column="label",
         )
 
-        assert "featurized_file_address" in result
+        # Verify Job object returned
+        assert isinstance(job, Job)
+        assert job.id is not None and job.id != ""
+
+        # wait for job to complete
+        job.wait()
+        featurized_data = job.result_as_data()
+        assert isinstance(featurized_data, DeepchemData)
+        assert featurized_data.address is not None and featurized_data.address != ""
+        assert f"test_featurized_output_{test_id}_{timestamp}" in featurized_data.address
 
     def test_run_with_defaults(
         self,
@@ -75,17 +87,27 @@ class TestFeaturize:
             filename=f"test_featurize_defaults_{test_id}_{timestamp}.csv",
             description="Test data for featurization with defaults",
         )
-        dataset_address = upload_result["dataset_address"]
+        # Use .address instead of ["dataset_address"]
+        dataset_address = upload_result.address
 
-        # Test featurization with minimal parameters
-        result = live_featurize_client.run(
+        # Test featurization with minimal parameters - returns Job object
+        job = live_featurize_client.run(
             dataset_address=dataset_address,
             featurizer="ecfp",
             output=f"test_featurized_defaults_{test_id}_{timestamp}",
             dataset_column="smiles",
         )
 
-        assert "featurized_file_address" in result
+        # Verify Job object returned
+        assert isinstance(job, Job)
+        assert job.id is not None and job.id != ""
+
+        # wait for job to complete
+        job.wait()
+        featurized_data = job.result_as_data()
+        assert isinstance(featurized_data, DeepchemData)
+        assert featurized_data.address is not None and featurized_data.address != ""
+        assert f"test_featurized_defaults_{test_id}_{timestamp}" in featurized_data.address
 
     def test_run_with_profile_project_override(
         self,
@@ -105,10 +127,11 @@ class TestFeaturize:
             filename=f"test_featurize_override_{test_id}_{timestamp}.csv",
             description="Test data for featurization with override",
         )
-        dataset_address = upload_result["dataset_address"]
+        # Use .address instead of ["dataset_address"]
+        dataset_address = upload_result.address
 
-        # Test featurization with profile/project override
-        result = live_featurize_client.run(
+        # Test featurization with profile/project override - returns Job object
+        job = live_featurize_client.run(
             dataset_address=dataset_address,
             featurizer="ecfp",
             output=f"test_featurized_override_{test_id}_{timestamp}",
@@ -117,7 +140,16 @@ class TestFeaturize:
             project_name="test_project",
         )
 
-        assert "featurized_file_address" in result
+        # Verify Job object returned
+        assert isinstance(job, Job)
+        assert job.id is not None and job.id != ""
+
+        # wait for job to complete
+        job.wait()
+        featurized_data = job.result_as_data()
+        assert isinstance(featurized_data, DeepchemData)
+        assert featurized_data.address is not None and featurized_data.address != ""
+        assert f"test_featurized_override_{test_id}_{timestamp}" in featurized_data.address
 
     def test_run_missing_settings(self, test_settings_not_configured: Settings) -> None:
         """Test featurize run with missing settings."""
@@ -133,11 +165,19 @@ class TestFeaturize:
 
     def test_run_api_error(self, live_featurize_client: Featurize) -> None:
         """Test featurize run with API error on live server."""
-        # Test with invalid featurizer to trigger server error
-        with pytest.raises(Exception, match="Invalid featurizer"):
-            live_featurize_client.run(
-                dataset_address="test/dataset",
-                featurizer="InvalidFeaturizer",
-                output="featurized_output",
-                dataset_column="smiles",
-            )
+        invalid_featurizer = "InvalidFeaturizer"
+        job = live_featurize_client.run(
+            dataset_address="test/dataset",
+            featurizer=invalid_featurizer,
+            output="featurized_output",
+            dataset_column="smiles",
+        )
+        assert isinstance(job, Job)
+        assert job.id is not None and job.id != ""
+
+        expected_error_regex = (r"Job\s+{}\s+failed:.*Featurizer\s+(?:{}\s+)?not\s+recognized".format(
+            re.escape(str(job.id)),
+            re.escape(invalid_featurizer.lower()),
+        ))
+        with pytest.raises(Exception, match=expected_error_regex):
+            job.wait()

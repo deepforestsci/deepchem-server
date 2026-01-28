@@ -5,9 +5,10 @@ Contains the abstract Primitive class that all specific primitive implementation
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional
+from typing import Optional
 
 from ..base import BaseClient
+from ..models import Job
 from ..settings import Settings
 
 
@@ -30,7 +31,7 @@ class Primitive(BaseClient, ABC):
         super().__init__(settings, base_url)
 
     @abstractmethod
-    def run(self, *args, **kwargs) -> Dict[str, Any]:
+    def run(self, *args, **kwargs) -> Job:
         """
         Abstract method to run the primitive.
 
@@ -41,7 +42,7 @@ class Primitive(BaseClient, ABC):
             **kwargs: Arbitrary keyword arguments
 
         Returns:
-            Response dictionary containing the result of the primitive execution
+            Job object representing the submitted job
 
         Raises:
             NotImplementedError: If not implemented by concrete class

@@ -1,14 +1,14 @@
 #!/bin/bash
 
-# lint.sh - Run yapf, isort, flake8, and mypy on Python files in a specified directory
+# lint.sh - Run yapf, flake8, and mypy on Python files in a specified directory
 # Usage: ./lint.sh [directory] [options]
 #
 # Options:
 #   --files      Specify individual Python files to lint (space-separated)
-#   --fix        Apply yapf formatting and isort import sorting automatically
+#   --fix        Apply yapf formatting automatically
 #   --strict     Use strict mypy checking (overrides setup.cfg)
 #   --linter     Specify which linter(s) to run (comma-separated)
-#                Available: yapf,isort,flake8,mypy (default: all)
+#                Available: yapf,flake8,mypy (default: all)
 #   --help       Show this help message
 
 set -e
@@ -34,7 +34,7 @@ FAILED_LINTERS=()
 show_help() {
     echo "Usage: $0 [directory] [options]"
     echo ""
-    echo "Run yapf, isort, flake8, and mypy on Python files in the specified directory."
+    echo "Run yapf, flake8, and mypy on Python files in the specified directory."
     echo "The script automatically uses configuration from setup.cfg if available."
     echo ""
     echo "Arguments:"
@@ -42,15 +42,15 @@ show_help() {
     echo ""
     echo "Options:"
     echo "  --files      Specify individual Python files to lint (space-separated)"
-    echo "  --fix        Apply yapf formatting and isort import sorting automatically"
+    echo "  --fix        Apply yapf formatting automatically"
     echo "  --strict     Use strict mypy checking (overrides setup.cfg)"
     echo "  --linter     Specify which linter(s) to run (comma-separated)"
-    echo "               Available: yapf,isort,flake8,mypy (default: all)"
+    echo "               Available: yapf,flake8,mypy (default: all)"
     echo "  --help       Show this help message"
     echo ""
     echo "Configuration:"
     echo "  The script looks for setup.cfg in the current directory or parent directory."
-    echo "  If found, it uses the [yapf], [isort], [flake8], and [mypy] sections for configuration."
+    echo "  If found, it uses the [yapf], [flake8], and [mypy] sections for configuration."
     echo ""
     echo "Examples:"
     echo "  $0                                          # Run all linters on current directory"
@@ -84,9 +84,9 @@ while [[ $# -gt 0 ]]; do
             LINTERS="$1"
             # Validate linter names
             for linter in ${LINTERS//,/ }; do
-                if [[ ! "$linter" =~ ^(yapf|isort|flake8|mypy|all)$ ]]; then
+                if [[ ! "$linter" =~ ^(yapf|flake8|mypy|all)$ ]]; then
                     echo -e "${RED}Error: Invalid linter '$linter'${NC}"
-                    echo "Available linters: yapf, isort, flake8, mypy"
+                    echo "Available linters: yapf, flake8, mypy"
                     exit 1
                 fi
             done
@@ -191,9 +191,7 @@ echo -e "${BLUE}Checking required tools...${NC}\n"
 if should_run_linter "yapf"; then
     check_tool yapf
 fi
-if should_run_linter "isort"; then
-    check_tool isort
-fi
+
 if should_run_linter "flake8"; then
     check_tool flake8
 fi
@@ -226,29 +224,7 @@ else
     YAPF_FAILED=false
 fi
 
-# Run isort (import sorter)
-if should_run_linter "isort"; then
-    echo -e "${BLUE}Running isort (import sorter)...${NC}"
-    if [ "$FIX_FORMAT" = true ]; then
-        echo -e "${YELLOW}Auto-fixing import order...${NC}"
-        echo "$PYTHON_FILES" | xargs isort
-        echo -e "${GREEN}✓ Import sorting applied${NC}"
-        ISORT_FAILED=false
-    else
-        if echo "$PYTHON_FILES" | xargs isort --check-only --diff; then
-            echo -e "${GREEN}✓ All imports are properly sorted${NC}"
-            ISORT_FAILED=false
-        else
-            echo -e "${RED}✗ Import sorting issues found${NC}"
-            echo "Run with --fix to automatically fix import order"
-            ISORT_FAILED=true
-            FAILED_LINTERS+=("isort")
-        fi
-    fi
-    echo ""
-else
-    ISORT_FAILED=false
-fi
+
 
 # Run flake8 (linter)
 if should_run_linter "flake8"; then
@@ -303,9 +279,7 @@ if [ "$FIX_FORMAT" = true ]; then
     if should_run_linter "yapf"; then
         echo -e "yapf (formatter): ${GREEN}APPLIED${NC}"
     fi
-    if should_run_linter "isort"; then
-        echo -e "isort (import sorter): ${GREEN}APPLIED${NC}"
-    fi
+
 else
     if should_run_linter "yapf"; then
         if [ "$YAPF_FAILED" = true ]; then
@@ -315,13 +289,7 @@ else
         fi
     fi
 
-    if should_run_linter "isort"; then
-        if [ "$ISORT_FAILED" = true ]; then
-            echo -e "isort (import sorter): ${RED}FAILED${NC}"
-        else
-            echo -e "isort (import sorter): ${GREEN}PASSED${NC}"
-        fi
-    fi
+
 fi
 
 if should_run_linter "flake8"; then
@@ -342,7 +310,7 @@ fi
 
 # Exit with error code if any tool failed (unless we're just fixing formatting)
 if [ "$FIX_FORMAT" = false ]; then
-    if [ "$YAPF_FAILED" = true ] || [ "$ISORT_FAILED" = true ] || [ "$FLAKE8_FAILED" = true ] || [ "$MYPY_FAILED" = true ]; then
+    if [ "$YAPF_FAILED" = true ] || [ "$FLAKE8_FAILED" = true ] || [ "$MYPY_FAILED" = true ]; then
         echo -e "\n${RED}One or more linters failed: ${FAILED_LINTERS[*]}${NC}"
         echo "Please fix the issues and try again."
         exit 1

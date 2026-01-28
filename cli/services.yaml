@@ -1,0 +1,139 @@
+# DeepChem Server - Service Configuration
+# Services are started in dependency order
+
+# =============================================================================
+# Infrastructure Dependencies
+# =============================================================================
+dependencies:
+  redis:
+    name: Redis
+    description: Message queue backend
+    
+    local:
+      command: ["redis-server"]
+      health_check:
+        type: command
+        command: ["redis-cli", "ping"]
+        expected: "PONG"
+    
+    docker:
+      service: redis
+      
+    port: 6379
+
+  mysql:
+    name: MySQL
+    description: Database backend for job state persistence
+    
+    local:
+      command: ["mysqld"]
+      env:
+        MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD:-deepchem_root}"
+      health_check:
+        type: command
+        command: ["mysqladmin", "ping", "-h", "localhost"]
+        expected: "mysqld is alive"
+    
+    docker:
+      service: mysql
+      
+    port: 3306
+
+# =============================================================================
+# Core Services
+# =============================================================================
+services:
+  datastore:
+    name: Datastore
+    description: File storage API for data and models
+    depends_on: []
+    
+    local:
+      command: ["python", "-m", "deepchem_server.services.datastore"]
+      env:
+        DATASTORE_BASE_DIR: "${DATASTORE_BASE_DIR:-./data/datastore}"
+        DATASTORE_API_KEY: "${DATASTORE_API_KEY:-dev-api-key}"
+        DATASTORE_PORT: "${DATASTORE_PORT:-8081}"
+      health_check:
+        type: http
+        url: "http://localhost:8081/api/v1/healthcheck"
+        timeout: 30
+    
+    docker:
+      service: datastore
+    
+    port: 8081
+
+  gateway:
+    name: Gateway
+    description: REST API server for DeepChem operations
+    depends_on: ["redis", "mysql", "datastore"]
+    
+    local:
+      command: 
+        - "uvicorn"
+        - "deepchem_server.api.main:app"
+        - "--host"
+        - "0.0.0.0"
+        - "--port"
+        - "8000"
+        - "--reload"
+      env:
+        REDIS_URL: "${REDIS_URL:-redis://localhost:6379/0}"
+        JOBS_DATABASE_URL: "${JOBS_DATABASE_URL:-mysql+pymysql://root:${MYSQL_ROOT_PASSWORD:-deepchem_root}@localhost:3306/deepchem_jobs}"
+        DATASTORE_URL: "${DATASTORE_URL:-http://localhost:8081}"
+        DATASTORE_API_KEY: "${DATASTORE_API_KEY:-dev-api-key}"
+        DATADIR: "${DATADIR:-./data}"
+      health_check:
+        type: http
+        url: "http://localhost:8000/healthcheck"
+        timeout: 25
+    
+    docker:
+      service: gateway
+    
+    port: 8000
+
+  worker:
+    name: Worker
+    description: Job execution worker for DeepChem tasks
+    depends_on: ["redis", "mysql", "datastore"]
+    scalable: true
+    default_replicas: 2
+    
+    local:
+      command: 
+        - "python"
+        - "-m"
+        - "deepchem_server.services.jobs.run_worker"
+        - "--simple"
+        - "--recover"
+      env:
+        REDIS_URL: "${REDIS_URL:-redis://localhost:6379/0}"
+        JOBS_DATABASE_URL: "${JOBS_DATABASE_URL:-mysql+pymysql://root:${MYSQL_ROOT_PASSWORD:-deepchem_root}@localhost:3306/deepchem_jobs}"
+        DATASTORE_URL: "${DATASTORE_URL:-http://localhost:8081}"
+        DATASTORE_API_KEY: "${DATASTORE_API_KEY:-dev-api-key}" # Change this for production
+        DATADIR: "${DATADIR:-./data}"
+        OBJC_DISABLE_INITIALIZE_FORK_SAFETY: "YES"
+      health_check:
+        type: process
+    
+    docker:
+      service: worker
+    
+    port: null
+
+# =============================================================================
+# Global Settings
+# =============================================================================
+settings:
+  data_dir: "./data"
+  pid_dir: ".deepchem/pids"
+  log_dir: ".deepchem/logs"
+  
+  # Directories to create on startup
+  create_dirs:
+    - "./data"
+    - "./data/datastore"
+    - ".deepchem/pids"
+    - ".deepchem/logs"

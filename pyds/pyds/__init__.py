@@ -9,10 +9,11 @@ __version__ = "0.1.0"
 
 from .base import BaseClient
 from .data import Data
+from .models import DeepchemData, Job, JobStatus
 from .primitives.base import Primitive
+from .primitives.docking import Docking
 from .primitives.evaluate import Evaluate
 from .primitives.featurize import Featurize
-from .primitives.docking import Docking
 from .primitives.infer import Infer
 from .primitives.splitter import TVTSplit
 from .primitives.train import Train
@@ -30,4 +31,8 @@ __all__ = [
     "Evaluate",
     "Infer",
     "TVTSplit",
+    # New model classes
+    "Job",
+    "JobStatus",
+    "DeepchemData",
 ]

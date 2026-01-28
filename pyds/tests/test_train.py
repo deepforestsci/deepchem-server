@@ -3,12 +3,13 @@ Unit tests for Train primitive using live server.
 """
 
 import time
-from typing import Any
 import uuid
+from typing import Any
 
 import pytest
 
 from pyds.data import Data
+from pyds.models import Job
 from pyds.primitives import Train
 from pyds.settings import Settings
 
@@ -44,8 +45,8 @@ class TestTrain:
         )
 
         # Featurize data using ECFP with unique output name
-        featurize_result = live_featurize_client.run(
-            dataset_address=upload_result["dataset_address"],
+        featurize_job = live_featurize_client.run(
+            dataset_address=upload_result.address,
             featurizer="ecfp",
             output=f"train_rf_feat_{test_id}_{timestamp}",
             dataset_column="smiles",
@@ -56,8 +57,13 @@ class TestTrain:
             },
         )
 
-        result = live_train_client.run(
-            dataset_address=featurize_result["featurized_file_address"],
+        # Wait for featurization to complete and get result
+        featurize_job.wait()
+        featurized_data = featurize_job.result_as_data()
+        assert featurized_data is not None
+
+        train_job = live_train_client.run(
+            dataset_address=featurized_data.address,
             model_type="random_forest_classifier",
             model_name=f"rf_cls_model_{test_id}_{timestamp}",
             init_kwargs={
@@ -67,9 +73,9 @@ class TestTrain:
             train_kwargs={},
         )
 
-        assert "trained_model_address" in result
-        assert isinstance(result["trained_model_address"], str)
-        assert len(result["trained_model_address"]) > 0
+        # Verify Job object returned
+        assert isinstance(train_job, Job)
+        assert train_job.id is not None and train_job.id != ""
 
     def test_train_random_forest_regressor(
         self,
@@ -91,8 +97,8 @@ class TestTrain:
             description="Test data for random forest regressor training",
         )
 
-        featurize_result = live_featurize_client.run(
-            dataset_address=upload_result["dataset_address"],
+        featurize_job = live_featurize_client.run(
+            dataset_address=upload_result.address,
             featurizer="ecfp",
             output=f"train_rf_reg_feat_{test_id}_{timestamp}",
             dataset_column="smiles",
@@ -103,8 +109,13 @@ class TestTrain:
             },
         )
 
-        result = live_train_client.run(
-            dataset_address=featurize_result["featurized_file_address"],
+        # Wait for featurization to complete and get result
+        featurize_job.wait()
+        featurized_data = featurize_job.result_as_data()
+        assert featurized_data is not None
+
+        train_job = live_train_client.run(
+            dataset_address=featurized_data.address,
             model_type="random_forest_regressor",
             model_name=f"rf_reg_model_{test_id}_{timestamp}",
             init_kwargs={
@@ -114,10 +125,9 @@ class TestTrain:
             train_kwargs={},
         )
 
-        # Verify the response structure
-        assert "trained_model_address" in result
-        assert isinstance(result["trained_model_address"], str)
-        assert len(result["trained_model_address"]) > 0
+        # Verify Job object returned
+        assert isinstance(train_job, Job)
+        assert train_job.id is not None and train_job.id != ""
 
     def test_train_linear_regression(
         self,
@@ -139,26 +149,30 @@ class TestTrain:
             description="Test data for linear regression training",
         )
 
-        featurize_result = live_featurize_client.run(
-            dataset_address=upload_result["dataset_address"],
+        featurize_job = live_featurize_client.run(
+            dataset_address=upload_result.address,
             featurizer="ecfp",
             output=f"train_linear_feat_{test_id}_{timestamp}",
             dataset_column="smiles",
             label_column="property",
         )
 
-        result = live_train_client.run(
-            dataset_address=featurize_result["featurized_file_address"],
+        # Wait for featurization to complete and get result
+        featurize_job.wait()
+        featurized_data = featurize_job.result_as_data()
+        assert featurized_data is not None
+
+        train_job = live_train_client.run(
+            dataset_address=featurized_data.address,
             model_type="linear_regression",
             model_name=f"linear_model_{test_id}_{timestamp}",
             init_kwargs={"fit_intercept": True},
             train_kwargs={},
         )
 
-        # Verify the response structure
-        assert "trained_model_address" in result
-        assert isinstance(result["trained_model_address"], str)
-        assert len(result["trained_model_address"]) > 0
+        # Verify Job object returned
+        assert isinstance(train_job, Job)
+        assert train_job.id is not None and train_job.id != ""
 
     def test_train_with_minimal_parameters(
         self,
@@ -179,41 +193,54 @@ class TestTrain:
             filename=f"train_minimal_{test_id}_{timestamp}.csv",
         )
 
-        featurize_result = live_featurize_client.run(
-            dataset_address=upload_result["dataset_address"],
+        featurize_job = live_featurize_client.run(
+            dataset_address=upload_result.address,
             featurizer="ecfp",
             output=f"train_minimal_feat_{test_id}_{timestamp}",
             dataset_column="smiles",
             label_column="label",
         )
 
+        # Wait for featurization to complete and get result
+        featurize_job.wait()
+        featurized_data = featurize_job.result_as_data()
+        assert featurized_data is not None
+
         # Train with minimal parameters (no init_kwargs, no train_kwargs)
-        result = live_train_client.run(
-            dataset_address=featurize_result["featurized_file_address"],
+        train_job = live_train_client.run(
+            dataset_address=featurized_data.address,
             model_type="random_forest_classifier",
             model_name=f"minimal_model_{test_id}_{timestamp}",
         )
 
-        assert "trained_model_address" in result
-        assert isinstance(result["trained_model_address"], str)
+        # Verify Job object returned
+        assert isinstance(train_job, Job)
+        assert train_job.id is not None and train_job.id != ""
 
     def test_train_invalid_model_type(self, live_train_client: Train) -> None:
         """Test training with invalid model type."""
-        with pytest.raises(Exception, match="Invalid model type"):
-            live_train_client.run(
-                dataset_address="test/dataset",
-                model_type="NonExistentModel",
-                model_name="test_model",
-            )
+        # Note: Server now queues job even with invalid model type
+        # The job will fail during execution, so we just verify a Job is returned
+        train_job = live_train_client.run(
+            dataset_address="test/dataset",
+            model_type="NonExistentModel",
+            model_name="test_model",
+        )
+        # Job is created but will fail during worker execution
+        assert isinstance(train_job, Job)
+        assert train_job.id is not None and train_job.id != ""
 
     def test_train_nonexistent_dataset(self, live_train_client: Train) -> None:
         """Test training with non-existent dataset."""
-        with pytest.raises(Exception):
-            live_train_client.run(
-                dataset_address="nonexistent/dataset/address",
-                model_type="random_forest_classifier",
-                model_name="test_model",
-            )
+        # Note: Server queues job, but it will fail during execution
+        train_job = live_train_client.run(
+            dataset_address="nonexistent/dataset/address",
+            model_type="random_forest_classifier",
+            model_name="test_model",
+        )
+        # Job is created but will fail during worker execution
+        assert isinstance(train_job, Job)
+        assert train_job.id is not None and train_job.id != ""
 
     def test_run_missing_settings(self, test_settings_not_configured: Settings) -> None:
         """Test train run with missing settings."""

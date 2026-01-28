@@ -10,6 +10,7 @@ import pytest
 import responses
 
 from pyds.data import Data
+from pyds.models import DeepchemData
 from pyds.settings import Settings
 
 
@@ -34,7 +35,7 @@ class TestData:
         """Test successful data upload."""
         responses.add(
             responses.POST,
-            "http://localhost:8000/data/uploaddata",
+            "http://localhost:8000/v1/data/uploaddata",
             json=sample_upload_response,
             status=200,
         )
@@ -46,7 +47,8 @@ class TestData:
                                          filename="custom_name.csv",
                                          description="Test description")
 
-        assert result == sample_upload_response
+        assert isinstance(result, DeepchemData)
+        assert result.address == sample_upload_response["dataset_address"]
 
     @responses.activate
     def test_upload_data_with_defaults(self, data_client: Data, temp_test_file: str,
@@ -54,7 +56,7 @@ class TestData:
         """Test data upload with default parameters."""
         responses.add(
             responses.POST,
-            "http://localhost:8000/data/uploaddata",
+            "http://localhost:8000/v1/data/uploaddata",
             json=sample_upload_response,
             status=200,
         )
@@ -64,7 +66,8 @@ class TestData:
 
         result = data_client.upload_data(file_path=temp_test_file)
 
-        assert result == sample_upload_response
+        assert isinstance(result, DeepchemData)
+        assert result.address == sample_upload_response["dataset_address"]
 
     @responses.activate
     def test_upload_data_with_profile_project_override(self, data_client: Data, temp_test_file: str,
@@ -72,7 +75,7 @@ class TestData:
         """Test data upload with profile and project override."""
         responses.add(
             responses.POST,
-            "http://localhost:8000/data/uploaddata",
+            "http://localhost:8000/v1/data/uploaddata",
             json=sample_upload_response,
             status=200,
         )
@@ -87,7 +90,8 @@ class TestData:
             project_name="custom_project",
         )
 
-        assert result == sample_upload_response
+        assert isinstance(result, DeepchemData)
+        assert result.address == sample_upload_response["dataset_address"]
 
     def test_upload_data_missing_settings(self, test_settings_not_configured: Settings, temp_test_file: str) -> None:
         """Test upload_data with missing settings."""
@@ -101,7 +105,7 @@ class TestData:
         """Test upload_data with API error."""
         responses.add(
             responses.POST,
-            "http://localhost:8000/data/uploaddata",
+            "http://localhost:8000/v1/data/uploaddata",
             json={"detail": "Upload failed"},
             status=400,
         )
@@ -126,8 +130,8 @@ class TestData:
 
         responses.add(
             responses.POST,
-            "http://localhost:8000/data/uploaddata",
-            json={"dataset_address": "test"},
+            "http://localhost:8000/v1/data/uploaddata",
+            json={"dataset_address": "deepchem://test/test/data"},
             status=200,
         )
 
@@ -136,7 +140,8 @@ class TestData:
 
         result = data_client.upload_data(file_path=temp_test_file)
 
-        assert result == {"dataset_address": "test"}
+        assert isinstance(result, DeepchemData)
+        assert result.address == "deepchem://test/test/data"
 
     @responses.activate
     def test_upload_data_request_exception(self, data_client: Data, temp_test_file: str) -> None:
@@ -153,8 +158,8 @@ class TestData:
         """Test that file handle is closed on successful upload."""
         responses.add(
             responses.POST,
-            "http://localhost:8000/data/uploaddata",
-            json={"dataset_address": "test"},
+            "http://localhost:8000/v1/data/uploaddata",
+            json={"dataset_address": "deepchem://test/test/data"},
             status=200,
         )
 
@@ -162,7 +167,8 @@ class TestData:
             f.write("test,data\n1,2")
 
         result = data_client.upload_data(file_path=temp_test_file)
-        assert result == {"dataset_address": "test"}
+        assert isinstance(result, DeepchemData)
+        assert result.address == "deepchem://test/test/data"
 
     def test_upload_data_file_closes_on_error(self, data_client: Data, temp_test_file: str) -> None:
         """Test that file handle is closed on upload error."""
@@ -178,8 +184,8 @@ class TestData:
         """Test upload_data with all parameters."""
         responses.add(
             responses.POST,
-            "http://localhost:8000/data/uploaddata",
-            json={"dataset_address": "test"},
+            "http://localhost:8000/v1/data/uploaddata",
+            json={"dataset_address": "deepchem://test/test/data"},
             status=200,
         )
 
@@ -193,15 +199,16 @@ class TestData:
             backend="custom",
         )
 
-        assert result == {"dataset_address": "test"}
+        assert isinstance(result, DeepchemData)
+        assert result.address == "deepchem://test/test/data"
 
     @responses.activate
     def test_upload_data_no_description(self, data_client: Data, temp_test_file: str) -> None:
         """Test upload_data without description."""
         responses.add(
             responses.POST,
-            "http://localhost:8000/data/uploaddata",
-            json={"dataset_address": "test"},
+            "http://localhost:8000/v1/data/uploaddata",
+            json={"dataset_address": "deepchem://test/test/data"},
             status=200,
         )
 
@@ -210,4 +217,5 @@ class TestData:
 
         result = data_client.upload_data(file_path=temp_test_file)
 
-        assert result == {"dataset_address": "test"}
+        assert isinstance(result, DeepchemData)
+        assert result.address == "deepchem://test/test/data"
