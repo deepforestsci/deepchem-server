@@ -69,6 +69,38 @@ class DependencyResolver:
             True if all services started successfully.
         """
         deps, ordered_services = self.resolve_order(services)
+
+        # In docker mode, do a single compose up (optionally scaling),
+        # and build images to avoid stale-code mismatches.
+        if self.mode == "docker":
+            # Determine services to start
+            services_to_start: list[str] = []
+            if not skip_deps:
+                services_to_start.extend(deps)
+            services_to_start.extend(ordered_services)
+
+            # Deduplicate while preserving order
+            seen: set[str] = set()
+            services_to_start = [s for s in services_to_start if not (s in seen or seen.add(s))]
+
+            scale: dict[str, int] | None = None
+            if "worker" in services_to_start and num_workers > 1:
+                scale = {"worker": num_workers}
+
+            console.print("[bold]Starting services (Docker Compose)...[/]")
+            ok = self.docker_mgr.start(
+                services=services_to_start if services_to_start else None,
+                scale=scale,
+                build=True,
+                no_deps=skip_deps,
+            )
+            if not ok:
+                return False
+
+            console.print()
+            console.print("[bold green]✓ All services started successfully![/]")
+            self._print_urls()
+            return True
         
         # Check what's already running in Docker (if in local mode)
         docker_running: set[str] = set()

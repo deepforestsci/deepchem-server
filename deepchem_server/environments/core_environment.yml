@@ -1,6 +1,7 @@
 name: deepchem-server-env
 dependencies:
   - python=3.11
+  - conda-forge::cryptography
   - conda-forge::pdbfixer
   - conda-forge::vina
   - conda-forge::openfe=1.1.0

@@ -111,6 +111,7 @@ class DockerManager:
         services: list[str] | None = None, 
         scale: dict[str, int] | None = None,
         build: bool = False,
+        no_deps: bool = False,
     ) -> bool:
         """Start docker services.
         
@@ -118,6 +119,7 @@ class DockerManager:
             services: Specific services to start. None for all.
             scale: Dict of service name to replica count for scaling.
             build: Whether to build images before starting.
+            no_deps: Whether to skip starting dependencies.
         
         Returns:
             True if successful, False otherwise.
@@ -126,6 +128,9 @@ class DockerManager:
         
         if build:
             cmd.append("--build")
+
+        if no_deps:
+            cmd.append("--no-deps")
         
         if scale:
             for svc, count in scale.items():
