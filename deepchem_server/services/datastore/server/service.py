@@ -124,13 +124,9 @@ class DatastoreService:
             prefix = "deepchem://"
             destination_profile = destination.replace(prefix, "").split("/")[0]
             destination_project = destination.replace(prefix, "").split("/")[1]
-            destination_key = destination.replace(
-                prefix + destination_profile + "/" + destination_project + "/", ""
-            )
+            destination_key = destination.replace(prefix + destination_profile + "/" + destination_project + "/", "")
 
-            destination_path = self._get_storage_path(
-                destination_profile, destination_project, destination_key
-            )
+            destination_path = self._get_storage_path(destination_profile, destination_project, destination_key)
 
             card = self.get_card(profile, project, key)
             if card:
@@ -167,11 +163,7 @@ class DatastoreService:
             # move the card
             if card:
                 card_path = self._get_card_path(profile, project, key, kind)
-                card_path.rename(
-                    self._get_card_path(
-                        destination_profile, destination_project, destination_key, kind
-                    )
-                )
+                card_path.rename(self._get_card_path(destination_profile, destination_project, destination_key, kind))
 
             self.delete_object(profile, project, key, kind)
 

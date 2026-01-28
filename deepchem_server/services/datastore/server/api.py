@@ -152,7 +152,7 @@ async def upload_data(
 
 
 @router.post("/dir/{profile}/{project}/{dirname}")
-async def upload_directory(
+async def create_directory(
     profile: str,
     project: str,
     dirname: str,

@@ -295,9 +295,7 @@ class DeepchemDatastore:
         card_dict = json.loads(card.to_json())
 
         # Models are directories - ZIP and upload
-        return self.client.upload_directory(
-            self._make_address(address), model.model_dir, card_dict, "model"
-        )
+        return self.client.upload_directory(self._make_address(address), model.model_dir, card_dict, "model")
 
     def upload_model_from_memory(
         self,
@@ -341,9 +339,7 @@ class DeepchemDatastore:
                     f.write(file_handle.read())
 
             card_dict = json.loads(card.to_json())
-            return self.client.upload_directory(
-                self._make_address(address), model_dir, card_dict, "model"
-            )
+            return self.client.upload_directory(self._make_address(address), model_dir, card_dict, "model")
         finally:
             shutil.rmtree(temp_dir, ignore_errors=True)
 

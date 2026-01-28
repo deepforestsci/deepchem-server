@@ -1,7 +1,6 @@
 import ast
 import multiprocessing as mp
 import os
-import re
 import tempfile
 from typing import Dict, Iterable, List, Optional, Set, Union
 

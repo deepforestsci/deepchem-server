@@ -157,9 +157,8 @@ class DatastoreClient:
             The assigned address
         """
         profile, project, key = self._parse_address(address)
-        response = self._get_client().post(
-            f"{self.base_url}/move/{profile}/{project}/{key}", json={"destination": destination}
-        )
+        response = self._get_client().post(f"{self.base_url}/move/{profile}/{project}/{key}",
+                                           json={"destination": destination})
         response.raise_for_status()
         return response.json()["address"]
 

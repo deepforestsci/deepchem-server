@@ -212,6 +212,7 @@ def test_get_file_size_disk_datastore(disk_datastore):
     file_size = os.path.getsize(path)
     assert disk_datastore.get_file_size(dataset_address) == file_size
 
+
 def test_dir_disk_add_list_data(disk_datastore):
     """Test adding a directory to disk and list data"""
     address = disk_datastore.add_dir("test_dir")
