@@ -174,8 +174,6 @@ class TestFeaturize:
         assert isinstance(job, Job)
         assert job.id is not None and job.id != ""
 
-        expected_error_message = (
-            f"Job {job.id} failed: Featurizer {invalid_featurizer.lower()} not recognized"
-        )
+        expected_error_message = (f"Job {job.id} failed: Featurizer {invalid_featurizer.lower()} not recognized")
         with pytest.raises(Exception, match=expected_error_message):
             job.wait()

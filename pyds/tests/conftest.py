@@ -11,7 +11,6 @@ from typing import Any, Dict, Generator, List
 
 import pytest
 import responses
-from urllib.error import URLError
 from urllib.parse import urlparse
 from urllib.request import urlopen
 
@@ -97,12 +96,10 @@ def pyds_services() -> Generator[None, None, None]:
         text=True,
     )
     if result.returncode != 0:
-        raise RuntimeError(
-            "Failed to start services for PyDS live tests.\n"
-            f"Command: {' '.join(start_cmd)}\n"
-            f"stdout:\n{result.stdout}\n"
-            f"stderr:\n{result.stderr}\n"
-        )
+        raise RuntimeError("Failed to start services for PyDS live tests.\n"
+                           f"Command: {' '.join(start_cmd)}\n"
+                           f"stdout:\n{result.stdout}\n"
+                           f"stderr:\n{result.stderr}\n")
 
     deadline = time.time() + 120.0
     while time.time() < deadline:
