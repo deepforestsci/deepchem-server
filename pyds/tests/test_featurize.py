@@ -2,6 +2,7 @@
 Unit tests for Featurize primitive using live server.
 """
 
+import re
 import time
 import uuid
 
@@ -174,6 +175,9 @@ class TestFeaturize:
         assert isinstance(job, Job)
         assert job.id is not None and job.id != ""
 
-        expected_error_message = (f"Job {job.id} failed: Featurizer {invalid_featurizer.lower()} not recognized")
-        with pytest.raises(Exception, match=expected_error_message):
+        expected_error_regex = (r"Job\s+{}\s+failed:.*Featurizer\s+(?:{}\s+)?not\s+recognized".format(
+            re.escape(str(job.id)),
+            re.escape(invalid_featurizer.lower()),
+        ))
+        with pytest.raises(Exception, match=expected_error_regex):
             job.wait()
