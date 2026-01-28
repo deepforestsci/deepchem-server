@@ -311,7 +311,9 @@ def featurize(
     # TODO: Handle parsing of dictionary via parser
     featurizer = featurizer.lower()
     if featurizer not in featurizer_map:
-        raise ValueError(f"Featurizer not recognized.\nAvailable featurizers: {list(featurizer_map.keys())}")
+        raise ValueError(
+            f"Featurizer {featurizer} not recognized. Available featurizers: {list(featurizer_map.keys())}"
+        )
     if dataset_address.endswith('csv'):
         if dataset_column == 'None' or dataset_column is None:
             raise ValueError("Please specify input column.")

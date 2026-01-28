@@ -69,7 +69,7 @@ def train(model_type: str,
     if isinstance(train_kwargs, str):
         train_kwargs = ast.literal_eval(train_kwargs)
     if model_type not in model_mappings.model_address_map:
-        raise ValueError(f"Model type not recognized.\nLogs: {model_mappings.LOGS}")
+        raise ValueError(f"Model type {model_type} not recognized")
 
     model = model_mappings.model_address_map[model_type](**init_kwargs)
     model_name = DeepchemAddress.get_key(model_name)
