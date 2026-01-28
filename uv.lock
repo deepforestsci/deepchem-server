@@ -213,15 +213,24 @@ name = "deepchem-datastore-client"
 version = "0.1.0"
 source = { editable = "deepchem_server/services/datastore/client" }
 dependencies = [
+    { name = "deepchem" },
     { name = "httpx" },
     { name = "pandas" },
 ]
 
+[package.optional-dependencies]
+images = [
+    { name = "pillow" },
+]
+
 [package.metadata]
 requires-dist = [
+    { name = "deepchem" },
     { name = "httpx" },
     { name = "pandas", specifier = ">=2.0.0" },
+    { name = "pillow", marker = "extra == 'images'", specifier = ">=10.0.0" },
 ]
+provides-extras = ["images"]
 
 [[package]]
 name = "deepchem-datastore-server"
