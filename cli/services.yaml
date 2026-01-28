@@ -80,7 +80,7 @@ services:
         - "--reload"
       env:
         REDIS_URL: "${REDIS_URL:-redis://localhost:6379/0}"
-        JOBS_DATABASE_URL: "${JOBS_DATABASE_URL:-mysql+pymysql://root:deepchem_root@localhost:3306/deepchem_jobs}"
+        JOBS_DATABASE_URL: "${JOBS_DATABASE_URL:-mysql+pymysql://root:${MYSQL_ROOT_PASSWORD:-deepchem_root}@localhost:3306/deepchem_jobs}"
         DATASTORE_URL: "${DATASTORE_URL:-http://localhost:8081}"
         DATASTORE_API_KEY: "${DATASTORE_API_KEY:-dev-api-key}"
         DATADIR: "${DATADIR:-./data}"
@@ -110,7 +110,7 @@ services:
         - "--recover"
       env:
         REDIS_URL: "${REDIS_URL:-redis://localhost:6379/0}"
-        JOBS_DATABASE_URL: "${JOBS_DATABASE_URL:-mysql+pymysql://root:deepchem_root@localhost:3306/deepchem_jobs}"
+        JOBS_DATABASE_URL: "${JOBS_DATABASE_URL:-mysql+pymysql://root:${MYSQL_ROOT_PASSWORD:-deepchem_root}@localhost:3306/deepchem_jobs}"
         DATASTORE_URL: "${DATASTORE_URL:-http://localhost:8081}"
         DATASTORE_API_KEY: "${DATASTORE_API_KEY:-dev-api-key}" # Change this for production
         DATADIR: "${DATADIR:-./data}"

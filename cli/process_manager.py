@@ -1,5 +1,6 @@
 """Local process management with PID and log tracking."""
 import os
+import socket
 import subprocess
 import time
 from dataclasses import dataclass
@@ -323,10 +324,27 @@ class LocalProcessManager:
             True if running, False otherwise.
         """
         pid = self._get_pid(name)
-        if pid is None:
+        if pid is not None:
+            return psutil.pid_exists(pid)
+
+        dep = self.config.dependencies.get(name)
+        if dep:
+            if dep.local.health_check.type != "process":
+                if self._check_health_quick(dep.local.health_check):
+                    return True
+            if dep.port and self._is_port_open(dep.port):
+                return True
             return False
-        
-        return psutil.pid_exists(pid)
+
+        svc = self.config.services.get(name)
+        if svc:
+            if svc.local.health_check.type != "process":
+                if self._check_health_quick(svc.local.health_check):
+                    return True
+            if svc.port and self._is_port_open(svc.port):
+                return True
+
+        return False
     
     def _get_pid(self, name: str) -> int | None:
         """Get PID for a service from its PID file.
@@ -445,6 +463,14 @@ class LocalProcessManager:
         
         # For process type, just return True (already checked running)
         return True
+
+    def _is_port_open(self, port: int, host: str = "127.0.0.1") -> bool:
+        """Check if a local TCP port is accepting connections."""
+        try:
+            with socket.create_connection((host, port), timeout=0.3):
+                return True
+        except OSError:
+            return False
     
     def show_logs(
         self, 
