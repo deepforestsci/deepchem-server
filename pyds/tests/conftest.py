@@ -3,10 +3,17 @@ Pytest configuration and fixtures for pyds tests.
 """
 
 import os
+import subprocess
+import sys
+import time
+from pathlib import Path
 from typing import Any, Dict, Generator, List
 
 import pytest
 import responses
+from urllib.error import URLError
+from urllib.parse import urlparse
+from urllib.request import urlopen
 
 from pyds import Settings
 from pyds.base.client import BaseClient
@@ -24,6 +31,105 @@ from .test_utils import (
     get_simple_regression_dataset,
     get_small_classification_dataset,
 )
+
+
+def _is_http_healthy(url: str, timeout_seconds: float = 2.0) -> bool:
+    try:
+        with urlopen(url, timeout=timeout_seconds) as resp:  # nosec B310
+            print(f"Response status: {getattr(resp, 'status', 0)}")
+            return 200 <= getattr(resp, "status", 0) < 300
+    except Exception:
+        return False
+
+
+@pytest.fixture(scope="session")
+def pyds_services() -> Generator[None, None, None]:
+    """Ensure a live DeepChem Server is available for PyDS live tests.
+
+    Default behavior:
+    - Starts services via the repo CLI in Docker mode:
+      `python -m cli start datastore gateway --mode docker`
+    - Reuses already-running services if the gateway healthcheck is already OK.
+    - Stops services on teardown only if this fixture started them.
+
+    Env overrides:
+    - PYDS_TEST_SERVER_URL: base URL for the gateway (default: http://localhost:8000)
+    - PYDS_TEST_MODE: CLI mode (default: docker)
+    - PYDS_TEST_SKIP_SERVICES=1: do not start/stop anything (assume externally managed)
+    - PYDS_TEST_KEEP_SERVICES=1: do not stop services after tests if we started them
+    """
+    if os.getenv("PYDS_TEST_SKIP_SERVICES") == "1":
+        yield
+        return
+
+    base_url = os.getenv("PYDS_TEST_SERVER_URL", "http://localhost:8000").rstrip("/")
+    mode = os.getenv("PYDS_TEST_MODE", "docker")
+
+    parsed = urlparse(base_url)
+    host = parsed.hostname or ""
+    # Only manage services automatically for local dev/CI URLs.
+    if host not in {"localhost", "127.0.0.1"}:
+        yield
+        return
+
+    health_url = f"{base_url}/healthcheck"
+    if _is_http_healthy(health_url):
+        yield
+        return
+
+    repo_root = Path(__file__).resolve().parents[2]
+    env = os.environ.copy()
+
+    start_cmd = [
+        sys.executable,
+        "-m",
+        "cli",
+        "start",
+        "--mode",
+        mode,
+    ]
+
+    result = subprocess.run(
+        start_cmd,
+        cwd=str(repo_root),
+        env=env,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(
+            "Failed to start services for PyDS live tests.\n"
+            f"Command: {' '.join(start_cmd)}\n"
+            f"stdout:\n{result.stdout}\n"
+            f"stderr:\n{result.stderr}\n"
+        )
+
+    deadline = time.time() + 120.0
+    while time.time() < deadline:
+        if _is_http_healthy(health_url):
+            break
+        time.sleep(0.5)
+    else:
+        raise TimeoutError(f"Timed out waiting for gateway healthcheck: {health_url}")
+
+    try:
+        yield
+    finally:
+        if os.getenv("PYDS_TEST_KEEP_SERVICES") == "1":
+            return
+
+        stop_cmd = [sys.executable, "-m", "cli", "stop", "--mode", mode]
+        # Best-effort teardown; don't fail the test run during cleanup.
+        try:
+            subprocess.run(
+                stop_cmd,
+                cwd=str(repo_root),
+                env=env,
+                capture_output=True,
+                text=True,
+            )
+        except Exception:
+            pass
 
 
 @pytest.fixture
@@ -180,7 +286,7 @@ def test_metrics() -> List[str]:
 
 # Live server testing fixtures
 @pytest.fixture
-def live_server_url() -> str:
+def live_server_url(pyds_services) -> str:
     """URL for live server testing."""
     return os.getenv("PYDS_TEST_SERVER_URL", "http://localhost:8000")
 
