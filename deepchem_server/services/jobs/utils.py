@@ -47,9 +47,9 @@ def init_datastore(profile_name: str, project_name: str) -> DeepchemDatastore:
     client = DatastoreClient(url=datastore_url)
     return DeepchemDatastore(
         client=client,
-        profile=profile_name,
-        project=project_name,
-        temp_dir=DATA_DIR,
+        profile_name=profile_name,
+        project_name=project_name,
+        basedir=DATA_DIR,
     )
 
 

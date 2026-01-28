@@ -6,7 +6,7 @@ Contains the FeaturizePrimitive class for featurization tasks.
 
 from typing import Any, Dict, Optional
 
-from ..models import Job
+from ..models import Job, DeepchemData
 from .base import Primitive
 
 
@@ -19,7 +19,7 @@ class Featurize(Primitive):
 
     def run(
         self,
-        dataset_address: str,
+        dataset_address: DeepchemData,
         featurizer: str,
         output: str,
         dataset_column: str,
@@ -32,7 +32,7 @@ class Featurize(Primitive):
         Run the featurization primitive.
 
         Args:
-            dataset_address: Datastore address of dataset to featurize
+            dataset_address: DeepchemData object of dataset to featurize
             featurizer: Featurizer to use
             output: Name of the featurized dataset
             dataset_column: Column containing the input for featurizer
@@ -60,7 +60,7 @@ class Featurize(Primitive):
         data = {
             "profile_name": profile,
             "project_name": project,
-            "dataset_address": dataset_address,
+            "dataset_address": dataset_address.address,
             "featurizer": featurizer,
             "output": output,
             "dataset_column": dataset_column,
