@@ -37,12 +37,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y docker-compose
 
-      - name: Make docker script executable
-        run: chmod +x ./docker.sh
-
-      - name: Run build and run script
-        run: ./docker.sh
-
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -52,7 +46,12 @@ jobs:
         run: |
           python -m pip install --upgrade pip &&
           pip install --no-cache-dir -r pyds/requirements.txt &&
+          pip install --no-cache-dir typer psutil pyyaml httpx rich &&
           pip install --no-cache-dir -r pyds/tests/requirements.txt
+
+      - name: Build Docker images (required for CLI start)
+        run: |
+          docker-compose build
 
       - name: Make pytest script executable
         run: chmod +x ./scripts/pytest_pyds.sh
@@ -63,7 +62,8 @@ jobs:
             echo "Tests passed"
             exit 0
           else
-            ./docker.sh -l
+            docker-compose ps || true
+            docker-compose logs --tail=200 || true
             echo "Tests failed! Check the logs above for debugging."
             exit 1
           fi
