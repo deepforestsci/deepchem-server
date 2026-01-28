@@ -16,6 +16,7 @@ from .dependency import DependencyResolver
 from .docker_manager import DockerManager
 from .process_manager import LocalProcessManager
 
+
 app = typer.Typer(
     name="deepchem-server-cli",
     help="Manage DeepChem Server services (local and Docker modes)",
@@ -50,7 +51,8 @@ def main(
     version: Annotated[
         bool,
         typer.Option(
-            "--version", "-v",
+            "--version",
+            "-v",
             callback=version_callback,
             is_eager=True,
             help="Show version and exit",
@@ -65,21 +67,21 @@ def main(
 def start(
     services: Annotated[
         Optional[list[str]],
-        typer.Argument(
-            help="Services to start (default: all). Options: datastore, gateway, worker"
-        ),
+        typer.Argument(help="Services to start (default: all). Options: datastore, gateway, worker"),
     ] = None,
     mode: Annotated[
         Optional[str],
         typer.Option(
-            "--mode", "-m",
+            "--mode",
+            "-m",
             help="Execution mode: local or docker (default: local, or DEEPCHEM_MODE env)",
         ),
     ] = None,
     workers: Annotated[
         int,
         typer.Option(
-            "--workers", "-w",
+            "--workers",
+            "-w",
             help="Number of worker replicas",
         ),
     ] = 2,
@@ -104,26 +106,26 @@ def start(
         deepchem-server-cli start --workers 4        # Start with 4 workers
     """
     effective_mode = get_mode(mode)
-    
+
     console.print()
     console.print(f"[bold]DeepChem Server - Starting services ({effective_mode} mode)[/]")
     console.print("=" * 50)
     console.print()
-    
+
     try:
         config = load_config()
     except FileNotFoundError as e:
         console.print(f"[red]✗ Configuration error: {e}[/]")
         raise typer.Exit(1)
-    
+
     resolver = DependencyResolver(config, effective_mode)
-    
+
     success = resolver.start_services(
         services=services,
         num_workers=workers,
         skip_deps=skip_deps,
     )
-    
+
     if not success:
         raise typer.Exit(1)
 
@@ -137,7 +139,8 @@ def stop(
     mode: Annotated[
         Optional[str],
         typer.Option(
-            "--mode", "-m",
+            "--mode",
+            "-m",
             help="Execution mode: local or docker",
         ),
     ] = None,
@@ -153,25 +156,25 @@ def stop(
         deepchem-server-cli stop --mode docker       # Stop Docker services
     """
     effective_mode = get_mode(mode)
-    
+
     console.print()
     console.print(f"[bold]DeepChem Server - Stopping services ({effective_mode} mode)[/]")
     console.print("=" * 50)
     console.print()
-    
+
     try:
         config = load_config()
     except FileNotFoundError as e:
         console.print(f"[red]✗ Configuration error: {e}[/]")
         raise typer.Exit(1)
-    
+
     if effective_mode == "docker":
         docker_mgr = DockerManager()
         docker_mgr.stop(services)
     else:
         local_mgr = LocalProcessManager(config)
         local_mgr.stop_services(services)
-    
+
     console.print()
     console.print("[green]✓ Stop complete[/]")
 
@@ -200,18 +203,18 @@ def restart(
         deepchem-server-cli restart worker           # Restart workers only
     """
     effective_mode = get_mode(mode)
-    
+
     console.print()
     console.print(f"[bold]DeepChem Server - Restarting services ({effective_mode} mode)[/]")
     console.print("=" * 50)
     console.print()
-    
+
     try:
         config = load_config()
     except FileNotFoundError as e:
         console.print(f"[red]✗ Configuration error: {e}[/]")
         raise typer.Exit(1)
-    
+
     # Stop first
     console.print("[bold]Stopping services...[/]")
     if effective_mode == "docker":
@@ -220,19 +223,19 @@ def restart(
     else:
         local_mgr = LocalProcessManager(config)
         local_mgr.stop_services(services)
-    
+
     console.print()
-    
+
     # Then start
     console.print("[bold]Starting services...[/]")
     resolver = DependencyResolver(config, effective_mode)
-    
+
     success = resolver.start_services(
         services=services,
         num_workers=workers,
         skip_deps=False,
     )
-    
+
     if not success:
         raise typer.Exit(1)
 
@@ -242,7 +245,8 @@ def status(
     mode: Annotated[
         Optional[str],
         typer.Option(
-            "--mode", "-m",
+            "--mode",
+            "-m",
             help="Check status for mode: local or docker",
         ),
     ] = None,
@@ -256,15 +260,15 @@ def status(
         deepchem-server-cli status --mode docker     # Show Docker service status
     """
     effective_mode = get_mode(mode)
-    
+
     try:
         config = load_config()
     except FileNotFoundError as e:
         console.print(f"[red]✗ Configuration error: {e}[/]")
         raise typer.Exit(1)
-    
+
     console.print()
-    
+
     # Build status table
     table = Table(
         title=f"DeepChem Server Status ({effective_mode.title()} Mode)",
@@ -276,22 +280,21 @@ def status(
     table.add_column("PID/Container", justify="right")
     table.add_column("Health", justify="center")
     table.add_column("Port", justify="right")
-    
+
     if effective_mode == "docker":
         docker_mgr = DockerManager()
         statuses = docker_mgr.get_status()
-        
+
         if not statuses:
             console.print("[yellow]No Docker services found[/]")
             console.print("[dim]  Run 'deepchem-server-cli start --mode docker' to start services[/]")
             return
-        
+
         for svc in statuses:
             status_str = "[green]● Running[/]" if svc.running else "[red]○ Stopped[/]"
             health_str = "[green]✓ Healthy[/]" if svc.healthy else (
-                "[yellow]⚠ Unknown[/]" if svc.running else "[dim]-[/]"
-            )
-            
+                "[yellow]⚠ Unknown[/]" if svc.running else "[dim]-[/]")
+
             table.add_row(
                 svc.name,
                 status_str,
@@ -301,27 +304,26 @@ def status(
             )
     else:
         local_mgr = LocalProcessManager(config)
-        statuses = local_mgr.get_all_status()
-        
+        statuses = local_mgr.get_all_status()  # type: ignore
+
         if not any(s.running for s in statuses):
             console.print("[yellow]No local services running[/]")
             console.print("[dim]  Run 'deepchem-server-cli start' to start services[/]")
             return
-        
+
         for svc in statuses:
             status_str = "[green]● Running[/]" if svc.running else "[red]○ Stopped[/]"
             health_str = "[green]✓ Healthy[/]" if svc.healthy else (
-                "[yellow]⚠ Unhealthy[/]" if svc.running else "[dim]-[/]"
-            )
-            
+                "[yellow]⚠ Unhealthy[/]" if svc.running else "[dim]-[/]")
+
             table.add_row(
                 svc.name,
                 status_str,
-                str(svc.pid) if svc.pid else "-",
+                str(svc.pid) if svc.pid else "-",  # type: ignore
                 health_str,
                 str(svc.port) if svc.port else "-",
             )
-    
+
     console.print(table)
     console.print()
 
@@ -356,15 +358,15 @@ def logs(
         deepchem-server-cli logs datastore -n 50     # Show last 50 lines
     """
     effective_mode = get_mode(mode)
-    
+
     try:
         config = load_config()
     except FileNotFoundError as e:
         console.print(f"[red]✗ Configuration error: {e}[/]")
         raise typer.Exit(1)
-    
+
     console.print()
-    
+
     if effective_mode == "docker":
         docker_mgr = DockerManager()
         docker_mgr.logs(service, follow=follow, lines=lines)

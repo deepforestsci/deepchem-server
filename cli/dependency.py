@@ -7,6 +7,7 @@ from .config import Config
 from .docker_manager import DockerManager
 from .process_manager import LocalProcessManager
 
+
 console = Console()
 
 
@@ -53,8 +54,8 @@ class DependencyResolver:
         return list(required_deps), ordered_services
 
     def start_services(
-        self, 
-        services: list[str] | None = None, 
+        self,
+        services: list[str] | None = None,
         num_workers: int = 2,
         skip_deps: bool = False,
     ) -> bool:
@@ -81,7 +82,7 @@ class DependencyResolver:
 
             # Deduplicate while preserving order
             seen: set[str] = set()
-            services_to_start = [s for s in services_to_start if not (s in seen or seen.add(s))]
+            services_to_start = [s for s in services_to_start if not (s in seen or seen.add(s))]  # type: ignore
 
             scale: dict[str, int] | None = None
             if "worker" in services_to_start and num_workers > 1:
@@ -106,10 +107,8 @@ class DependencyResolver:
         if self.mode == "local":
             docker_running = set(self.docker_mgr.get_running_services())
             if docker_running:
-                console.print(
-                    f"[yellow]⚠ Services already running in Docker: "
-                    f"{', '.join(sorted(docker_running))}[/]"
-                )
+                console.print(f"[yellow]⚠ Services already running in Docker: "
+                              f"{', '.join(sorted(docker_running))}[/]")
                 console.print("[yellow]  These will be skipped in local mode.[/]")
                 console.print()
 
@@ -143,13 +142,9 @@ class DependencyResolver:
             if svc:
                 for dep in svc.depends_on:
                     if not self._is_running(dep) and dep not in docker_running:
-                        console.print(
-                            f"[red]✗ Cannot start {svc_name}: "
-                            f"dependency '{dep}' is not running[/]"
-                        )
-                        console.print(
-                            f"[dim]  Try: deepchem-server-cli start {dep}[/]"
-                        )
+                        console.print(f"[red]✗ Cannot start {svc_name}: "
+                                      f"dependency '{dep}' is not running[/]")
+                        console.print(f"[dim]  Try: deepchem-server-cli start {dep}[/]")
                         return False
 
             console.print(f"[blue]  ▶ Starting {svc_name}...[/]")

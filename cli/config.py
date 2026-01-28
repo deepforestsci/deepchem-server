@@ -74,7 +74,7 @@ def _parse_health_check(data: dict[str, Any]) -> HealthCheck:
     """Parse health check configuration from YAML data."""
     if not data:
         return HealthCheck(type="process")
-    
+
     return HealthCheck(
         type=data.get("type", "process"),
         url=data.get("url"),
@@ -106,13 +106,13 @@ def load_config(config_path: Path | None = None) -> Config:
     if config_path is None:
         # Look for config in cli package directory
         config_path = Path(__file__).parent / "services.yaml"
-    
+
     if not config_path.exists():
         raise FileNotFoundError(f"Configuration file not found: {config_path}")
-    
+
     with open(config_path) as f:
         raw = yaml.safe_load(f)
-    
+
     # Parse dependencies
     dependencies: dict[str, DependencyConfig] = {}
     for name, dep_data in raw.get("dependencies", {}).items():
@@ -123,7 +123,7 @@ def load_config(config_path: Path | None = None) -> Config:
             docker=DockerConfig(service=dep_data.get("docker", {}).get("service", name)),
             port=dep_data.get("port"),
         )
-    
+
     # Parse services
     services: dict[str, ServiceConfig] = {}
     for name, svc_data in raw.get("services", {}).items():
@@ -137,7 +137,7 @@ def load_config(config_path: Path | None = None) -> Config:
             scalable=svc_data.get("scalable", False),
             default_replicas=svc_data.get("default_replicas", 1),
         )
-    
+
     # Parse settings
     settings_data = raw.get("settings", {})
     settings = Settings(
@@ -146,7 +146,7 @@ def load_config(config_path: Path | None = None) -> Config:
         log_dir=settings_data.get("log_dir", ".deepchem/logs"),
         create_dirs=settings_data.get("create_dirs", []),
     )
-    
+
     return Config(
         dependencies=dependencies,
         services=services,
