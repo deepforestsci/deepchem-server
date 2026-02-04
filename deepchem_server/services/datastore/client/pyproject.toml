@@ -1,0 +1,23 @@
+[project]
+name = "deepchem-datastore-client"
+version = "0.1.0"
+description = "DeepChem Datastore Client - Access datastore service via HTTP"
+requires-python = ">=3.11"
+dependencies = [
+    "httpx",
+    "pandas>=2.0.0",
+    "deepchem",
+]
+
+# Optional dependencies for image handling
+[project.optional-dependencies]
+images = [
+    "pillow>=10.0.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["deepchem_server/services/datastore/client"]
