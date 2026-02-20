@@ -29,12 +29,12 @@ def _init_datastore(profile_name: str, project_name: str, backend='local') -> Da
     """
     if backend == 'local':
         client = DatastoreClient(url=os.getenv("DATASTORE_URL"))
-        datastore: DataStore = DeepchemDatastore(client=client,
-                                                 profile_name=profile_name,
-                                                 project_name=project_name,
-                                                 basedir=DATA_DIR)
     else:
         raise NotImplementedError(f"{backend} backend not implemented")
+    datastore: DataStore = DeepchemDatastore(client=client,
+                                             profile_name=profile_name,
+                                             project_name=project_name,
+                                             basedir=DATA_DIR)
     return datastore
 
 

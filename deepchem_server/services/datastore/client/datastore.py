@@ -56,12 +56,23 @@ def _get_csv_or_dataframe_shape(filename: Optional[str] = None, dataframe: Optio
 
 class DeepchemDatastore:
     """High-level datastore interface for deepchem operations.
-    
+
     This class provides the interface that all primitives (feat, train, evaluate)
     expect. It wraps the HTTP DatastoreClient and handles complex operations
     like model/dataset loading.
-    
+
     Parameters
+    ----------
+    client : DatastoreClient
+        The HTTP client for communicating with DatastoreService
+    profile_name : str
+        Profile name (used for address construction)
+    project_name : str
+        Project name (used for address construction)
+    basedir : str, optional
+        Base directory for file storage.
+
+    Attributes
     ----------
     client : DatastoreClient
         The HTTP client for communicating with DatastoreService
@@ -69,18 +80,13 @@ class DeepchemDatastore:
         Profile name (used for address construction)
     project : str
         Project name (used for address construction)
-    temp_dir : str, optional
-        Directory for temporary file operations (downloaded models/datasets)
-    
-    Attributes
-    ----------
-    storage_loc : str
-        Local temp directory for downloaded files (for compatibility)
     address_prefix : str
         Prefix for constructing addresses (e.g., "profile/project/")
+    storage_loc : str
+        Local temp directory for downloaded files (for compatibility)
     sample_rows : int
-        Number of rows to return when fetch_sample=True (default: 100)
-    
+        Number of rows to return when fetch_sample=True (default: 100).
+
     Examples
     --------
     >>> from deepchem_server.services.datastore.client import DatastoreClient, DeepchemDatastore
