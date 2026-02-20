@@ -20,6 +20,11 @@ For tests, either:
 """
 import warnings
 
+from deepchem_server.services.datastore.client import (
+    DatastoreClient,
+    DeepchemDatastore,
+)  # noqa
+
 
 warnings.warn(
     "deepchem_server.core.datastore is deprecated and will be removed. "
@@ -29,10 +34,7 @@ warnings.warn(
     stacklevel=2,
 )
 
-from deepchem_server.services.datastore.client import DeepchemDatastore  # noqa: E402
-
-
 DiskDataStore = DeepchemDatastore
 DataStore = DeepchemDatastore
 
-__all__ = ["DiskDataStore", "DataStore", "DeepchemDatastore"]
+__all__ = ["DiskDataStore", "DataStore", "DatastoreClient", "DeepchemDatastore"]
