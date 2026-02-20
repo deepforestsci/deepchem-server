@@ -5,7 +5,8 @@ from typing import Dict
 
 from deepchem_server.core import config
 from deepchem_server.core.primitives.compute import ComputeWorkflow
-from deepchem_server.core.datastore import DataStore, DiskDataStore
+
+from deepchem_server.core.datastore import DataStore, DeepchemDatastore, DatastoreClient
 
 
 logger = logging.getLogger(__name__)
@@ -27,9 +28,13 @@ def _init_datastore(profile_name: str, project_name: str, backend='local') -> Da
         Backend to be used to run the job (Default: local)
     """
     if backend == 'local':
-        datastore: DataStore = DiskDataStore(profile_name=profile_name, project_name=project_name, basedir=DATA_DIR)
+        client = DatastoreClient(url=os.getenv("DATASTORE_URL"))
     else:
         raise NotImplementedError(f"{backend} backend not implemented")
+    datastore: DataStore = DeepchemDatastore(client=client,
+                                             profile_name=profile_name,
+                                             project_name=project_name,
+                                             basedir=DATA_DIR)
     return datastore
 
 
