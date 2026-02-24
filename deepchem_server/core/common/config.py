@@ -1,25 +1,19 @@
 from __future__ import annotations
 
-import os
-from typing import TYPE_CHECKING, Optional
+from typing import Optional
 
-if TYPE_CHECKING:
-    from deepchem_server.services.datastore.client import DeepchemDatastore
+from deepchem_server.core.datastore import DiskDataStore
 
 
-_DATASTORE: Optional["DeepchemDatastore"] = None
-
-# Environment variable for remote datastore URL
-DATASTORE_URL = os.getenv("DATASTORE_URL")
-DATASTORE_API_KEY = os.getenv("DATASTORE_API_KEY")
+_DATASTORE: Optional[DiskDataStore] = None
 
 
-def set_datastore(datastore: Optional["DeepchemDatastore"]) -> None:
+def set_datastore(datastore: Optional[DiskDataStore]) -> None:
     """Set the global datastore instance.
 
     Parameters
     ----------
-    datastore : DeepchemDatastore or None
+    datastore : DiskDataStore or None
         The datastore instance to set as the global datastore, or None to reset.
 
     Returns
@@ -30,37 +24,15 @@ def set_datastore(datastore: Optional["DeepchemDatastore"]) -> None:
     _DATASTORE = datastore
 
 
-def get_datastore() -> Optional["DeepchemDatastore"]:
+def get_datastore() -> Optional[DiskDataStore]:
     """Get the current global datastore instance.
 
     Returns
     -------
-    DeepchemDatastore or None
+    DiskDataStore or None
         The current datastore instance, or None if no datastore has been set.
     """
     return _DATASTORE
-
-
-def get_datastore_client():
-    """Get a DatastoreClient if remote mode is configured.
-    
-    Returns None if DATASTORE_URL is not set.
-    
-    Returns
-    -------
-    DatastoreClient or None
-        Client for remote datastore service
-    """
-    if not DATASTORE_URL:
-        return None
-
-    from deepchem_server.services.datastore.client import DatastoreClient
-    return DatastoreClient(url=DATASTORE_URL, api_key=DATASTORE_API_KEY)
-
-
-def is_remote_datastore() -> bool:
-    """Check if remote datastore mode is enabled."""
-    return DATASTORE_URL is not None
 
 
 def refresh() -> None:

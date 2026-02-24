@@ -13,10 +13,8 @@ from deepchem_server.api.utils import (
     parse_boolean_none_values_from_kwargs,
     parse_dict_with_datatypes,
 )
-from deepchem_server.services.jobs import run_job
+from deepchem_server.services.jobs import run_jo
 
-# NOTE: featurizer_map and model_mappings removed to avoid deepchem import.
-# Validation is now done in workers.
 
 router = APIRouter(
     prefix="/primitive",

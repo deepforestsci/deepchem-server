@@ -77,7 +77,6 @@ jobs:
         continue-on-error: false 
         run: |
           yapf --version
-          # Use --diff-filter=ACMR to only include Added, Copied, Modified, Renamed files (excludes Deleted files)
           CHANGED_FILES=`git diff --name-only --diff-filter=ACMR $COMMIT_RANGE | grep .py$ || true`
           if [ -n "$CHANGED_FILES" ]; then
             ./lint.sh --files $CHANGED_FILES --linter yapf

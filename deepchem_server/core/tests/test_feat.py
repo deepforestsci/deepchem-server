@@ -93,8 +93,8 @@ def test_featurize_multicore_restart(disk_datastore, zinc5k_dataset):
     )
     disk_datastore.upload_data(checkpoint_output_key, partial_checkpoints_dir_path, card)
 
-    assert f"{checkpoint_output_key}/_checkpoint/part_0_of_3.cdc" in disk_datastore.list_data(include_card_files=True)
-    assert f"{checkpoint_output_key}/_checkpoint/part_1_of_3.cdc" in disk_datastore.list_data(include_card_files=True)
+    assert f"{checkpoint_output_key}/_checkpoint/part_0_of_3.cdc" in disk_datastore.list_data()
+    assert f"{checkpoint_output_key}/_checkpoint/part_1_of_3.cdc" in disk_datastore.list_data()
 
     dataset_address = featurize(
         zinc5k_dataset,

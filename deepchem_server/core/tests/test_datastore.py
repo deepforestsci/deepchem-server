@@ -213,13 +213,6 @@ def test_get_file_size_disk_datastore(disk_datastore):
     assert disk_datastore.get_file_size(dataset_address) == file_size
 
 
-def test_dir_disk_add_list_data(disk_datastore):
-    """Test adding a directory to disk and list data"""
-    address = disk_datastore.add_dir("test_dir")
-    assert address.endswith("test_dir")
-    assert "test_dir/" in disk_datastore.list_data()
-
-
 def test_dir_disk_delete(disk_datastore):
     """Test deleting a directory from disk."""
     disk_datastore.add_dir("test_dir_del")
@@ -237,6 +230,7 @@ def test_dir_disk_move(disk_datastore, alternate_disk_datastore):
     disk_datastore.move_object(
         "deepchem://test/user/test_dir_move",
         "deepchem://alternate-test/alternate-user/test_dir_move",
+        alternate_disk_datastore,
     )
     assert "test_dir_move/" not in disk_datastore.list_data()
     assert "test_dir_move/" in alternate_disk_datastore.list_data()

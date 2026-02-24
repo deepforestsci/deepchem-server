@@ -3,4 +3,4 @@ pytest-cov
 responses
 build
 wheel
-setuptools
+setuptools<78

@@ -9,6 +9,7 @@ dependencies:
   - conda-forge::pymbar
   - pip
   - pip:
+      - setuptools<78
       - pandas
       - python-multipart
       - fastapi

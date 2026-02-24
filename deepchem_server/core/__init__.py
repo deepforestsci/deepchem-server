@@ -11,7 +11,6 @@ Import them explicitly where needed:
     from deepchem_server.core.primitives import train, evaluate, etc.
 """
 
-# Common utilities - safe to import, no ML deps
 from deepchem_server.core.common import config
 from deepchem_server.core.common import cards
 from deepchem_server.core.common.cards import Card, DataCard, ModelCard

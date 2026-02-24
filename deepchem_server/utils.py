@@ -4,7 +4,7 @@ import os
 from typing import Dict
 
 from deepchem_server.core import config
-from deepchem_server.core.compute import ComputeWorkflow
+from deepchem_server.core.primitives.compute import ComputeWorkflow
 from deepchem_server.core.datastore import DataStore, DiskDataStore
 
 
