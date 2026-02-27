@@ -274,8 +274,6 @@ class DatastoreService:
         for path in project_path.rglob("*"):
             if path.is_file() and (include_card_files or path.suffix not in (".cdc", ".cmc")):
                 keys.append(str(path.relative_to(project_path)))
-            elif path.is_dir():
-                keys.append(str(path.relative_to(project_path)) + "/")
 
         return sorted(keys)
 
