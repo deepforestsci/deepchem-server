@@ -7,6 +7,7 @@ import json
 import logging
 import os
 from typing import Annotated, Any, Dict, List, Optional
+from pathlib import Path
 
 from fastapi import (
     APIRouter,
@@ -128,8 +129,6 @@ async def upload_data(
         data = await file.read()
         card_dict = None
         if card:
-            import json
-
             card_dict = json.loads(card)
 
         address = service.upload_data(
@@ -611,8 +610,6 @@ async def download_object(
     Response
         File content or ZIP archive
     """
-    from pathlib import Path
-
     try:
         storage_path = service._get_storage_path(profile, project, key)
 
@@ -640,7 +637,6 @@ async def download_object(
         # Handle directory
         if format == "direct" or (format == "auto" and not storage_path.is_dir()):
             # Return list of files for client to download individually
-            import json
             files = service.list_directory_contents(profile, project, key)
             return Response(
                 content=json.dumps({"files": files}),
