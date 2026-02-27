@@ -230,7 +230,6 @@ def test_dir_disk_move(disk_datastore, alternate_disk_datastore):
     disk_datastore.move_object(
         "deepchem://test/user/test_dir_move",
         "deepchem://alternate-test/alternate-user/test_dir_move",
-        alternate_disk_datastore,
     )
     assert "test_dir_move/" not in disk_datastore.list_data()
     assert "test_dir_move/" in alternate_disk_datastore.list_data()

@@ -52,7 +52,7 @@ show_docker_logs() {
     local show_all=${3:-false}
     
     log_info "=== DOCKER COMPOSE LOGS ==="
-    echo "Showing logs from deepchem-server service..."
+    echo "Showing logs from all services..."
     
     # Build the command
     local cmd="$DOCKER_COMPOSE_CMD logs --timestamps"
@@ -67,8 +67,6 @@ show_docker_logs() {
         log_info "Showing last $tail_count lines..."
     fi
     
-    cmd="$cmd deepchem-server"
-    
     log_info "Running: $cmd"
     $cmd || log_error "Failed to retrieve logs"
     
@@ -77,11 +75,11 @@ show_docker_logs() {
 
 # Function to check service status
 check_service_status() {
-    if $DOCKER_COMPOSE_CMD ps deepchem-server | grep -q "Up"; then
-        log_success "✓ deepchem-server is running"
+    if $DOCKER_COMPOSE_CMD ps gateway | grep -q "Up"; then
+        log_success "✓ gateway is running"
         return 0
     else
-        log_warning "⚠ deepchem-server is not running"
+        log_warning "⚠ gateway is not running"
         return 1
     fi
 }
@@ -94,7 +92,7 @@ healthcheck_status() {
 
     while [ $retries -le $max_retries ]; do
         if curl -f http://localhost:8000/healthcheck &> /dev/null; then
-            log_success "✓ deepchem-server is healthy"
+            log_success "✓ gateway is healthy"
             return 0
         else
             log_warning "Healthcheck failed. Retrying... [$retries/$max_retries]"

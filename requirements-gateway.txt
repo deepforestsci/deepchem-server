@@ -1,0 +1,13 @@
+# Gateway dependencies (minimal, no ML stack)
+# These match the base dependencies in pyproject.toml
+
+fastapi>=0.127.0
+uvicorn[standard]>=0.40.0
+python-multipart>=0.0.21
+httpx>=0.28.1
+pandas>=2.3.3
+redis>=7.1.0
+rq>=2.6.1
+sqlalchemy>=2.0.45
+pymysql>=1.1.0
+cryptography>=41.0.0
