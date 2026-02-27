@@ -103,11 +103,9 @@ def datastore_service(tmp_path_factory: pytest.TempPathFactory, datastore_api_ke
                 logs = log_path.read_text(encoding="utf-8", errors="replace")
             except Exception:
                 pass
-            raise RuntimeError(
-                "Datastore service exited before becoming healthy.\n"
-                f"Command: {' '.join(cmd)}\n"
-                f"Logs:\n{logs}"
-            )
+            raise RuntimeError("Datastore service exited before becoming healthy.\n"
+                               f"Command: {' '.join(cmd)}\n"
+                               f"Logs:\n{logs}")
         try:
             with urlopen(health_url, timeout=1.0) as resp:  # nosec B310
                 if resp.status == 200:
@@ -128,12 +126,10 @@ def datastore_service(tmp_path_factory: pytest.TempPathFactory, datastore_api_ke
             logs = log_path.read_text(encoding="utf-8", errors="replace")
         except Exception:
             pass
-        raise TimeoutError(
-            "Timed out waiting for datastore service to become healthy.\n"
-            f"Health URL: {health_url}\n"
-            f"Command: {' '.join(cmd)}\n"
-            f"Logs:\n{logs}"
-        )
+        raise TimeoutError("Timed out waiting for datastore service to become healthy.\n"
+                           f"Health URL: {health_url}\n"
+                           f"Command: {' '.join(cmd)}\n"
+                           f"Logs:\n{logs}")
 
     url = f"http://{host}:{port}"
     try:
@@ -191,9 +187,7 @@ def datastore_client(datastore_url: str, datastore_api_key: str):
 @pytest.fixture
 def disk_datastore(tmp_path, datastore_url: str, datastore_api_key: str):
     client = DatastoreClient(url=datastore_url, api_key=datastore_api_key)
-    fds = DiskDataStore(
-        client=client, profile_name="test", project_name="user", basedir=str(tmp_path)
-    )
+    fds = DiskDataStore(client=client, profile_name="test", project_name="user", basedir=str(tmp_path))
     return fds
 
 

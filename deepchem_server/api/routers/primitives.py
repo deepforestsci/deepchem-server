@@ -13,7 +13,7 @@ from deepchem_server.api.utils import (
     parse_boolean_none_values_from_kwargs,
     parse_dict_with_datatypes,
 )
-from deepchem_server.services.jobs import run_jo
+from deepchem_server.services.jobs import run_job
 
 
 router = APIRouter(

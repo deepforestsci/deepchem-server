@@ -19,6 +19,10 @@ For tests, either:
 2. Run a local datastore service
 """
 import warnings
+from deepchem_server.services.datastore.client import (
+    DeepchemDatastore,
+    DatastoreClient,
+)  # noqa: E402
 
 
 warnings.warn(
@@ -29,10 +33,7 @@ warnings.warn(
     stacklevel=2,
 )
 
-from deepchem_server.services.datastore.client import DeepchemDatastore  # noqa: E402
-
-
 DiskDataStore = DeepchemDatastore
 DataStore = DeepchemDatastore
 
-__all__ = ["DiskDataStore", "DataStore", "DeepchemDatastore"]
+__all__ = ["DiskDataStore", "DataStore", "DeepchemDatastore", "DatastoreClient"]
