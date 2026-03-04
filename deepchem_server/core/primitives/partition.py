@@ -3,7 +3,7 @@
 import os
 import shutil
 import tempfile
-from typing import List
+from typing import List, Optional
 
 import numpy as np
 import pandas as pd
@@ -51,9 +51,7 @@ def _partition_disk_dataset(dataset_address: str, shuffle: bool, n_partition: in
 
     with tempfile.TemporaryDirectory() as tempdir:
         for i in range(n_partition):
-            partition_indices = indices[
-                int(i * elements_per_partition) : int((i + 1) * elements_per_partition)
-            ]
+            partition_indices = indices[int(i * elements_per_partition):int((i + 1) * elements_per_partition)]
             partition_path = os.path.join(tempdir, f"partition{i}")
             partition_dataset = dataset.select(partition_indices, select_dir=partition_path)
             card = DataCard(
@@ -123,17 +121,13 @@ def _partition_csv_dataframe(dataset_address: str, n_partition: int) -> List[str
                     if row_count_in_partition == 0:
                         df_block[:-excess_rows].to_csv(partition_file_path, mode="w", index=False)
                     else:
-                        df_block[:-excess_rows].to_csv(
-                            partition_file_path, mode="a", header=False, index=False
-                        )
+                        df_block[:-excess_rows].to_csv(partition_file_path, mode="a", header=False, index=False)
 
                     if partition_file_path not in partition_file_paths:
                         partition_file_paths.append(partition_file_path)
 
                     partition_id += 1
-                    partition_file_path = os.path.join(
-                        tempdir, f"{stem}partition{partition_id}.csv"
-                    )
+                    partition_file_path = os.path.join(tempdir, f"{stem}partition{partition_id}.csv")
                     df_block[-excess_rows:].to_csv(partition_file_path, mode="w", index=False)
                     row_count_in_partition = excess_rows
                 else:
@@ -143,10 +137,7 @@ def _partition_csv_dataframe(dataset_address: str, n_partition: int) -> List[str
                         df_block.to_csv(partition_file_path, mode="w", index=False)
                     row_count_in_partition = future_rows
 
-            if (
-                os.path.exists(partition_file_path)
-                and partition_file_path not in partition_file_paths
-            ):
+            if (os.path.exists(partition_file_path) and partition_file_path not in partition_file_paths):
                 partition_file_paths.append(partition_file_path)
 
             partitioned_dataset_addresses: List[str] = []
@@ -202,7 +193,7 @@ def partition(dataset_address: str, shuffle: bool = False, n_partition: int = 4)
     if datastore is None:
         raise ValueError("Datastore not set")
 
-    data_card = datastore.get_card(dataset_address, kind="data")
+    data_card: Optional[DataCard] = datastore.get_card(dataset_address, kind="data")  # type: ignore
     if data_card is None:
         raise ValueError(f"Datacard not found for dataset address: {dataset_address}")
 
@@ -212,20 +203,14 @@ def partition(dataset_address: str, shuffle: bool = False, n_partition: int = 4)
         if shuffle:
             raise ValueError("CSV/DataFrame partitioning does not support shuffling.")
         if data_card.file_type != "csv":
-            raise NotImplementedError(
-                f"DataFrame partitioning for file_type '{data_card.file_type}' is not supported."
-            )
+            raise NotImplementedError(f"DataFrame partitioning for file_type '{data_card.file_type}' is not supported.")
         partitioned_datasets = _partition_csv_dataframe(dataset_address, n_partition)
     else:
-        raise NotImplementedError(
-            f"Dataset type '{data_card.data_type}' is not supported for partitioning."
-        )
+        raise NotImplementedError(f"Dataset type '{data_card.data_type}' is not supported for partitioning.")
 
     # Update parent card metadata with partition information.
     data_card.update_card("n_partition", n_partition)
     parent_key = DeepchemAddress.get_key(dataset_address)
-    datastore.upload_data_from_memory(
-        data=data_card, datastore_filename=f"{parent_key}.cdc", card=None
-    )
+    datastore.upload_data_from_memory(data=data_card, datastore_filename=f"{parent_key}.cdc", card=None)
 
     return partitioned_datasets
