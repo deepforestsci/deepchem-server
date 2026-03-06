@@ -51,7 +51,18 @@ The featurization primitive supports the following DeepChem featurizers:
 Partition
 ---------
 
-The partition primitive splits supported datasets into multiple partitions and uploads each partition back to the datastore.
+The partition primitive splits a dataset into multiple smaller datasets and uploads each partition back to the datastore. Use it when you need to:
+
+* **Distribute workloads** — break a large dataset into chunks so featurization or inference can run in parallel.
+* **Reduce memory pressure** — process data in manageable pieces when the full dataset does not fit in memory.
+* **Stage training pipelines** — create fixed data splits before training begins.
+
+**Supported dataset types:**
+
+* DeepChem ``DiskDataset`` — supports optional shuffling before partitioning.
+* CSV ``DataFrame`` — partitions rows sequentially (shuffling is not supported).
+
+After partitioning, the parent dataset's datacard is updated with the number of partitions (n_partition) so downstream primitives can discover the splits.
 
 .. autofunction:: deepchem_server.core.primitives.partition.partition
 

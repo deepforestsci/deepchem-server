@@ -29,6 +29,14 @@ def _partition_disk_dataset(dataset_address: str, shuffle: bool, n_partition: in
     -------
     List[str]
         List of datastore addresses of the partitioned datasets
+    
+    Examples
+    --------
+    >>> from deepchem_server.core.primitives import partition
+    >>> dataset_address = "deepchem://deepchem/data/zinc5k"
+    >>> partitioned_dataset_addresses = partition._partition_disk_dataset(dataset_address, shuffle=False, n_partition=4)
+    >>> print(partitioned_dataset_addresses)
+    ['deepchem://deepchem/data/zinc5k_partition0', 'deepchem://deepchem/data/zinc5k_partition1', 'deepchem://deepchem/data/zinc5k_partition2', 'deepchem://deepchem/data/zinc5k_partition3']
     """
     datastore = config.get_datastore()
     if datastore is None:
@@ -89,6 +97,14 @@ def _partition_csv_dataframe(dataset_address: str, n_partition: int) -> List[str
     -------
     List[str]
         List of datastore addresses of the partitioned datasets
+    
+    Examples
+    --------
+    >>> from deepchem_server.core.primitives import partition
+    >>> dataset_address = "deepchem://deepchem/data/zinc5k"
+    >>> partitioned_dataset_addresses = partition._partition_csv_dataframe(dataset_address, n_partition=4)
+    >>> print(partitioned_dataset_addresses)
+    ['deepchem://deepchem/data/zinc5k_partition0', 'deepchem://deepchem/data/zinc5k_partition1', 'deepchem://deepchem/data/zinc5k_partition2', 'deepchem://deepchem/data/zinc5k_partition3']
     """
     datastore = config.get_datastore()
     if datastore is None:
@@ -181,6 +197,18 @@ def partition(dataset_address: str, shuffle: bool = False, n_partition: int = 4)
     -----
     - Supported inputs: DeepChem ``DiskDataset`` and CSV ``DataFrame``.
     - CSV partitioning does not support shuffling.
+    
+    Examples
+    --------
+    >>> from deepchem_server.core.primitives import partition
+    >>> dataset_address = "deepchem://deepchem/data/zinc5k"
+    >>> partitioned_dataset_addresses = partition(dataset_address, n_partition=4)
+    >>> print(partitioned_dataset_addresses)
+    ['deepchem://deepchem/data/zinc5k_partition0', 'deepchem://deepchem/data/zinc5k_partition1', 'deepchem://deepchem/data/zinc5k_partition2', 'deepchem://deepchem/data/zinc5k_partition3']
+    
+    >>> partitioned_dataset_addresses = partition(dataset_address, n_partition=4, shuffle=True)
+    >>> print(partitioned_dataset_addresses)
+    ['deepchem://deepchem/data/zinc5k_partition0', 'deepchem://deepchem/data/zinc5k_partition1', 'deepchem://deepchem/data/zinc5k_partition2', 'deepchem://deepchem/data/zinc5k_partition3']
     """
     if isinstance(shuffle, str):
         shuffle = shuffle.lower() == "true"
