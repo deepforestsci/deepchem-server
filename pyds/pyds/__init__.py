@@ -14,6 +14,7 @@ from .primitives.evaluate import Evaluate
 from .primitives.featurize import Featurize
 from .primitives.docking import Docking
 from .primitives.infer import Infer
+from .primitives.partition import Partition
 from .primitives.splitter import TVTSplit
 from .primitives.train import Train
 from .settings import Settings
@@ -29,5 +30,6 @@ __all__ = [
     "Train",
     "Evaluate",
     "Infer",
+    "Partition",
     "TVTSplit",
 ]
