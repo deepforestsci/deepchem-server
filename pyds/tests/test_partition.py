@@ -8,7 +8,7 @@ import uuid
 import pytest
 
 from pyds.data import Data
-from pyds.primitives import Featurize, Partition
+from pyds.primitives import Partition
 from pyds.settings import Settings
 
 
@@ -64,9 +64,7 @@ class TestPartition:
         )
         dataset_address = upload_result["dataset_address"]
 
-        result = live_partition_client.run(
-            dataset_address=dataset_address,
-        )
+        result = live_partition_client.run(dataset_address=dataset_address,)
 
         assert "partitioned_dataset_addresses" in result
 
