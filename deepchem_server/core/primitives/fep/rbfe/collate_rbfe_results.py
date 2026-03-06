@@ -2,15 +2,13 @@ import json
 import logging
 import os
 import tempfile
-from typing import Dict, List, Union
-
-from openff.units import unit  # type: ignore
-import pandas as pd  # type: ignore
 import pint
-
+import pandas as pd
+from typing import List, Union, Dict
 from deepchem_server.core.common import config
-from deepchem_server.core.common.cards import DataCard
 from deepchem_server.core.primitives.fep.rbfe.data_domain_classes.ExperimentalMeasurement import ExperimentalMeasurement
+from deepchem_server.core.common.cards import DataCard
+from openff.units import unit
 
 
 logger = logging.getLogger(__name__)
@@ -110,8 +108,10 @@ def collate_rbfe_results(result_file_deepchem_addresses: List[str], reference_li
     )
 
     # Upload the CSV file to the user's deepchem datastore
-    saved_csv_file_name = config.get_datastore().upload_data(  # type: ignore
-        output_file_name, 'temp.csv', result_datacard)
+    datastore = config.get_datastore()
+    if datastore is None:
+        raise ValueError("Datastore not set")
+    saved_csv_file_name = datastore.upload_data(output_file_name, 'temp.csv', result_datacard)
 
     # Delete the temporary file
     os.remove('temp.csv')
@@ -119,7 +119,7 @@ def collate_rbfe_results(result_file_deepchem_addresses: List[str], reference_li
     return saved_csv_file_name
 
 
-def process_input_files(result_file_deepchem_addresses: list[str]):
+def process_input_files(result_file_deepchem_addresses: List[str]):
     """Helper function for collate_rbfe_results()
 
     This function takes in a list of RBFE Result file addresses, fetched them from the deepchem datastore.
@@ -129,7 +129,7 @@ def process_input_files(result_file_deepchem_addresses: list[str]):
 
     Parameters
     ----------
-    result_file_deepchem_addresses : list[str]
+    result_file_deepchem_addresses : List[str]
         The list of deepchem addresses of all result files to be processed.
 
     Returns
@@ -140,12 +140,12 @@ def process_input_files(result_file_deepchem_addresses: list[str]):
     Raises
     ------
     Exception
-        Raises a Datastore not set exception if the deepchem datastore is not set.
+        Raises a Datastore not set ValueError if the deepchem datastore is not set.
     """
 
-    # Raise exception if the datastore is not set
-    if config.get_datastore() is None:
-        raise Exception("Datastore not set")
+    datastore = config.get_datastore()
+    if datastore is None:
+        raise ValueError("Datastore not set")
 
     fetched_result_files = []
     simulation_results = []
@@ -156,8 +156,7 @@ def process_input_files(result_file_deepchem_addresses: list[str]):
         try:
             file_name = os.path.basename(deepchem_file_path)
             temp_file_path = os.path.join(tempdir.name, file_name)
-            config.get_datastore().download_object(  # type: ignore
-                file_name, temp_file_path)
+            datastore.download_object(file_name, temp_file_path)
             fetched_result_files.append(temp_file_path)
         except Exception:
             logger.error(f"Could not fetch file - {deepchem_file_path}")
@@ -180,14 +179,14 @@ def process_input_files(result_file_deepchem_addresses: list[str]):
     return simulation_results
 
 
-def get_ligands_from_results(simulation_results: list[dict]):
+def get_ligands_from_results(simulation_results: List[Dict]):
     """Helper function for collate_rbfe_results(). Extracts the ligand names from the simulation results.
 
     This function extracts the ligand names from the simulation results and return a list of these names.
 
     Parameters
     ----------
-    simulation_results : list[dict]
+    simulation_results : List[Dict]
         The list of simulation_results obtained from process_input_files()
 
     Returns
@@ -206,7 +205,7 @@ def get_ligands_from_results(simulation_results: list[dict]):
     return list(set(ligands))
 
 
-def calculate_dg_values(simulation_results: list[dict], reference_ligand: str, reference_ligand_dg_value: str,
+def calculate_dg_values(simulation_results: List[Dict], reference_ligand: str, reference_ligand_dg_value: str,
                         reference_ligand_dg_value_uncertainty: str):
     """Helper function for collate_rbfe_results(). Calculates the dG values for each ligand from the simulation_results.
 
@@ -223,7 +222,7 @@ def calculate_dg_values(simulation_results: list[dict], reference_ligand: str, r
 
     Parameters
     ----------
-    simulation_results : list[dict]
+    simulation_results : List[Dict]
         The list of simulation_results obtained from process_input_files()
     reference_ligand : Union[None, str]
         The name of the reference ligand whose experimental dG value is known
@@ -266,25 +265,18 @@ def calculate_dg_values(simulation_results: list[dict], reference_ligand: str, r
             if ligand_dg_values[simulation_result['componentA_name']] is not None and ligand_dg_values[
                     simulation_result['componentB_name']] is None:
                 ligand_dg_values[simulation_result['componentB_name']] = ExperimentalMeasurement(
-                    value=pint.Quantity(simulation_result['edge_ddG']) +  # type: ignore
+                    value=pint.Quantity(simulation_result['edge_ddG']) +
                     ligand_dg_values[simulation_result['componentA_name']].value,
-                    uncertainty=pint.Quantity(  # type: ignore
-                        simulation_result['edge_ddG_uncertainty']) +
+                    uncertainty=pint.Quantity(simulation_result['edge_ddG_uncertainty']) +
                     ligand_dg_values[simulation_result['componentA_name']].uncertainty)
 
             if ligand_dg_values[simulation_result['componentA_name']] is None and ligand_dg_values[
                     simulation_result['componentB_name']] is not None:
-                ligand_dg_values[simulation_result[
-                    'componentA_name']] = ExperimentalMeasurement(
-                        value=ligand_dg_values[
-                            simulation_result['componentB_name']].value -
-                        pint.Quantity(simulation_result['edge_ddG']
-                                     ),  # type: ignore
-                        uncertainty=ligand_dg_values[
-                            simulation_result['componentB_name']].uncertainty +
-                        pint.Quantity(  # type: ignore
-                            simulation_result['edge_ddG_uncertainty'])
-                )  # yapf: disable
+                ligand_dg_values[simulation_result['componentA_name']] = ExperimentalMeasurement(
+                    value=ligand_dg_values[simulation_result['componentB_name']].value -
+                    pint.Quantity(simulation_result['edge_ddG']),
+                    uncertainty=ligand_dg_values[simulation_result['componentB_name']].uncertainty +
+                    pint.Quantity(simulation_result['edge_ddG_uncertainty']))
 
         iteration_count += 1
 
@@ -300,16 +292,16 @@ def calculate_dg_values(simulation_results: list[dict], reference_ligand: str, r
     return ligand_dg_values
 
 
-def get_result_dataframe(ligand_dg_values: dict):
+def get_result_dataframe(ligand_dg_values: Dict):
     """Helper function for the collate_rbfe_results() function. Creates a dataframe out of the ligand_dg_values object.
 
-    This function takes in the ligand_dg_values dict generated by the calculate_dg_values() function, and then
+    This function takes in the ligand_dg_values Dict generated by the calculate_dg_values() function, and then
     created a pandas datafrane the Ligand Name, DG Value and the calculation Uncertainty, sorted by the descending order
     of dG Values.
 
     Parameters
     ----------
-    ligand_dg_values : dict
+    ligand_dg_values : Dict
        A dictionary containing the ligand -> ExperimentalMeasurement(Value, Uncertainty) mapping for each ligand
        Generated by the calculate_dg_values() function
 
@@ -327,10 +319,8 @@ def get_result_dataframe(ligand_dg_values: dict):
             dg_value = None
             uncertainty = None
         else:
-            dg_value = pint.Quantity(value.value).to(  # type: ignore
-                unit.kilocalorie / unit.mole)
-            uncertainty = pint.Quantity(value.uncertainty).to(  # type: ignore
-                unit.kilocalorie / unit.mole)
+            dg_value = pint.Quantity(value.value).to(unit.kilocalorie / unit.mole)
+            uncertainty = pint.Quantity(value.uncertainty).to(unit.kilocalorie / unit.mole)
         result_dataframe.loc[len(result_dataframe)] = {
             'Ligand': key,
             'DG Value': dg_value and dg_value.round(4),  # type: ignore

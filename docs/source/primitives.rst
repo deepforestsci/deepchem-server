@@ -119,6 +119,14 @@ Supporting Functions
 .. autofunction:: deepchem_server.core.docking.split_pdbqt_docked_ligands
    :no-index:
 
+Relative Binding Free Energy
+----------------------------
+
+Relative Binding Free Energy (RBFE) calculations are computational methods used in the field of computational chemistry and drug discovery to estimate the difference in binding free energy between two or more ligands to a common target (e.g., a protein or enzyme).
+The binding free energy (ΔG) is a thermodynamic parameter that represents the balance between the energy gained from the favorable interactions between the ligand and the target (e.g., van der Waals forces, hydrogen bonding) and the energy cost associated with desolvation and conformational changes upon binding.
+
+.. autofunction:: deepchem_server.core.primitives.fep.rbfe.run_rbfe
+
 Available Metrics
 ~~~~~~~~~~~~~~~~~
 

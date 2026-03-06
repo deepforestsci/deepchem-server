@@ -1,9 +1,7 @@
 import ast
 import json
 import logging
-import os
-from typing import Dict, Optional
-
+from typing import Dict, Optional, List
 from deepchem_server.core.common import config
 from deepchem_server.core.common.address import DeepchemAddress
 from deepchem_server.core.common.cards import DataCard
@@ -20,20 +18,21 @@ def run_rbfe(ligands_sdf_address: str,
              overridden_rbfe_settings: str,
              dry_run: bool = False,
              radial_network_central_ligand: Optional[str] = None,
-             output_key: Optional[str] = None) -> list[str]:
+             output_key: Optional[str] = None) -> List[str]:
     """A FEP utility to run RBFE calculations for a protein-solvent-ligand system, for a list of ligands.
 
-    If run as an Array Job, Each edge in the perturbation network is run as an independent job within the same AWS Batch array job.
-    This allows us to group the different edges in the perturbation network into a single AWS Batch array job.
+    NOTE: AWS parallel run diabled (in development)
+    # If run as an Array Job, Each edge in the perturbation network is run as an independent job within the same AWS Batch array job.
+    # This allows us to group the different edges in the perturbation network into a single AWS Batch array job.
 
-    For example, if a calculation involves 3 edges to be run, then the AWS Batch array will have 3 jobs.
+    # For example, if a calculation involves 3 edges to be run, then the AWS Batch array will have 3 jobs.
 
-    For each job within an array job, the job command stays the same. Since each job within an array job is for a different edge, we need to determine which edge to run for each job.
-    This edge identification is achieved by the use of the AWS_BATCH_JOB_ARRAY_INDEX environment variable.
-    The AWS_BATCH_JOB_ARRAY_INDEX  is set by AWS Batch runner, and is available as an environment variable in the job environment.
+    # For each job within an array job, the job command stays the same. Since each job within an array job is for a different edge, we need to determine which edge to run for each job.
+    # This edge identification is achieved by the use of the AWS_BATCH_JOB_ARRAY_INDEX environment variable.
+    # The AWS_BATCH_JOB_ARRAY_INDEX  is set by AWS Batch runner, and is available as an environment variable in the job environment.
 
-    If the AWS_BATCH_JOB_ARRAY_INDEX environment variable is not set, it indicates the the job is being run outside of AWS.
-    In such a case, all the edges of the perturbation network are executed serially, one after another.
+    # If the AWS_BATCH_JOB_ARRAY_INDEX environment variable is not set, it indicates the the job is being run outside of AWS.
+    # In such a case, all the edges of the perturbation network are executed serially, one after another.
 
     Upon successful execution, the result of the RBFE calculation is written to a JSON file, which is then uploaded to the user's project directory.
     Each edge in the perturbation network generates a corresponding JSON file. If the perturbation network has N edges, then N files are generated
@@ -84,11 +83,13 @@ def run_rbfe(ligands_sdf_address: str,
 
     logger = logging.getLogger(__name__)
 
-    # The AWS_BATCH_JOB_ARRAY_INDEX environment variable is set by the AWS Runner when running batch array jobs.
-    try:
-        AWS_BATCH_JOB_ARRAY_INDEX = int(os.getenv('AWS_BATCH_JOB_ARRAY_INDEX'))  # type: ignore
-    except TypeError:
-        AWS_BATCH_JOB_ARRAY_INDEX = None
+    # NOTE: AWS parallel run diabled (in development)
+
+    # # The AWS_BATCH_JOB_ARRAY_INDEX environment variable is set by the AWS Runner when running batch array jobs.
+    # try:
+    #     AWS_BATCH_JOB_ARRAY_INDEX = int(os.getenv('AWS_BATCH_JOB_ARRAY_INDEX'))
+    # except TypeError:
+    #     AWS_BATCH_JOB_ARRAY_INDEX = None
 
     if not radial_network_central_ligand or radial_network_central_ligand == 'None':
         radial_network_central_ligand = None
@@ -163,13 +164,14 @@ def run_rbfe(ligands_sdf_address: str,
     # Setup the transformations.
     runnable_edges, rbfe_transform = system_setup.setup_transformations(network, solvent, protein, rbfe_settings)
 
+    # NOTE: AWS parallel run diabled (in development)
     # If the AWS_BATCH_JOB_ARRAY_INDEX environment variable is set, then only run the edge corresponding to the index. (Other edges will be handled by sibling child jobs)
     # If the environment variable is not set, then run all the edges serially.
-    if AWS_BATCH_JOB_ARRAY_INDEX is not None:
-        runnable_edges = [runnable_edges[AWS_BATCH_JOB_ARRAY_INDEX]]
-        logger.info(f"Found AWS_BATCH_JOB_ARRAY_INDEX in the environment. Running edge {AWS_BATCH_JOB_ARRAY_INDEX}")
-    else:
-        logger.warning(f"Could not find AWS_BATCH_JOB_ARRAY_INDEX. Running all {len(runnable_edges)} edges serially.")
+    # if AWS_BATCH_JOB_ARRAY_INDEX is not None:
+    #     runnable_edges = [runnable_edges[AWS_BATCH_JOB_ARRAY_INDEX]]
+    #     logger.info(f"Found AWS_BATCH_JOB_ARRAY_INDEX in the environment. Running edge {AWS_BATCH_JOB_ARRAY_INDEX}")
+    # else:
+    #     logger.warning(f"Could not find AWS_BATCH_JOB_ARRAY_INDEX. Running all {len(runnable_edges)} edges serially.")
     result_datastore_address_list = []
 
     for i, edge in enumerate(runnable_edges):
@@ -183,7 +185,7 @@ def run_rbfe(ligands_sdf_address: str,
 
         # Write the result to a temporary file.
         with open(f'tmp_{i+1}.json', 'w') as f:
-            f.write(json.dumps(result.__dict__, indent=2))  # type: ignore
+            f.write(json.dumps(result.__dict__, indent=2))
 
         # Upload the result to the datastore.
 

@@ -11,6 +11,7 @@ from deepchem_server.core.primitives.fep.rbfe.data_domain_classes.EdgeSimulation
 from deepchem_server.core.primitives.fep.rbfe.utils.constants import NetworkPlanningConstants
 import pint
 
+# NOTE: AWS parallel run diabled (in development)
 
 mocked_result = EdgeSimulationResult(
     componentA_name='benzene',
@@ -89,18 +90,18 @@ def test_run_rbfe_dry_run(patched_run_edge, caplog, protein_datastore_address, l
     """Tests RBFE dry run
     """
 
-    # Without the AWS Batch environment variable
-    try:
-        del os.environ["AWS_BATCH_JOB_ARRAY_INDEX"]
-    except KeyError:
-        pass
+    # # Without the AWS Batch environment variable
+    # try:
+    #     del os.environ["AWS_BATCH_JOB_ARRAY_INDEX"]
+    # except KeyError:
+    #     pass
 
     result_datastore_addresses = run_rbfe(**run_rbfe_kwargs, dry_run=True)
 
     assert result_datastore_addresses is not None
 
     # Assert that the log message for AWS Batch confirms unavailability of AWS Batch Environment.
-    assert 'Could not find AWS_BATCH_JOB_ARRAY_INDEX. Running all' in caplog.text
+    # assert 'Could not find AWS_BATCH_JOB_ARRAY_INDEX. Running all' in caplog.text
     assert len(result_datastore_addresses) == 6
 
     tempdir = tempfile.TemporaryDirectory()
@@ -116,11 +117,11 @@ def test_run_rbfe_dry_run(patched_run_edge, caplog, protein_datastore_address, l
         assert os.path.exists(result_destination_address)
 
     # With the AWS Batch environment variable
-    os.environ['AWS_BATCH_JOB_ARRAY_INDEX'] = '3'
+    # os.environ['AWS_BATCH_JOB_ARRAY_INDEX'] = '3'
     result_datastore_addresses = run_rbfe(**run_rbfe_kwargs, dry_run=True)
 
     # Assert that the log message for AWS Batch confirms availability of AWS Batch Environment.
-    assert "Found AWS_BATCH_JOB_ARRAY_INDEX in the environment. Running edge 3" in caplog.text
+    # assert "Found AWS_BATCH_JOB_ARRAY_INDEX in the environment. Running edge 3" in caplog.text
 
 
 @patch('deepchem_server.core.primitives.fep.rbfe.run_rbfe.system_setup.dry_run_edge', return_value=mocked_result)
@@ -130,10 +131,10 @@ def test_run_rbfe_dry_run_nested_full_address(patched_run_edge, caplog, protein_
     """
 
     # Without the AWS Batch environment variable
-    try:
-        del os.environ["AWS_BATCH_JOB_ARRAY_INDEX"]
-    except KeyError:
-        ...
+    # try:
+    #     del os.environ["AWS_BATCH_JOB_ARRAY_INDEX"]
+    # except KeyError:
+    #     ...
 
     result_datastore_addresses = run_rbfe(**run_rbfe_nested_kwargs, dry_run=True)
 
@@ -147,18 +148,18 @@ def test_run_rbfe(patched_run_edge, caplog, protein_datastore_address, ligands_l
     """Tests RBFE dry run
     """
 
-    # Without the AWS Batch environment variable
-    try:
-        del os.environ["AWS_BATCH_JOB_ARRAY_INDEX"]
-    except KeyError:
-        pass
+    # # Without the AWS Batch environment variable
+    # try:
+    #     del os.environ["AWS_BATCH_JOB_ARRAY_INDEX"]
+    # except KeyError:
+    #     pass
 
     result_datastore_addresses = run_rbfe(**run_rbfe_kwargs, dry_run=False)
 
     assert result_datastore_addresses is not None
 
     # Assert that the log message for AWS Batch confirms unavailability of AWS Batch Environment.
-    assert 'Could not find AWS_BATCH_JOB_ARRAY_INDEX. Running all' in caplog.text
+    # assert 'Could not find AWS_BATCH_JOB_ARRAY_INDEX. Running all' in caplog.text
     assert len(result_datastore_addresses) == 6
 
     tempdir = tempfile.TemporaryDirectory()
@@ -174,11 +175,11 @@ def test_run_rbfe(patched_run_edge, caplog, protein_datastore_address, ligands_l
         assert os.path.exists(result_destination_address)
 
     # With the AWS Batch environment variable
-    os.environ['AWS_BATCH_JOB_ARRAY_INDEX'] = '3'
+    # os.environ['AWS_BATCH_JOB_ARRAY_INDEX'] = '3'
     result_datastore_addresses = run_rbfe(**run_rbfe_kwargs, dry_run=False)
 
     # Assert that the log message for AWS Batch confirms availability of AWS Batch Environment.
-    assert "Found AWS_BATCH_JOB_ARRAY_INDEX in the environment. Running edge 3" in caplog.text
+    # assert "Found AWS_BATCH_JOB_ARRAY_INDEX in the environment. Running edge 3" in caplog.text
 
 
 @patch('deepchem_server.core.primitives.fep.rbfe.run_rbfe.system_setup.run_edge', return_value=mocked_result)
@@ -196,17 +197,17 @@ def test_run_rbfe_single_dir_output_key(patched_run_edge,
     """
 
     # Without the AWS Batch environment variable
-    try:
-        del os.environ["AWS_BATCH_JOB_ARRAY_INDEX"]
-    except KeyError:
-        pass
+    # try:
+    #     del os.environ["AWS_BATCH_JOB_ARRAY_INDEX"]
+    # except KeyError:
+    #     pass
 
     result_datastore_addresses = run_rbfe(**run_rbfe_kwargs, dry_run=False, output_key=output_key)
 
     assert result_datastore_addresses is not None
 
     # Assert that the log message for AWS Batch confirms unavailability of AWS Batch Environment.
-    assert 'Could not find AWS_BATCH_JOB_ARRAY_INDEX. Running all' in caplog.text
+    # assert 'Could not find AWS_BATCH_JOB_ARRAY_INDEX. Running all' in caplog.text
     assert len(result_datastore_addresses) == 6
 
     # Check presnece of output_key
@@ -214,13 +215,12 @@ def test_run_rbfe_single_dir_output_key(patched_run_edge,
         assert output_key in address, "output_key not in address"
 
     # With the AWS Batch environment variable
-    os.environ['AWS_BATCH_JOB_ARRAY_INDEX'] = '3'
+    # os.environ['AWS_BATCH_JOB_ARRAY_INDEX'] = '3'
     result_datastore_addresses = run_rbfe(**run_rbfe_kwargs, dry_run=False, output_key=output_key)
 
     # Assert that the log message for AWS Batch confirms availability of AWS Batch Environment.
-    assert "Found AWS_BATCH_JOB_ARRAY_INDEX in the environment. Running edge 3" in caplog.text
-    assert output_key in result_datastore_addresses[0], \
-        "output_key not in address"
+    # assert "Found AWS_BATCH_JOB_ARRAY_INDEX in the environment. Running edge 3" in caplog.text
+    assert output_key in result_datastore_addresses[0], "output_key not in address"
 
 
 @patch('deepchem_server.core.primitives.fep.rbfe.run_rbfe.system_setup.run_edge', return_value=mocked_result)
@@ -238,17 +238,17 @@ def test_run_rbfe_nested_dir_output_key(patched_run_edge,
     """
 
     # Without the AWS Batch environment variable
-    try:
-        del os.environ["AWS_BATCH_JOB_ARRAY_INDEX"]
-    except KeyError:
-        pass
+    # try:
+    #     del os.environ["AWS_BATCH_JOB_ARRAY_INDEX"]
+    # except KeyError:
+    #     pass
 
     result_datastore_addresses = run_rbfe(**run_rbfe_kwargs, dry_run=False, output_key=output_key)
 
     assert result_datastore_addresses is not None
 
     # Assert that the log message for AWS Batch confirms unavailability of AWS Batch Environment.
-    assert 'Could not find AWS_BATCH_JOB_ARRAY_INDEX. Running all' in caplog.text
+    # assert 'Could not find AWS_BATCH_JOB_ARRAY_INDEX. Running all' in caplog.text
     assert len(result_datastore_addresses) == 6
 
     # Check presnece of output_key
@@ -256,10 +256,9 @@ def test_run_rbfe_nested_dir_output_key(patched_run_edge,
         assert output_key in address, "output_key not in address"
 
     # With the AWS Batch environment variable
-    os.environ['AWS_BATCH_JOB_ARRAY_INDEX'] = '3'
+    # os.environ['AWS_BATCH_JOB_ARRAY_INDEX'] = '3'
     result_datastore_addresses = run_rbfe(**run_rbfe_kwargs, dry_run=False, output_key=output_key)
 
     # Assert that the log message for AWS Batch confirms availability of AWS Batch Environment.
-    assert "Found AWS_BATCH_JOB_ARRAY_INDEX in the environment. Running edge 3" in caplog.text
-    assert output_key in result_datastore_addresses[0], \
-        "output_key not in address"
+    # assert "Found AWS_BATCH_JOB_ARRAY_INDEX in the environment. Running edge 3" in caplog.text
+    assert output_key in result_datastore_addresses[0], "output_key not in address"

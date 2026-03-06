@@ -8,15 +8,10 @@ from deepchem_server.core.primitives.feat import featurize
 from deepchem_server.core.primitives.inference import infer
 from deepchem_server.core.primitives.splitter import train_valid_test_split
 from deepchem_server.core.primitives.train import train
+from deepchem_server.core.primitives.fep import run_rbfe, collate_rbfe_results
 
 
 __all__ = [
-    "featurize",
-    "train",
-    "infer",
-    "model_evaluator",
-    "train_valid_test_split",
-    "generate_pose",
-    "ComputeWorkflow",
-    "program_map",
+    "featurize", "train", "infer", "model_evaluator", "train_valid_test_split", "generate_pose", "ComputeWorkflow",
+    "program_map", "run_rbfe", "collate_rbfe_results"
 ]

@@ -1,7 +1,6 @@
+from openfe import SmallMoleculeComponent
+from gufe.protocols.protocoldag import ProtocolDAG
 from typing import Type
-
-from gufe.protocols.protocoldag import ProtocolDAG  # type: ignore
-from openfe import SmallMoleculeComponent  # type: ignore
 
 
 class RunnableEdge:
@@ -26,7 +25,7 @@ class RunnableEdge:
     """
 
     def __init__(self, componentA: Type[SmallMoleculeComponent], componentB: Type[SmallMoleculeComponent],
-                 solvent_dag: Type[ProtocolDAG], complex_dag: type[ProtocolDAG]):
+                 solvent_dag: Type[ProtocolDAG], complex_dag: Type[ProtocolDAG]):
         """
         Parameters
         ----------
