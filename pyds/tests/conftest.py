@@ -11,7 +11,7 @@ import responses
 from pyds import Settings
 from pyds.base.client import BaseClient
 from pyds.data import Data
-from pyds.primitives import Evaluate, Featurize, Infer, Train
+from pyds.primitives import Evaluate, Featurize, Infer, Partition, Train
 
 from .test_utils import (
     cleanup_temp_file,
@@ -84,6 +84,12 @@ def evaluate_client(test_settings: Settings) -> Evaluate:
 def infer_client(test_settings: Settings) -> Infer:
     """Create Infer primitive client for testing."""
     return Infer(settings=test_settings)
+
+
+@pytest.fixture
+def partition_client(test_settings: Settings) -> Partition:
+    """Create Partition primitive client for testing."""
+    return Partition(settings=test_settings)
 
 
 @pytest.fixture
@@ -224,6 +230,12 @@ def live_evaluate_client(live_settings: Settings) -> Evaluate:
 def live_infer_client(live_settings: Settings) -> Infer:
     """Create Infer client for live server testing."""
     return Infer(settings=live_settings)
+
+
+@pytest.fixture
+def live_partition_client(live_settings: Settings) -> Partition:
+    """Create Partition client for live server testing."""
+    return Partition(settings=live_settings)
 
 
 # ===========================

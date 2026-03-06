@@ -10,6 +10,7 @@ from .evaluate import Evaluate
 from .featurize import Featurize
 from .docking import Docking
 from .infer import Infer
+from .partition import Partition
 from .splitter import TVTSplit
 from .train import Train
 
@@ -21,5 +22,6 @@ __all__ = [
     "Train",
     "Evaluate",
     "Infer",
+    "Partition",
     "TVTSplit",
 ]
