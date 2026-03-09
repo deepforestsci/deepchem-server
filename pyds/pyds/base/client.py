@@ -2,7 +2,6 @@
 Base client class with common functionality for all DeepChem API clients.
 """
 
-from os import PathLike
 from typing import Any, Dict, Optional
 from pathlib import Path
 
@@ -156,7 +155,7 @@ class BaseClient:
         self._handle_http_error(response)
         return response.json()
 
-    def _validate_file_response(self, response: requests.Response, destination_path: str) -> PathLike:
+    def _validate_file_response(self, response: requests.Response, destination_path: str) -> str:
         """
         Validate file response and return file path.
 
