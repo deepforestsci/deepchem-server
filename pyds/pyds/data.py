@@ -130,7 +130,7 @@ class Data(BaseClient):
         destination_path: str,
         profile_name: Optional[str] = None,
         project_name: Optional[str] = None,
-    ) -> Dict[str, Any]:
+    ) -> str:
         """
         Download data from datastore.
 
