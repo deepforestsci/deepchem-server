@@ -113,12 +113,12 @@ class TestSettings:
         assert new_settings.base_url == "http://saved:8000"
         assert new_settings.get_setting("saved_key") == "saved_value"
 
-    def test_load_nonexistent_file(self, temp_settings_file: str) -> None:
+    def test_load_nonexistent_file(self) -> None:
         """Test load method with nonexistent file."""
-        os.remove(temp_settings_file)
+        tmp_file = tempfile.NamedTemporaryFile(delete=True)
 
-        settings = Settings()
-        settings.settings_file = Path(temp_settings_file)
+        settings = Settings(settings_file=tmp_file.name)
+        settings.settings_file = Path(tmp_file.name)
         settings.load()
 
         # Should not raise exception and maintain defaults
