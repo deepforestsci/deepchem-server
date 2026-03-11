@@ -352,6 +352,45 @@ async def train_valid_test_split(
     return {"train_valid_test_split_results_address": result}
 
 
+@router.post("/partition")
+async def partition(
+    profile_name: Annotated[str, Body()],
+    project_name: Annotated[str, Body()],
+    dataset_address: Annotated[str, Body()],
+    n_partition: Annotated[int, Body()] = 4,
+    shuffle: Annotated[bool, Body()] = False,
+) -> dict:
+    """
+    Partition a dataset into N datastore datasets.
+
+    Parameters
+    ----------
+    profile_name: str
+        Name of the Profile where the job is run
+    project_name: str
+        Name of the Project where the job is run
+    dataset_address: str
+        datastore address of dataset to partition
+    n_partition: int
+        Number of partitions to create
+    shuffle: bool
+        Whether to shuffle before partitioning
+    """
+    program: Dict = {
+        "program_name": "partition",
+        "dataset_address": dataset_address,
+        "n_partition": n_partition,
+        "shuffle": shuffle,
+    }
+
+    try:
+        result = run_job(profile_name=profile_name, project_name=project_name, program=program)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Partition failed: {str(e)}")
+
+    return {"partitioned_dataset_addresses": result}
+
+
 @router.post("/generate_pose")
 async def docking_generate_pose(
     profile_name: str,

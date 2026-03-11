@@ -16,13 +16,14 @@ class TestImports:
 
     def test_primitive_imports(self):
         """Test importing primitive classes."""
-        from pyds import Evaluate, Featurize, Infer, Primitive, Train, TVTSplit
+        from pyds import Evaluate, Featurize, Infer, Partition, Primitive, Train, TVTSplit
 
         assert Primitive is not None
         assert Featurize is not None
         assert Train is not None
         assert Evaluate is not None
         assert Infer is not None
+        assert Partition is not None
         assert TVTSplit is not None
 
     def test_all_exports_accessible(self):
@@ -38,6 +39,7 @@ class TestImports:
             "Train",
             "Evaluate",
             "Infer",
+            "Partition",
             "TVTSplit",
         ]
 
@@ -56,6 +58,7 @@ class TestImports:
         import pyds.primitives.evaluate  # noqa: F401
         import pyds.primitives.featurize  # noqa: F401
         import pyds.primitives.infer  # noqa: F401
+        import pyds.primitives.partition  # noqa: F401
         import pyds.primitives.splitter  # noqa: F401
         import pyds.primitives.train  # noqa: F401
         import pyds.settings  # noqa: F401

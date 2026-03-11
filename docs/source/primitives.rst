@@ -6,6 +6,7 @@ These primitives provide the essential functionality for molecular machine learn
 Currently, Deepchem Server provides the following primitives: (Other primitives are planned to be added soon)
 
 * **Featurize**: Transform raw molecular data into machine learning features
+* **Partition**: Split a dataset into multiple datastore-backed partitions
 * **Train Valid Test Split**: Split the dataset into training, validation, and test sets
 * **Train**: Build and train machine learning models on featurized datasets
 * **Inference**: Run predictions on new data using trained models
@@ -46,6 +47,24 @@ The featurization primitive supports the following DeepChem featurizers:
 
 .. note::
    While scikit-learn models (linear_regression, random_forest_*) can work with any featurizer, the GCN model specifically requires the ``molgraphconv`` featurizer for proper graph-based processing.
+
+Partition
+---------
+
+The partition primitive splits a dataset into multiple smaller datasets and uploads each partition back to the datastore. Use it when you need to:
+
+* **Distribute workloads** — break a large dataset into chunks so featurization or inference can run in parallel.
+* **Reduce memory pressure** — process data in manageable pieces when the full dataset does not fit in memory.
+* **Stage training pipelines** — create fixed data splits before training begins.
+
+**Supported dataset types:**
+
+* DeepChem ``DiskDataset`` — supports optional shuffling before partitioning.
+* CSV ``DataFrame`` — partitions rows sequentially (shuffling is not supported).
+
+After partitioning, the parent dataset's datacard is updated with the number of partitions (n_partition) so downstream primitives can discover the splits.
+
+.. autofunction:: deepchem_server.core.primitives.partition.partition
 
 Training
 --------
@@ -140,11 +159,12 @@ Workflow Integration
 These primitives are designed to work together in typical machine learning workflows:
 
 1. **Data Preparation**: Upload raw data to the datastore
-2. **Featurization**: Use ``featurize()`` to transform molecular data into features
-3. **Training**: Use ``train()`` to build models on the featurized data
-4. **Inference**: Use ``infer()`` to make predictions on new data
-5. **Evaluation**: Use ``model_evaluator()`` to assess model performance
-6. **Docking**: Use ``generate_pose()`` to predict protein-ligand binding interactions
+2. **Partition (Optional)**: Use ``partition()`` to split large datasets for parallel or staged workflows
+3. **Featurization**: Use ``featurize()`` to transform molecular data into features
+4. **Training**: Use ``train()`` to build models on the featurized data
+5. **Inference**: Use ``infer()`` to make predictions on new data
+6. **Evaluation**: Use ``model_evaluator()`` to assess model performance
+7. **Docking**: Use ``generate_pose()`` to predict protein-ligand binding interactions
 
 Example Workflow
 ~~~~~~~~~~~~~~~~

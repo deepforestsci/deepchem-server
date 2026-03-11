@@ -6,6 +6,7 @@ from deepchem_server.core.primitives.feat import featurize
 from deepchem_server.core.primitives.fep.rbfe.collate_rbfe_results import collate_rbfe_results
 from deepchem_server.core.primitives.fep.rbfe.run_rbfe import run_rbfe
 from deepchem_server.core.primitives.inference import infer
+from deepchem_server.core.primitives.partition import partition
 from deepchem_server.core.primitives.splitter import train_valid_test_split
 from deepchem_server.core.primitives.train import train
 
@@ -15,6 +16,7 @@ program_map = {
     "train": train,
     "evaluate": model_evaluator,
     "infer": infer,
+    "partition": partition,
     "train_valid_test_split": train_valid_test_split,
     "generate_pose": generate_pose,
     "relative_binding_free_energy": run_rbfe,
