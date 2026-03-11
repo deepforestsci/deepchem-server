@@ -161,14 +161,20 @@ class BaseClient:
         """
         Validate file response and return file path.
 
-        Args:
-            response: Response object to validate
-            destination_path: Path to save the downloaded file
+        Parameters
+        ----------
+            response: requests.Response
+                Response object to validate
+            destination_path: str
+                Path to save the downloaded file
 
-        Returns:
-            Path to the downloaded file
+        Returns
+        -------
+            str
+                Path to the downloaded file
 
-        Raises:
+        Raises
+        ------
             requests.exceptions.HTTPError: If response indicates an error
 
         Examples
@@ -178,9 +184,6 @@ class BaseClient:
         >>> response = client._validate_file_response(response, "/path/to/download/file.txt")
         >>> print(response)
         "/path/to/download/file.txt"
-
-        Raises:
-            requests.exceptions.HTTPError: If response from server indicates an error
         """
         self._handle_http_error(response)
 
