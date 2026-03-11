@@ -128,8 +128,10 @@ class BaseClient:
         """
         Handle HTTP error and raise exception.
 
-        Args:
-            response: Response object to handle
+        Parameters
+        ----------
+            response: requests.Response
+                Response object to handle
         """
         if response.status_code >= 400:
             try:

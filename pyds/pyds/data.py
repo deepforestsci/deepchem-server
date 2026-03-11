@@ -24,9 +24,12 @@ class Data(BaseClient):
         """
         Initialize Data client.
 
-        Args:
-            settings: Settings instance for configuration
-            base_url: Base URL for the API (overrides settings if provided)
+        Parameters
+        ----------
+            settings: Settings
+                Settings instance for configuration
+            base_url: str
+                Base URL for the API (overrides settings if provided)
         """
         super().__init__(settings, base_url)
 
@@ -98,14 +101,20 @@ class Data(BaseClient):
         """
         List data in datastore.
 
-        Args:
-            profile_name: Profile name (uses settings if not provided)
-            project_name: Project name (uses settings if not provided)
+        Parameters
+        ----------
+            profile_name: str
+                Profile name (uses settings if not provided)
+            project_name: str
+                Project name (uses settings if not provided)
 
-        Returns:
-            List of data in datastore
+        Returns
+        -------
+            Dict[str, Any]
+                List of data in datastore
 
-        Raises:
+        Raises
+        ------
             requests.exceptions.HTTPError: If response indicates an error
 
         Examples
@@ -115,9 +124,6 @@ class Data(BaseClient):
         >>> response = client.list_data()
         >>> print(response)
         ["data1.csv", "data2.csv"]
-
-        Raises:
-            requests.exceptions.HTTPError: If response from server indicates an error
         """
         profile, project = self._get_profile_and_project(profile_name, project_name)
         response = self._get(f"/data?profile_name={profile}&project_name={project}")
@@ -134,16 +140,24 @@ class Data(BaseClient):
         """
         Download data from datastore.
 
-        Args:
-            address: Address of the data to download
-            destination_path: Path to save the downloaded file
-            profile_name: Profile name (uses settings if not provided)
-            project_name: Project name (uses settings if not provided)
+        Parameters
+        ----------
+            address: str
+                Address of the data to download
+            destination_path: str
+                Path to save the downloaded file
+            profile_name: str
+                Profile name (uses settings if not provided)
+            project_name: str
+                Project name (uses settings if not provided)
 
-        Returns:
-            Absolute path to the downloaded file
+        Returns
+        -------
+            str
+                Absolute path to the downloaded file
 
-        Raises:
+        Raises
+        ------
             requests.exceptions.HTTPError: If response indicates an error
 
         Examples
@@ -154,8 +168,6 @@ class Data(BaseClient):
         >>> print(response)
         "/path/to/download/data.csv"
 
-        Raises:
-            requests.exceptions.HTTPError: If response from server indicates an error
         """
         profile, project = self._get_profile_and_project(profile_name, project_name)
         response = self._get(f"/data/{address}?profile_name={profile}&project_name={project}")
