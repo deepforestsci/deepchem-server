@@ -1,4 +1,4 @@
-"""Library screening script: upload -> partition -> featurize each part -> infer each part."""
+"""Large library screening script: upload -> partition -> featurize each part -> infer each part."""
 
 import sys
 import time
