@@ -21,7 +21,6 @@ from pyds import (
     Train,
 )
 
-# Global config
 BASE_URL = "http://deepchem-server"
 PROFILE = "test_profile"
 PROJECT = "test_project"
