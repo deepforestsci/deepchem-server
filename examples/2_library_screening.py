@@ -5,10 +5,11 @@ import time
 import uuid
 from pathlib import Path
 
+from pyds import BaseClient, Data, Featurize, Infer, Partition, Settings  # type: ignore
+
+
 repo_root = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(repo_root / "pyds"))
-
-from pyds import BaseClient, Data, Featurize, Infer, Partition, Settings
 
 BASE_URL = "http://deepchem-server"
 PROFILE = "test_profile"
@@ -63,7 +64,10 @@ for i, part_addr in enumerate(partitions):
         output=f"library_ecfp_{run_id}_part{i}",
         dataset_column="smiles",
         label_column="logp",
-        feat_kwargs={"radius": 2, "size": 1024},
+        feat_kwargs={
+            "radius": 2,
+            "size": 1024
+        },
     )
     featurized_part_address = featurize_result["featurized_file_address"]
     print(f"  featurized partition[{i}]: {featurized_part_address}")

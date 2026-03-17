@@ -5,21 +5,13 @@ import time
 import uuid
 from pathlib import Path
 
+from pyds import BaseClient, Data, Evaluate, Featurize, Infer, Settings, TVTSplit, Train  # type: ignore
+
+
 repo_root = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(repo_root / "pyds"))
 
 repo_root = Path(__file__).resolve().parents[1]
-
-from pyds import (
-    BaseClient,
-    Data,
-    Evaluate,
-    Featurize,
-    Infer,
-    Settings,
-    TVTSplit,
-    Train,
-)
 
 BASE_URL = "http://deepchem-server"
 PROFILE = "test_profile"
@@ -87,7 +79,10 @@ train_result = train_client.run(
     dataset_address=train_addr,
     model_type="random_forest_regressor",
     model_name=f"rf_logp_{run_id}",
-    init_kwargs={"n_estimators": 100, "random_state": 42},
+    init_kwargs={
+        "n_estimators": 100,
+        "random_state": 42
+    },
     train_kwargs={},
 )
 model_address = train_result["trained_model_address"]
