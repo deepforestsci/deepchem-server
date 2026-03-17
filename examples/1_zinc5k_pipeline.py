@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Basic Zinc5k pipeline script: featurize -> train -> evaluate -> infer."""
 
 import sys
