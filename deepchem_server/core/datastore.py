@@ -913,6 +913,6 @@ class DiskDataStore(DataStore):
         # TODO A pretty print of objects. Ref: https://docs.python.org/3/library/pprint.html
         all_objects = self._get_datastore_objects(self.storage_loc)
         objects = []
-        for i, object_ in enumerate(all_objects):
-            objects.append('deepchem://' + self.storage_loc + '/' + object_)
+        for _, object_ in enumerate(all_objects):
+            objects.append(DeepchemAddress(self.address_prefix + object_).address)
         return '\n'.join(objects)

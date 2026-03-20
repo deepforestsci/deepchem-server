@@ -3,6 +3,7 @@ Base client class with common functionality for all DeepChem API clients.
 """
 
 from typing import Any, Dict, Optional
+from pathlib import Path
 
 import requests
 
@@ -123,6 +124,23 @@ class BaseClient:
         """
         return self._make_request("DELETE", endpoint, **kwargs)
 
+    def _handle_http_error(self, response: requests.Response) -> None:
+        """
+        Handle HTTP error and raise exception.
+
+        Parameters
+        ----------
+            response: requests.Response
+                Response object to handle
+        """
+        if response.status_code >= 400:
+            try:
+                error_data = response.json()
+                error_message = error_data.get("detail", f"HTTP {response.status_code}")
+            except:
+                error_message = f"HTTP {response.status_code}"
+            raise requests.exceptions.HTTPError(error_message)
+
     def _validate_response(self, response: requests.Response) -> Dict[str, Any]:
         """
         Validate response and return JSON data.
@@ -136,15 +154,44 @@ class BaseClient:
         Raises:
             Exception: If response indicates an error
         """
-        if response.status_code >= 400:
-            try:
-                error_data = response.json()
-                error_message = error_data.get("detail", f"HTTP {response.status_code}")
-            except:
-                error_message = f"HTTP {response.status_code}"
-            raise Exception(error_message)
-
+        self._handle_http_error(response)
         return response.json()
+
+    def _validate_file_response(self, response: requests.Response, destination_path: str) -> str:
+        """
+        Validate file response and return file path.
+
+        Parameters
+        ----------
+            response: requests.Response
+                Response object to validate
+            destination_path: str
+                Path to save the downloaded file
+
+        Returns
+        -------
+            str
+                Path to the downloaded file
+
+        Raises
+        ------
+            requests.exceptions.HTTPError: If response indicates an error
+
+        Examples
+        --------
+        >>> from pyds.base.client import BaseClient
+        >>> client = BaseClient()
+        >>> response = client._validate_file_response(response, "/path/to/download/file.txt")
+        >>> print(response)
+        "/path/to/download/file.txt"
+        """
+        self._handle_http_error(response)
+
+        with open(destination_path, "wb") as f:
+            f.write(response.content)
+
+        path = Path(destination_path)
+        return str(path.resolve())
 
     def _get_profile_project(self,
                              profile_name: Optional[str] = None,

@@ -211,3 +211,21 @@ class TestData:
         result = data_client.upload_data(file_path=temp_test_file)
 
         assert result == {"dataset_address": "test"}
+
+    def test_list_data_success(self, temp_test_file: str, data_client: Data) -> None:
+        """Test list_data success."""
+
+        with open(temp_test_file, "w") as f:
+            f.write("test,data\n1,2")
+
+        result = data_client.upload_data(file_path=temp_test_file, filename="test_data1.csv")
+        dataset_address1 = result["dataset_address"]
+        assert dataset_address1 is not None
+
+        result = data_client.upload_data(file_path=temp_test_file, filename="test_data2.csv")
+        dataset_address2 = result["dataset_address"]
+        assert dataset_address2 is not None
+
+        result = data_client.list_data()
+        assert dataset_address1 in result
+        assert dataset_address2 in result

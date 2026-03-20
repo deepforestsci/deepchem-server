@@ -33,6 +33,37 @@ def _init_datastore(profile_name: str, project_name: str, backend='local') -> Da
     return datastore
 
 
+def zipdir(path: str) -> str:
+    """
+    A helper method to zip a directory
+
+    Parameters
+    ----------
+    path: str
+        The path of the directory to be zipped
+
+    Returns
+    -------
+    zip_path: str
+        The path of the zipped directory
+    
+    Examples
+    --------
+    >>> from deepchem_server.utils import zipdir
+    >>> zipdir("/path/to/directory")
+    "/path/to/directory.zip"
+    """
+    import zipfile
+
+    zip_path = path + ".zip"
+    with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
+        for root, dirs, files in os.walk(path):
+            for file in files:
+                file_path = os.path.join(root, file)
+                zipf.write(file_path, arcname=os.path.relpath(file_path, os.path.dirname(path)))
+    return zip_path
+
+
 def run_job(profile_name: str, project_name: str, program: Dict, backend: str = 'local'):
     """
     Function to run jobs based on the submitted program
@@ -90,6 +121,43 @@ def _upload_data(profile_name, project_name, datastore_filename, contents, data_
         f.write(contents)
     dataset_address = datastore.upload_data(datastore_filename=datastore_filename, filename=temppath, card=data_card)
     return dataset_address
+
+
+def _download_file(profile_name: str, project_name: str, file_name: str, backend="local") -> str:
+    """
+    A wrapper method used by the server to fetch objects from the datastore
+
+    Parameters
+    ----------
+    profile_name: str
+        Name of the Profile where the job is run
+    project_name: str
+        Name of the Project where the job is run
+    file_name: str
+        Name of the file to download
+    backend: str
+        Backend to be used to run the job (Default: local)
+
+    Returns
+    -------
+    file_path: str
+        The path of the downloaded object
+    
+    Examples
+    --------
+    >>> from deepchem_server.utils import _download_file
+    >>> _download_file("test_profile", "test_project", "test_file.csv")
+    "/path/to/test_file.csv"
+    """
+    datastore = _init_datastore(profile_name=profile_name, project_name=project_name, backend=backend)
+    if isinstance(datastore, DiskDataStore):
+        storage_loc = datastore.storage_loc
+        file_path = os.path.join(storage_loc, file_name)
+    else:
+        raise NotImplementedError(f"{backend} backend not implemented")
+    if os.path.isdir(file_path):
+        return zipdir(file_path)
+    return file_path
 
 
 def parse_boolean_none_values_from_kwargs(kwargs: Dict) -> Dict:

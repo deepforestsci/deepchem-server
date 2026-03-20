@@ -1,10 +1,16 @@
 import logging
 from typing import Dict
+import mimetypes
+import os
 
-from fastapi import APIRouter, File, Form, UploadFile
+from fastapi import APIRouter, File, Form, UploadFile, HTTPException
+from fastapi.responses import FileResponse
+from starlette.background import BackgroundTask
 
+from deepchem_server.utils import _init_datastore
 from deepchem_server.core.common.cards import DataCard
-from deepchem_server.utils import _upload_data
+from deepchem_server.core.common.address import DeepchemAddress
+from deepchem_server.utils import _upload_data, _download_file
 
 
 logger = logging.getLogger("backend_logs")
@@ -74,3 +80,83 @@ async def upload_data(
 
     address: str = _upload_data(profile_name, project_name, filename, contents, card, backend=backend)  # type: ignore
     return {"dataset_address": address}
+
+
+@router.get("")
+async def list_files(profile_name: str, project_name: str, backend="local") -> Dict:
+    """
+    List data files in datastore for a given profile and project
+
+    Parameters
+    ----------
+    profile_name: str
+        Name of the Profile where the job is run
+    project_name: str
+        Name of the Project where the job is run
+    backend: str
+        Backend to be used to run the job (Default: local)
+    """
+    datastore = _init_datastore(profile_name=profile_name, project_name=project_name, backend=backend)
+    data_files = datastore.list_data().split("\n")
+    return {"data_files": data_files}
+
+
+@router.get("/{file_name}")
+async def download_file(profile_name: str, project_name: str, file_name: str, backend="local") -> FileResponse:
+    """
+    Download a file from the datastore for a given profile and project
+
+    Parameters
+    ----------
+    profile_name: str
+        Name of the Profile where the job is run
+    project_name: str
+        Name of the Project where the job is run
+    file_name: str
+        Name of the file to download
+    backend: str
+        Backend to be used to run the job (Default: local)
+
+    Returns
+    -------
+    FileResponse:
+        The file response object
+
+    Raises
+    ------
+    HTTPException:
+        If the file is not found in the datastore
+    """
+    address = f"deepchem://{profile_name}/{project_name}/{file_name}"
+    key = DeepchemAddress(address).key
+    file_path = _download_file(profile_name=profile_name,
+                               project_name=project_name,
+                               file_name=file_name,
+                               backend=backend)
+    if file_path is None:
+        raise HTTPException(status_code=404, detail=f"The address {file_name} is not found in the datastore")
+    mime_type, _ = mimetypes.guess_type(file_path)
+    if mime_type is None:
+        mime_type = "application/octet-stream"
+
+    def clean_up():
+        if backend == "local":
+            return
+
+        # Clean up the file or directory after downloading
+        if os.path.exists(file_path):
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+            elif os.path.isdir(file_path):
+                import shutil
+
+                shutil.rmtree(file_path)
+        if mime_type == "application/zip":
+            # Clean up the zipped directory after downloading
+            zip_dir_path = os.path.join(os.path.dirname(file_path), key)
+            if os.path.exists(zip_dir_path):
+                import shutil
+
+                shutil.rmtree(zip_dir_path)
+
+    return FileResponse(file_path, filename=key, media_type=mime_type, background=BackgroundTask(clean_up))
