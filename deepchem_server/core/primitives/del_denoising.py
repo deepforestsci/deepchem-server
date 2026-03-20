@@ -410,7 +410,7 @@ def del_denoise(
         card_kwargs["aggregate_operation"] = aggregate_operation
         card_kwargs["min_count_threshold"] = min_count_threshold
         card_kwargs["n_failed_smiles"] = n_failed
-    
+
     if strategy == "unified":
         card_kwargs["alpha"] = alpha
 
