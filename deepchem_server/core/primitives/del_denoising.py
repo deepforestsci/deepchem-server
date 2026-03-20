@@ -1,6 +1,6 @@
 """DEL denoising and enrichment scoring primitives.
 
-Implements two methods for converting raw DEL sequencing read
+Implements two modes for converting raw DEL sequencing read
 counts into enrichment scores:
 
 1. Unified (Poisson CI ratio) — models replicate counts as Poisson random
