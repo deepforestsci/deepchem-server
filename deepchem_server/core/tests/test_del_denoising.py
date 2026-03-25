@@ -38,9 +38,7 @@ def test_poissfit_basic():
 
 def test_normalized_enrichment_score():
     """Match the expected z-score from deepchem-del test suite."""
-    df = pd.DataFrame(
-        {"seq_target_1": [10, 20, 30], "seq_target_2": [40, 50, 60], "seq_target_3": [70, 80, 90]}
-    )
+    df = pd.DataFrame({"seq_target_1": [10, 20, 30], "seq_target_2": [40, 50, 60], "seq_target_3": [70, 80, 90]})
     row = df.iloc[0]
     total_sum = 60
     row_count = 3
@@ -54,9 +52,7 @@ def test_poisson_enrichment_matches_reference():
     control_cols = ["seq_matrix_1", "seq_matrix_2", "seq_matrix_3"]
     target_cols = ["seq_target_1", "seq_target_2", "seq_target_3"]
     result = _calculate_poisson_enrichment(df, control_cols, target_cols)
-    np.testing.assert_allclose(
-        result["Poisson_Enrichment"].values, df["target_enrichment"].values, rtol=1e-5
-    )
+    np.testing.assert_allclose(result["Poisson_Enrichment"].values, df["target_enrichment"].values, rtol=1e-5)
 
 
 def test_del_denoise_unified_regression(disk_datastore):
@@ -64,9 +60,7 @@ def test_del_denoise_unified_regression(disk_datastore):
     config.set_datastore(disk_datastore)
     address = _upload_del_csv(disk_datastore)
 
-    result_address = del_denoise(
-        dataset_address=address, output_key="denoised_unified", strategy="unified"
-    )
+    result_address = del_denoise(dataset_address=address, output_key="denoised_unified", strategy="unified")
 
     result_df = disk_datastore.get(result_address)
     assert "Poisson_Enrichment" in result_df.columns
@@ -79,17 +73,13 @@ def test_del_denoise_unified_matches_reference(disk_datastore):
     config.set_datastore(disk_datastore)
     address = _upload_del_csv(disk_datastore)
 
-    result_address = del_denoise(
-        dataset_address=address, output_key="denoised_unified_check", strategy="unified"
-    )
+    result_address = del_denoise(dataset_address=address, output_key="denoised_unified_check", strategy="unified")
 
     result_df = disk_datastore.get(result_address)
     ref_df = pd.read_csv(DEL_CSV)
     ref_df = ref_df.dropna(subset=["smiles"]).drop_duplicates(subset=["smiles"])
 
-    np.testing.assert_allclose(
-        result_df["Poisson_Enrichment"].values, ref_df["target_enrichment"].values, rtol=1e-5
-    )
+    np.testing.assert_allclose(result_df["Poisson_Enrichment"].values, ref_df["target_enrichment"].values, rtol=1e-5)
 
 
 def test_del_denoise_unified_classification(disk_datastore):
@@ -116,9 +106,7 @@ def test_del_denoise_non_unified(disk_datastore):
     config.set_datastore(disk_datastore)
     address = _upload_del_csv(disk_datastore)
 
-    result_address = del_denoise(
-        dataset_address=address, output_key="denoised_non_unified", strategy="non_unified"
-    )
+    result_address = del_denoise(dataset_address=address, output_key="denoised_non_unified", strategy="non_unified")
 
     result_df = disk_datastore.get(result_address)
     assert "Target_Enrichment_Score" in result_df.columns
@@ -152,9 +140,7 @@ def test_del_denoise_card_metadata(disk_datastore):
     config.set_datastore(disk_datastore)
     address = _upload_del_csv(disk_datastore)
 
-    result_address = del_denoise(
-        dataset_address=address, output_key="denoised_card_test", strategy="unified"
-    )
+    result_address = del_denoise(dataset_address=address, output_key="denoised_card_test", strategy="unified")
 
     card = disk_datastore.get_card(result_address, kind="data")
     assert card.strategy == "unified"

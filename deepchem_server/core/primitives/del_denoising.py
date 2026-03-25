@@ -113,9 +113,7 @@ def _calculate_poisson_enrichment(df: pd.DataFrame,
     return result_df
 
 
-def _calculate_normalized_enrichment_score(
-    row: pd.Series, total_sum: float, row_count: int, column_name: str
-) -> float:
+def _calculate_normalized_enrichment_score(row: pd.Series, total_sum: float, row_count: int, column_name: str) -> float:
     """Z-score for one row: (p0 - p1) / sqrt(p1 * (1 - p1)).
 
     Parameters
