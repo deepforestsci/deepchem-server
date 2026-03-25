@@ -1,19 +1,17 @@
-"""DEL denoising and enrichment scoring primitives.
+"""DEL denoising primitive.
 
-Implements two modes for converting raw DEL sequencing read
-counts into enrichment scores:
+Two scoring modes:
 
-1. Unified (Poisson CI ratio) — models replicate counts as Poisson random
-   variables, returns LowerBound(lambda_target) / UpperBound(lambda_control).
-2. Non-unified (z-score normalization) — computes z-score enrichment
-   independently for target and control experiments.
+1. Unified - Poisson confidence-interval ratio across all replicates.
+2. Non-unified - z-score computed independently for target and control.
 
-Optionally collapses trisynthon data into disynthon pairs before scoring
-when use_disynthon_pairs=True.
+Optionally collapses three-part rows into pairwise combinations before
+scoring (use_disynthon_pairs=True).
 """
 
 import logging
 import os
+import json
 import tempfile
 from math import sqrt
 from typing import Dict, List, Optional, Set, Tuple
@@ -36,19 +34,19 @@ DEFAULT_TARGET_COLS = ["seq_target_1", "seq_target_2", "seq_target_3"]
 
 
 def _poissfit(vec: pd.Series, alpha: float = 0.05) -> Tuple[float, float]:
-    """Poisson confidence interval for a vector of replicate counts.
+    """Poisson confidence interval for replicate counts.
 
     Parameters
     ----------
     vec : pd.Series
-        Replicate read counts for a single compound.
+        Replicate counts for one row.
     alpha : float
         Significance level (default 0.05 for 95% CI).
 
     Returns
     -------
     Tuple[float, float]
-        (lower_bound, upper_bound) of the Poisson rate λ.
+        (lower_bound, upper_bound) of the estimated rate.
     """
     k_sum = vec.sum()
     n = len(vec)
@@ -61,7 +59,24 @@ def _get_enrichment_ratio(row: pd.Series,
                           control_cols: List[str],
                           target_cols: List[str],
                           alpha: float = 0.05) -> float:
-    """Poisson enrichment ratio: target_lower / control_upper."""
+    """Enrichment ratio: target_lower_bound / control_upper_bound.
+
+    Parameters
+    ----------
+    row : pd.Series
+        One row with control and target count columns.
+    control_cols : List[str]
+        Control count column names.
+    target_cols : List[str]
+        Target count column names.
+    alpha : float
+        Significance level for the confidence interval.
+
+    Returns
+    -------
+    float
+        Ratio or 0.0 if control upper bound is zero.
+    """
     _, c_upper = _poissfit(row[control_cols], alpha)
     t_lower, _ = _poissfit(row[target_cols], alpha)
     if c_upper == 0:
@@ -73,7 +88,24 @@ def _calculate_poisson_enrichment(df: pd.DataFrame,
                                   control_cols: List[str],
                                   target_cols: List[str],
                                   alpha: float = 0.05) -> pd.DataFrame:
-    """Add Poisson_Enrichment column to DataFrame."""
+    """Add a Poisson_Enrichment column to the DataFrame.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Input data with control and target count columns.
+    control_cols : List[str]
+        Control count column names.
+    target_cols : List[str]
+        Target count column names.
+    alpha : float
+        Significance level for confidence intervals.
+
+    Returns
+    -------
+    pd.DataFrame
+        Copy of dataframe with a Poisson_Enrichment column added.
+    """
     result_df = df.copy()
     sub_df = result_df[control_cols + target_cols].astype(float)
     result_df["Poisson_Enrichment"] = sub_df.apply(
@@ -81,15 +113,49 @@ def _calculate_poisson_enrichment(df: pd.DataFrame,
     return result_df
 
 
-def _calculate_normalized_enrichment_score(row: pd.Series, total_sum: float, row_count: int, column_name: str) -> float:
-    """Z-score enrichment: (p0 - p1) / sqrt(p1 * (1 - p1))."""
+def _calculate_normalized_enrichment_score(
+    row: pd.Series, total_sum: float, row_count: int, column_name: str
+) -> float:
+    """Z-score for one row: (p0 - p1) / sqrt(p1 * (1 - p1)).
+
+    Parameters
+    ----------
+    row : pd.Series
+        One DataFrame row.
+    total_sum : float
+        Sum of column_name across all rows.
+    row_count : int
+        Number of rows in the DataFrame.
+    column_name : str
+        Column to read the count from.
+
+    Returns
+    -------
+    float
+        Normalized score.
+    """
     p0 = row[column_name] / total_sum
     p1 = 1 / row_count
     return (p0 - p1) / sqrt(p1 * (1 - p1))
 
 
 def _calculate_hit_threshold(df: pd.DataFrame, column_name: str, percentile: float) -> float:
-    """Return the percentile threshold for a column."""
+    """Return the percentile cutoff for a column.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Input DataFrame.
+    column_name : str
+        Column to compute the percentile on.
+    percentile : float
+        Percentile value (0--100).
+
+    Returns
+    -------
+    float
+        The cutoff value.
+    """
     return np.percentile(df[column_name], percentile)
 
 
@@ -100,7 +166,26 @@ def _get_disynthon_smiles(
     failed_smiles: Set,
     failed_combines: Set,
 ) -> Optional[str]:
-    """Convert two synthon indices back to SMILES and combine with RDKit."""
+    """Look up two fragments by index and merge them into one SMILES string.
+
+    Parameters
+    ----------
+    d1_idx : str
+        Index key for the first fragment.
+    d2_idx : str
+        Index key for the second fragment.
+    smiles_dict_inv : Dict[str, str]
+        Maps index keys to SMILES strings.
+    failed_smiles : Set
+        Collects invalid SMILES (modified in place).
+    failed_combines : Set
+        Collects pairs that fail to merge (modified in place).
+
+    Returns
+    -------
+    Optional[str]
+        Merged SMILES or None on failure.
+    """
     from rdkit import Chem
 
     try:
@@ -131,11 +216,26 @@ def _create_disynthon_pairs(
     count_cols: List[str],
     is_unified: bool,
 ) -> Tuple[pd.DataFrame, Dict[str, str]]:
-    """Generate all pairwise disynthon groupings from trisynthon data.
+    """Generate all pairwise groupings (AB, AC, BC) from three-part data.
 
-    Maps SMILES to integer indices, generates 3 pairwise combinations
-    (AB, AC, BC), groups by each pair summing count columns, and unions
-    the results.
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Input data with SMILES and count columns.
+    smiles_cols : List[str]
+        Three SMILES column names.
+    count_cols : List[str]
+        Count columns to aggregate.
+    is_unified : bool
+        If True, keep individual count columns.  If False,
+        pre-sum them into two totals before grouping.
+
+    Returns
+    -------
+    Tuple[pd.DataFrame, Dict[str, str]]
+        (pair_df, smiles_dict).  pair_df has Disynthon_1,
+        Disynthon_2 and aggregated counts.  smiles_dict maps
+        SMILES to index strings.
     """
     smiles_set: set = set()
     for col in smiles_cols:
@@ -180,9 +280,32 @@ def _collapse_to_disynthons(
     aggregate_operation: str = "sum",
     min_count_threshold: int = 0,
 ) -> Tuple[pd.DataFrame, int]:
-    """Collapse trisynthon DataFrame into disynthon pairs.
+    """Collapse three-part rows into pairwise combinations.
 
-    Returns the collapsed DataFrame and the number of failed SMILES combinations.
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Cleaned input (no NaN/duplicate rows).
+    smiles_cols : List[str]
+        Three SMILES column names.
+    control_cols : List[str]
+        Control count column names.
+    target_cols : List[str]
+        Target count column names.
+    is_unified : bool
+        If True, keep individual count columns.  If False,
+        pre-sum into two totals.
+    aggregate_operation : str
+        How to combine duplicate counts: 'sum' or 'mean'.
+    min_count_threshold : int
+        Drop rows with total count below this value.
+
+    Returns
+    -------
+    Tuple[pd.DataFrame, int]
+        (collapsed_df, n_failed).  collapsed_df has a disynthons
+        column and aggregated counts.  n_failed is the number of
+        SMILES that could not be merged.
     """
     count_cols = control_cols + target_cols
 
@@ -228,46 +351,102 @@ def del_denoise(
     aggregate_operation: str = "sum",
     min_count_threshold: int = 0,
 ) -> str:
-    """DEL denoising and enrichment scoring.
+    """Score DEL screening data to find strong binders.
+
+    Reads a CSV of raw counts, scores each row and writes the
+    result back to the datastore.  Two strategies are available:
+    'unified' (Poisson-based) and 'non_unified' (z-score-based).
 
     Parameters
     ----------
     dataset_address : str
-        Deepchem address of the raw DEL CSV.
+        Datastore address of the input CSV.
     output_key : str
-        Datastore key for the output denoised CSV.
+        Name for the output CSV in the datastore.
     strategy : str
-        'unified' or 'non_unified'.
-    control_cols : List[str], optional
-        Control replicate count column names.
-    target_cols : List[str], optional
-        Target replicate count column names.
+        'unified' (Poisson ratio) or 'non_unified' (z-score).
+    control_cols : Optional[List[str]]
+        Control count column names.
+    target_cols : Optional[List[str]]
+        Target count column names.
     add_hit_labels : bool
-        Whether to add binary hit label columns.
+        Add binary 0/1 hit columns based on a percentile cutoff.
     hit_percentile : float
-        Percentile threshold for hit classification (0-100).
+        Percentile cutoff for hits (0--100).  Used when
+        add_hit_labels is True.
     alpha : float
-        Significance level for Poisson CI (unified only).
+        Confidence level for Poisson intervals.  Used when
+        strategy is 'unified'.
     drop_duplicates : bool
-        Whether to drop duplicate SMILES rows.
+        Remove duplicate SMILES rows before scoring.
     use_disynthon_pairs : bool
-        If True, collapse trisynthon data into disynthon pairs before
-        enrichment scoring. Requires smiles_cols with three synthon
-        SMILES column names.
-    smiles_cols : List[str], optional
-        Three synthon SMILES column names (e.g. ['smiles_a', 'smiles_b',
-        'smiles_c']). Only used when use_disynthon_pairs=True.
+        Collapse three-part rows into pairwise combinations
+        before scoring.
+    smiles_cols : Optional[List[str]]
+        Three SMILES column names for the pairwise collapse.
+        Used when use_disynthon_pairs is True.
     aggregate_operation : str
-        Aggregation function for disynthon count deduplication: 'sum'
-        or 'mean'. Only used when use_disynthon_pairs=True.
+        'sum' or 'mean' for combining duplicate pair counts.
+        Used when use_disynthon_pairs is True.
     min_count_threshold : int
-        Minimum total count per disynthon row to retain. Only used when
-        use_disynthon_pairs=True.
+        Drop pair rows with total count below this value.
+        Used when use_disynthon_pairs is True.
 
     Returns
     -------
     str
-        Deepchem address of the denoised output CSV.
+        Datastore address of the output CSV.
+
+    Raises
+    ------
+    ValueError
+        If strategy is invalid or the datastore is not configured.
+
+    Examples
+    --------
+    Unified scoring:
+
+    >>> from deepchem_server.core.common.cards import DataCard
+    >>> from deepchem_server.core.common import config
+    >>> from deepchem_server.core.datastore import DiskDataStore
+    >>> import tempfile, pandas as pd
+    >>> disk_datastore = DiskDataStore('profile', 'project', tempfile.mkdtemp())
+    >>> config.set_datastore(disk_datastore)
+    >>> df = pd.DataFrame({
+    ...     "smiles": ["CCO", "CCN", "CCC"],
+    ...     "seq_matrix_1": [10, 20, 5], "seq_matrix_2": [12, 18, 6],
+    ...     "seq_matrix_3": [11, 22, 4],
+    ...     "seq_target_1": [50, 30, 8], "seq_target_2": [55, 28, 7],
+    ...     "seq_target_3": [48, 32, 9],
+    ... })
+    >>> card = DataCard(address='', file_type='csv', data_type='pandas.DataFrame')
+    >>> addr = disk_datastore.upload_data_from_memory(df, "raw_del.csv", card)
+    >>> result_addr = del_denoise(dataset_address=addr, output_key="denoised")
+    >>> result_addr
+    'deepchem://project/profile/denoised.csv'
+
+    With hit labels:
+
+    >>> result_addr = del_denoise(
+    ...     dataset_address=addr,
+    ...     output_key="denoised_hits",
+    ...     strategy="unified",
+    ...     add_hit_labels=True,
+    ...     hit_percentile=90.0,
+    ... )
+    >>> result_addr
+    'deepchem://project/profile/denoised_hits.csv'
+
+    Non-unified scoring:
+
+    >>> result_addr = del_denoise(
+    ...     dataset_address=addr,
+    ...     output_key="denoised_nu",
+    ...     strategy="non_unified",
+    ...     add_hit_labels=True,
+    ... )
+    >>> result_addr
+    'deepchem://project/profile/denoised_nu.csv'
     """
     if control_cols is None:
         control_cols = list(DEFAULT_CONTROL_COLS)
@@ -276,29 +455,18 @@ def del_denoise(
     if smiles_cols is None:
         smiles_cols = list(DEFAULT_SMILES_COLS)
 
-    if isinstance(add_hit_labels, str):
-        add_hit_labels = add_hit_labels.lower() == "true"
-    if isinstance(drop_duplicates, str):
-        drop_duplicates = drop_duplicates.lower() == "true"
-    if isinstance(use_disynthon_pairs, str):
-        use_disynthon_pairs = use_disynthon_pairs.lower() == "true"
-    if isinstance(hit_percentile, str):
-        hit_percentile = float(hit_percentile)
-    if isinstance(alpha, str):
-        alpha = float(alpha)
-    if isinstance(min_count_threshold, str):
-        min_count_threshold = int(min_count_threshold)
+    # All params arrive as plain strings when called through the HTTP router.
+    add_hit_labels = str(add_hit_labels).lower() == "true"
+    drop_duplicates = str(drop_duplicates).lower() == "true"
+    use_disynthon_pairs = str(use_disynthon_pairs).lower() == "true"
+    hit_percentile = float(hit_percentile)
+    alpha = float(alpha)
+    min_count_threshold = int(min_count_threshold)
     if isinstance(control_cols, str):
-        import json
-
         control_cols = json.loads(control_cols)
     if isinstance(target_cols, str):
-        import json
-
         target_cols = json.loads(target_cols)
     if isinstance(smiles_cols, str):
-        import json
-
         smiles_cols = json.loads(smiles_cols)
 
     datastore = config.get_datastore()

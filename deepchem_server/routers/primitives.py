@@ -570,6 +570,106 @@ async def relative_binding_free_energy(
     return {"relative_binding_free_energy_results_address": str(result)}
 
 
+@router.post("/del/denoise")
+async def del_denoise(
+    profile_name: Annotated[str, Body()],
+    project_name: Annotated[str, Body()],
+    dataset_address: Annotated[str, Body()],
+    output_key: Annotated[str, Body()],
+    strategy: Annotated[str, Body()] = 'unified',
+    control_cols: Annotated[Optional[List[str]], Body()] = None,
+    target_cols: Annotated[Optional[List[str]], Body()] = None,
+    add_hit_labels: Annotated[bool, Body()] = False,
+    hit_percentile: Annotated[float, Body()] = 90.0,
+    alpha: Annotated[float, Body()] = 0.05,
+    drop_duplicates: Annotated[bool, Body()] = True,
+    use_disynthon_pairs: Annotated[bool, Body()] = False,
+    smiles_cols: Annotated[Optional[List[str]], Body()] = None,
+    aggregate_operation: Annotated[str, Body()] = 'sum',
+    min_count_threshold: Annotated[int, Body()] = 0,
+) -> dict:
+    """Denoise DEL sequencing data by computing enrichment scores.
+
+    Optionally collapses trisynthon data into disynthon pairs before
+    enrichment scoring when use_disynthon_pairs=True.
+
+    Parameters
+    ----------
+    profile_name : str
+        Name of the Profile where the job is run.
+    project_name : str
+        Name of the Project where the job is run.
+    dataset_address : str
+        Datastore address of the raw DEL CSV.
+    output_key : str
+        Name for the denoised output dataset.
+    strategy : str
+        'unified' (Poisson CI ratio) or 'non_unified' (z-score).
+    control_cols : List[str], optional
+        Control replicate count column names.
+    target_cols : List[str], optional
+        Target replicate count column names.
+    add_hit_labels : bool
+        Whether to add binary hit label columns.
+    hit_percentile : float
+        Percentile threshold for hit classification (0-100).
+    alpha : float
+        Significance level for Poisson CI (unified only).
+    drop_duplicates : bool
+        Whether to drop duplicate SMILES rows.
+    use_disynthon_pairs : bool
+        If True, collapse trisynthon data into disynthon pairs before scoring.
+    smiles_cols : List[str], optional
+        Three synthon SMILES column names. Required when use_disynthon_pairs=True.
+    aggregate_operation : str
+        Aggregation function for disynthon deduplication: 'sum' or 'mean'.
+    min_count_threshold : int
+        Minimum total count per disynthon to retain.
+
+    Returns
+    -------
+    dict
+        Dictionary containing the denoised dataset address.
+    """
+    if strategy not in ('unified', 'non_unified'):
+        raise HTTPException(status_code=422,
+                            detail=f"Invalid strategy '{strategy}'. Must be 'unified' or 'non_unified'.")
+    if not 0 < hit_percentile < 100:
+        raise HTTPException(status_code=422, detail=f"hit_percentile must be between 0 and 100, got {hit_percentile}")
+    if not 0 < alpha < 1:
+        raise HTTPException(status_code=422, detail=f"alpha must be between 0 and 1, got {alpha}")
+    if use_disynthon_pairs and smiles_cols is not None and len(smiles_cols) != 3:
+        raise HTTPException(status_code=422,
+                            detail=f"smiles_cols must contain exactly 3 column names, got {len(smiles_cols)}")
+    if aggregate_operation not in ('sum', 'mean'):
+        raise HTTPException(status_code=422,
+                            detail=f"aggregate_operation must be 'sum' or 'mean', got '{aggregate_operation}'")
+
+    program: Dict = {
+        "program_name": "del_denoise",
+        "dataset_address": dataset_address,
+        "output_key": output_key,
+        "strategy": strategy,
+        "control_cols": control_cols,
+        "target_cols": target_cols,
+        "add_hit_labels": add_hit_labels,
+        "hit_percentile": hit_percentile,
+        "alpha": alpha,
+        "drop_duplicates": drop_duplicates,
+        "use_disynthon_pairs": use_disynthon_pairs,
+        "smiles_cols": smiles_cols,
+        "aggregate_operation": aggregate_operation,
+        "min_count_threshold": min_count_threshold,
+    }
+
+    try:
+        result = run_job(profile_name=profile_name, project_name=project_name, program=program)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"DEL denoising failed: {str(e)}")
+
+    return {"denoised_dataset_address": str(result)}
+
+
 @router.post("/fep/collate_rbfe_results")
 async def collate_rbfe_results(
     profile_name: Annotated[str, Body()],
