@@ -84,9 +84,7 @@ def poissfit(vec: pd.Series, alpha: float = 0.05) -> Tuple[float, float]:
     return (lower, upper)
 
 
-def get_enrichment_ratio(
-    row: pd.Series, control_cols: List[str], target_cols: List[str], alpha: float = 0.05
-) -> float:
+def get_enrichment_ratio(row: pd.Series, control_cols: List[str], target_cols: List[str], alpha: float = 0.05) -> float:
     """Enrichment ratio: target_lower_bound / control_upper_bound.
 
     Parameters
@@ -122,9 +120,10 @@ def get_enrichment_ratio(
     return t_lower / c_upper
 
 
-def calculate_poisson_enrichment(
-    df: pd.DataFrame, control_cols: List[str], target_cols: List[str], alpha: float = 0.05
-) -> pd.DataFrame:
+def calculate_poisson_enrichment(df: pd.DataFrame,
+                                 control_cols: List[str],
+                                 target_cols: List[str],
+                                 alpha: float = 0.05) -> pd.DataFrame:
     """Add a Poisson_Enrichment column to the DataFrame.
 
     Parameters
@@ -163,14 +162,11 @@ def calculate_poisson_enrichment(
     result_df = df.copy()
     sub_df = result_df[control_cols + target_cols].astype(float)
     result_df["Poisson_Enrichment"] = sub_df.apply(
-        lambda row: get_enrichment_ratio(row, control_cols, target_cols, alpha), axis=1
-    )
+        lambda row: get_enrichment_ratio(row, control_cols, target_cols, alpha), axis=1)
     return result_df
 
 
-def calculate_normalized_enrichment_score(
-    row: pd.Series, total_sum: float, row_count: int, column_name: str
-) -> float:
+def calculate_normalized_enrichment_score(row: pd.Series, total_sum: float, row_count: int, column_name: str) -> float:
     """Z-score for one row: (p0 - p1) / sqrt(p1 * (1 - p1)).
 
     Parameters
@@ -436,9 +432,8 @@ def collapse_to_disynthons(
     failed_combines: Set = set()
 
     pair_df["disynthons"] = pair_df.apply(
-        lambda row: get_disynthon_smiles(
-            row["Disynthon_1"], row["Disynthon_2"], smiles_dict_inv, failed_smiles, failed_combines
-        ),
+        lambda row: get_disynthon_smiles(row["Disynthon_1"], row["Disynthon_2"], smiles_dict_inv, failed_smiles,
+                                         failed_combines),
         axis=1,
     )
 
@@ -668,28 +663,20 @@ def del_denoise(
         row_count = len(df)
 
         df["Target_Enrichment_Score"] = df.apply(
-            lambda row: calculate_normalized_enrichment_score(
-                row, total_target, row_count, "seq_target_sum"
-            ),
+            lambda row: calculate_normalized_enrichment_score(row, total_target, row_count, "seq_target_sum"),
             axis=1,
         )
 
         log_progress("del_denoise", 65, "computing z-score enrichment (control)")
         df["Control_Enrichment_Score"] = df.apply(
-            lambda row: calculate_normalized_enrichment_score(
-                row, total_control, row_count, "seq_control_sum"
-            ),
+            lambda row: calculate_normalized_enrichment_score(row, total_control, row_count, "seq_control_sum"),
             axis=1,
         )
 
         if add_hit_labels:
             log_progress("del_denoise", 75, "computing hit labels")
-            target_threshold = calculate_hit_threshold(
-                df, "Target_Enrichment_Score", hit_percentile
-            )
-            control_threshold = calculate_hit_threshold(
-                df, "Control_Enrichment_Score", hit_percentile
-            )
+            target_threshold = calculate_hit_threshold(df, "Target_Enrichment_Score", hit_percentile)
+            control_threshold = calculate_hit_threshold(df, "Control_Enrichment_Score", hit_percentile)
             df["target_hits"] = (df["Target_Enrichment_Score"] > target_threshold).astype(int)
             df["control_hits"] = (df["Control_Enrichment_Score"] > control_threshold).astype(int)
     else:
