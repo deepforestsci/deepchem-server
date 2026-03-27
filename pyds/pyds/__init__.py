@@ -10,6 +10,7 @@ __version__ = "0.1.0"
 from .base import BaseClient
 from .data import Data
 from .primitives.base import Primitive
+from .primitives.del_denoising import DelDenoise
 from .primitives.evaluate import Evaluate
 from .primitives.featurize import Featurize
 from .primitives.docking import Docking
@@ -25,6 +26,7 @@ __all__ = [
     "Data",
     "BaseClient",
     "Primitive",
+    "DelDenoise",
     "Featurize",
     "Docking",
     "Train",

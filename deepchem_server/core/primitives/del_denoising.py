@@ -1,12 +1,30 @@
 """DEL denoising primitive.
 
+The DEL Denoise primitive scores DEL screening data to identify compounds that
+are strongly enriched in the target selection relative to background noise.
+
 Two scoring modes:
 
-1. Unified - Poisson confidence-interval ratio across all replicates.
-2. Non-unified - z-score computed independently for target and control.
+``unified`` (default)
+    Uses Poisson confidence intervals computed across all replicates
+    simultaneously.  For each row the enrichment ratio is defined as
+    the lower bound of the target Poisson interval divided by the upper
+    bound of the control Poisson interval.  Values above 1 indicate
+    enrichment above background.  This strategy keeps per-replicate
+    columns intact and is the recommended approach when replicates are
+    trusted individually.
 
-Optionally collapses three-part rows into pairwise combinations before
-scoring (use_disynthon_pairs=True).
+``non_unified``
+    Sums replicate counts into a single target total and a single
+    control total, then computes a z-score for each column separately.
+    The z-score formula is ``(p0 - p1) / sqrt(p1 * (1 - p1))``, where
+    ``p0`` is the row's fractional count and ``p1 = 1 / n_rows``.
+    This strategy is useful when replicate-level data is noisy or
+    unavailable.
+
+Optionally, the primitive can collapse three-part (trisynthon) rows
+into all pairwise (disynthon) combinations before scoring by setting
+``use_disynthon_pairs=True``.
 """
 
 import logging
@@ -33,7 +51,7 @@ DEFAULT_CONTROL_COLS = ["seq_matrix_1", "seq_matrix_2", "seq_matrix_3"]
 DEFAULT_TARGET_COLS = ["seq_target_1", "seq_target_2", "seq_target_3"]
 
 
-def _poissfit(vec: pd.Series, alpha: float = 0.05) -> Tuple[float, float]:
+def poissfit(vec: pd.Series, alpha: float = 0.05) -> Tuple[float, float]:
     """Poisson confidence interval for replicate counts.
 
     Parameters
@@ -46,7 +64,18 @@ def _poissfit(vec: pd.Series, alpha: float = 0.05) -> Tuple[float, float]:
     Returns
     -------
     Tuple[float, float]
-        (lower_bound, upper_bound) of the estimated rate.
+        ``(lower_bound, upper_bound)`` of the estimated Poisson rate.
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> lower, upper = poissfit(pd.Series([10, 12, 11]))
+    >>> round(lower, 4)
+    7.5719
+    >>> round(upper, 4)
+    15.4481
+    >>> lower < upper
+    True
     """
     k_sum = vec.sum()
     n = len(vec)
@@ -55,10 +84,9 @@ def _poissfit(vec: pd.Series, alpha: float = 0.05) -> Tuple[float, float]:
     return (lower, upper)
 
 
-def _get_enrichment_ratio(row: pd.Series,
-                          control_cols: List[str],
-                          target_cols: List[str],
-                          alpha: float = 0.05) -> float:
+def get_enrichment_ratio(
+    row: pd.Series, control_cols: List[str], target_cols: List[str], alpha: float = 0.05
+) -> float:
     """Enrichment ratio: target_lower_bound / control_upper_bound.
 
     Parameters
@@ -75,19 +103,28 @@ def _get_enrichment_ratio(row: pd.Series,
     Returns
     -------
     float
-        Ratio or 0.0 if control upper bound is zero.
+        Ratio or 0.0 when the control upper bound is zero.
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> row = pd.Series({"ctrl_1": 5, "ctrl_2": 6, "tgt_1": 50, "tgt_2": 55})
+    >>> ratio = get_enrichment_ratio(row, ["ctrl_1", "ctrl_2"], ["tgt_1", "tgt_2"])
+    >>> round(ratio, 4)
+    4.3633
+    >>> ratio > 1.0
+    True
     """
-    _, c_upper = _poissfit(row[control_cols], alpha)
-    t_lower, _ = _poissfit(row[target_cols], alpha)
+    _, c_upper = poissfit(row[control_cols], alpha)
+    t_lower, _ = poissfit(row[target_cols], alpha)
     if c_upper == 0:
         return 0.0
     return t_lower / c_upper
 
 
-def _calculate_poisson_enrichment(df: pd.DataFrame,
-                                  control_cols: List[str],
-                                  target_cols: List[str],
-                                  alpha: float = 0.05) -> pd.DataFrame:
+def calculate_poisson_enrichment(
+    df: pd.DataFrame, control_cols: List[str], target_cols: List[str], alpha: float = 0.05
+) -> pd.DataFrame:
     """Add a Poisson_Enrichment column to the DataFrame.
 
     Parameters
@@ -105,15 +142,35 @@ def _calculate_poisson_enrichment(df: pd.DataFrame,
     -------
     pd.DataFrame
         Copy of dataframe with a Poisson_Enrichment column added.
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> df = pd.DataFrame({
+    ...     "seq_matrix_1": [10, 20], "seq_matrix_2": [12, 18], "seq_matrix_3": [11, 22],
+    ...     "seq_target_1": [50, 30], "seq_target_2": [55, 28], "seq_target_3": [48, 32],
+    ... })
+    >>> result = calculate_poisson_enrichment(
+    ...     df,
+    ...     ["seq_matrix_1", "seq_matrix_2", "seq_matrix_3"],
+    ...     ["seq_target_1", "seq_target_2", "seq_target_3"],
+    ... )
+    >>> "Poisson_Enrichment" in result.columns
+    True
+    >>> list(result["Poisson_Enrichment"].round(4))
+    [2.799, 0.9371]
     """
     result_df = df.copy()
     sub_df = result_df[control_cols + target_cols].astype(float)
     result_df["Poisson_Enrichment"] = sub_df.apply(
-        lambda row: _get_enrichment_ratio(row, control_cols, target_cols, alpha), axis=1)
+        lambda row: get_enrichment_ratio(row, control_cols, target_cols, alpha), axis=1
+    )
     return result_df
 
 
-def _calculate_normalized_enrichment_score(row: pd.Series, total_sum: float, row_count: int, column_name: str) -> float:
+def calculate_normalized_enrichment_score(
+    row: pd.Series, total_sum: float, row_count: int, column_name: str
+) -> float:
     """Z-score for one row: (p0 - p1) / sqrt(p1 * (1 - p1)).
 
     Parameters
@@ -131,13 +188,21 @@ def _calculate_normalized_enrichment_score(row: pd.Series, total_sum: float, row
     -------
     float
         Normalized score.
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> row = pd.Series({"count_col": 30})
+    >>> score = calculate_normalized_enrichment_score(row, total_sum=115.0, row_count=5, column_name="count_col")
+    >>> round(score, 4)
+    0.1522
     """
     p0 = row[column_name] / total_sum
     p1 = 1 / row_count
     return (p0 - p1) / sqrt(p1 * (1 - p1))
 
 
-def _calculate_hit_threshold(df: pd.DataFrame, column_name: str, percentile: float) -> float:
+def calculate_hit_threshold(df: pd.DataFrame, column_name: str, percentile: float) -> float:
     """Return the percentile cutoff for a column.
 
     Parameters
@@ -153,11 +218,19 @@ def _calculate_hit_threshold(df: pd.DataFrame, column_name: str, percentile: flo
     -------
     float
         The cutoff value.
+    
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> df = pd.DataFrame({"Poisson_Enrichment": [0.1, 0.5, 1.2, 2.3, 0.8, 3.1, 0.3, 0.9, 1.5, 4.0]})
+    >>> threshold = calculate_hit_threshold(df, "Poisson_Enrichment", 80.0)
+    >>> threshold
+    2.46
     """
     return np.percentile(df[column_name], percentile)
 
 
-def _get_disynthon_smiles(
+def get_disynthon_smiles(
     d1_idx: str,
     d2_idx: str,
     smiles_dict_inv: Dict[str, str],
@@ -183,6 +256,14 @@ def _get_disynthon_smiles(
     -------
     Optional[str]
         Merged SMILES or None on failure.
+
+    Examples
+    --------
+    >>> failed_smiles, failed_combines = set(), set()
+    >>> get_disynthon_smiles("0", "1", {"0": "CCO", "1": "CCN"}, failed_smiles, failed_combines)
+    'CCN.CCO'
+    >>> get_disynthon_smiles("0", "9", {"0": "CCO", "1": "CCN"}, failed_smiles, failed_combines) is None
+    True
     """
     from rdkit import Chem
 
@@ -208,7 +289,7 @@ def _get_disynthon_smiles(
         return None
 
 
-def _create_disynthon_pairs(
+def create_disynthon_pairs(
     df: pd.DataFrame,
     smiles_cols: List[str],
     count_cols: List[str],
@@ -234,6 +315,23 @@ def _create_disynthon_pairs(
         (pair_df, smiles_dict).  pair_df has Disynthon_1,
         Disynthon_2 and aggregated counts.  smiles_dict maps
         SMILES to index strings.
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> df = pd.DataFrame({
+    ...     "smiles_a": ["CCO", "CCO", "CCN"],
+    ...     "smiles_b": ["CCN", "CCC", "CCC"],
+    ...     "smiles_c": ["CCC", "CCO", "CCO"],
+    ...     "seq_matrix_1": [5, 3, 7], "seq_target_1": [20, 10, 15],
+    ... })
+    >>> pair_df, smiles_dict = create_disynthon_pairs(
+    ...     df, ["smiles_a", "smiles_b", "smiles_c"], ["seq_matrix_1", "seq_target_1"], is_unified=True
+    ... )
+    >>> "Disynthon_1" in pair_df.columns
+    True
+    >>> len(pair_df) > 0
+    True
     """
     smiles_set: set = set()
     for col in smiles_cols:
@@ -269,7 +367,7 @@ def _create_disynthon_pairs(
     return result, smiles_dict
 
 
-def _collapse_to_disynthons(
+def collapse_to_disynthons(
     df: pd.DataFrame,
     smiles_cols: List[str],
     control_cols: List[str],
@@ -304,18 +402,43 @@ def _collapse_to_disynthons(
         (collapsed_df, n_failed).  collapsed_df has a disynthons
         column and aggregated counts.  n_failed is the number of
         SMILES that could not be merged.
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> df = pd.DataFrame({
+    ...     "smiles_a": ["CCO", "CCO", "CCN"],
+    ...     "smiles_b": ["CCN", "CCC", "CCC"],
+    ...     "smiles_c": ["CCC", "CCO", "CCO"],
+    ...     "seq_matrix_1": [5, 3, 7], "seq_matrix_2": [6, 4, 8], "seq_matrix_3": [5, 3, 6],
+    ...     "seq_target_1": [20, 10, 15], "seq_target_2": [22, 11, 16], "seq_target_3": [19, 9, 14],
+    ... })
+    >>> collapsed_df, n_failed = collapse_to_disynthons(
+    ...     df,
+    ...     smiles_cols=["smiles_a", "smiles_b", "smiles_c"],
+    ...     control_cols=["seq_matrix_1", "seq_matrix_2", "seq_matrix_3"],
+    ...     target_cols=["seq_target_1", "seq_target_2", "seq_target_3"],
+    ...     is_unified=True,
+    ... )
+    >>> "disynthons" in collapsed_df.columns
+    True
+    >>> len(collapsed_df)
+    4
+    >>> n_failed
+    0
     """
     count_cols = control_cols + target_cols
 
-    pair_df, smiles_dict = _create_disynthon_pairs(df, smiles_cols, count_cols, is_unified)
+    pair_df, smiles_dict = create_disynthon_pairs(df, smiles_cols, count_cols, is_unified)
 
     smiles_dict_inv = {v: k for k, v in smiles_dict.items()}
     failed_smiles: Set = set()
     failed_combines: Set = set()
 
     pair_df["disynthons"] = pair_df.apply(
-        lambda row: _get_disynthon_smiles(row["Disynthon_1"], row["Disynthon_2"], smiles_dict_inv, failed_smiles,
-                                          failed_combines),
+        lambda row: get_disynthon_smiles(
+            row["Disynthon_1"], row["Disynthon_2"], smiles_dict_inv, failed_smiles, failed_combines
+        ),
         axis=1,
     )
 
@@ -349,11 +472,25 @@ def del_denoise(
     aggregate_operation: str = "sum",
     min_count_threshold: int = 0,
 ) -> str:
-    """Score DEL screening data to find strong binders.
+    """Score DEL screening data to identify strong binders.
 
-    Reads a CSV of raw counts, scores each row and writes the
-    result back to the datastore.  Two strategies are available:
-    'unified' (Poisson-based) and 'non_unified' (z-score-based).
+    Reads a CSV of raw sequencing counts, scores each compound using
+    the chosen enrichment strategy, and writes the result back to the
+    datastore.
+
+    Scoring strategies
+    ------------------
+    **unified**
+        Applies Poisson confidence intervals across all replicate columns
+        simultaneously.  The enrichment score for each row is -
+
+            Poisson_Enrichment = target_lower_CI / control_upper_CI
+
+        where the CIs are computed via poissfit.
+
+    **non_unified**
+        Sums replicate counts to form seq_target_sum and
+        seq_control_sum, then computes a z-score for each.
 
     Parameters
     ----------
@@ -421,7 +558,7 @@ def del_denoise(
     >>> addr = disk_datastore.upload_data_from_memory(df, "raw_del.csv", card)
     >>> result_addr = del_denoise(dataset_address=addr, output_key="denoised")
     >>> result_addr
-    'deepchem://project/profile/denoised.csv'
+    'deepchem://profile/project/denoised.csv'
 
     With hit labels:
 
@@ -433,7 +570,7 @@ def del_denoise(
     ...     hit_percentile=90.0,
     ... )
     >>> result_addr
-    'deepchem://project/profile/denoised_hits.csv'
+    'deepchem://profile/project/denoised_hits.csv'
 
     Non-unified scoring:
 
@@ -444,7 +581,7 @@ def del_denoise(
     ...     add_hit_labels=True,
     ... )
     >>> result_addr
-    'deepchem://project/profile/denoised_nu.csv'
+    'deepchem://profile/project/denoised_nu.csv'
     """
     if control_cols is None:
         control_cols = list(DEFAULT_CONTROL_COLS)
@@ -487,7 +624,7 @@ def del_denoise(
 
         is_unified = strategy == "unified"
         log_progress("del_denoise", 25, "collapsing trisynthons into disynthon pairs")
-        df, n_failed = _collapse_to_disynthons(
+        df, n_failed = collapse_to_disynthons(
             df,
             smiles_cols,
             control_cols,
@@ -513,11 +650,11 @@ def del_denoise(
 
     if strategy == "unified":
         log_progress("del_denoise", 50, "computing Poisson enrichment scores")
-        df = _calculate_poisson_enrichment(df, control_cols, target_cols, alpha)
+        df = calculate_poisson_enrichment(df, control_cols, target_cols, alpha)
 
         if add_hit_labels:
             log_progress("del_denoise", 70, "computing hit labels")
-            threshold = _calculate_hit_threshold(df, "Poisson_Enrichment", hit_percentile)
+            threshold = calculate_hit_threshold(df, "Poisson_Enrichment", hit_percentile)
             df["hits"] = (df["Poisson_Enrichment"] > threshold).astype(int)
 
     elif strategy == "non_unified":
@@ -531,20 +668,28 @@ def del_denoise(
         row_count = len(df)
 
         df["Target_Enrichment_Score"] = df.apply(
-            lambda row: _calculate_normalized_enrichment_score(row, total_target, row_count, "seq_target_sum"),
+            lambda row: calculate_normalized_enrichment_score(
+                row, total_target, row_count, "seq_target_sum"
+            ),
             axis=1,
         )
 
         log_progress("del_denoise", 65, "computing z-score enrichment (control)")
         df["Control_Enrichment_Score"] = df.apply(
-            lambda row: _calculate_normalized_enrichment_score(row, total_control, row_count, "seq_control_sum"),
+            lambda row: calculate_normalized_enrichment_score(
+                row, total_control, row_count, "seq_control_sum"
+            ),
             axis=1,
         )
 
         if add_hit_labels:
             log_progress("del_denoise", 75, "computing hit labels")
-            target_threshold = _calculate_hit_threshold(df, "Target_Enrichment_Score", hit_percentile)
-            control_threshold = _calculate_hit_threshold(df, "Control_Enrichment_Score", hit_percentile)
+            target_threshold = calculate_hit_threshold(
+                df, "Target_Enrichment_Score", hit_percentile
+            )
+            control_threshold = calculate_hit_threshold(
+                df, "Control_Enrichment_Score", hit_percentile
+            )
             df["target_hits"] = (df["Target_Enrichment_Score"] > target_threshold).astype(int)
             df["control_hits"] = (df["Control_Enrichment_Score"] > control_threshold).astype(int)
     else:

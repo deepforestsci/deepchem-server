@@ -12,6 +12,7 @@ Currently, Deepchem Server provides the following primitives: (Other primitives 
 * **Inference**: Run predictions on new data using trained models
 * **Evaluation**: Assess model performance using various metrics
 * **Docking**: Perform molecular docking to predict protein-ligand binding poses
+* **DEL Denoise**: Score DEL screening data to identify strong binders
 
 These primitives are designed to work seamlessly together while also being usable independently for specific tasks.
 
@@ -152,6 +153,47 @@ The evaluation primitive supports the following metrics:
 * **bedroc_score**: BEDROC score
 * **accuracy_score**: Classification accuracy
 * **balanced_accuracy_score**: Balanced classification accuracy
+
+DEL Denoise
+-----------
+
+The DEL Denoise primitive scores DEL screening data to identify compounds that 
+are strongly enriched in the target selection relative to background noise.
+
+**Key Features:**
+
+* Supports two scoring strategies: Poisson-based (``unified``) and z-score-based (``non_unified``)
+* Optional collapsing of trisynthon rows into pairwise disynthon combinations
+
+**Scoring Strategies:**
+
+* **unified**: Computes a Poisson confidence-interval enrichment ratio
+  (target lower bound / control upper bound) across all replicates simultaneously.
+* **non_unified**: Sums replicates then computes a z-score for each compound
+  independently in the target and control.
+
+.. autofunction:: deepchem_server.core.primitives.del_denoising.del_denoise
+
+Supporting Functions
+~~~~~~~~~~~~~~~~~~~~
+
+.. autofunction:: deepchem_server.core.primitives.del_denoising.poissfit
+   :no-index:
+
+.. autofunction:: deepchem_server.core.primitives.del_denoising.get_enrichment_ratio
+   :no-index:
+
+.. autofunction:: deepchem_server.core.primitives.del_denoising.calculate_poisson_enrichment
+   :no-index:
+
+.. autofunction:: deepchem_server.core.primitives.del_denoising.calculate_normalized_enrichment_score
+   :no-index:
+
+.. autofunction:: deepchem_server.core.primitives.del_denoising.calculate_hit_threshold
+   :no-index:
+
+.. autofunction:: deepchem_server.core.primitives.del_denoising.collapse_to_disynthons
+   :no-index:
 
 Workflow Integration
 --------------------

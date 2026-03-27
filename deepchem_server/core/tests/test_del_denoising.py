@@ -8,9 +8,9 @@ import pandas as pd
 from deepchem_server.core.common import config
 from deepchem_server.core.common.cards import DataCard
 from deepchem_server.core.primitives.del_denoising import (
-    _calculate_normalized_enrichment_score,
-    _calculate_poisson_enrichment,
-    _poissfit,
+    calculate_normalized_enrichment_score,
+    calculate_poisson_enrichment,
+    poissfit,
     del_denoise,
 )
 
@@ -29,7 +29,7 @@ def _upload_del_csv(disk_datastore):
 def test_poissfit_basic():
     """Test Poisson CI on a known vector."""
     vec = pd.Series([10, 20, 30])
-    lower, upper = _poissfit(vec, alpha=0.05)
+    lower, upper = poissfit(vec, alpha=0.05)
     assert lower > 0
     assert upper > lower
     assert abs(lower - 15.262) < 0.01
@@ -42,7 +42,7 @@ def test_normalized_enrichment_score():
     row = df.iloc[0]
     total_sum = 60
     row_count = 3
-    result = _calculate_normalized_enrichment_score(row, total_sum, row_count, "seq_target_1")
+    result = calculate_normalized_enrichment_score(row, total_sum, row_count, "seq_target_1")
     assert abs(result - (-0.35355339059327373)) < 1e-6
 
 
@@ -51,7 +51,7 @@ def test_poisson_enrichment_matches_reference():
     df = pd.read_csv(DEL_CSV)
     control_cols = ["seq_matrix_1", "seq_matrix_2", "seq_matrix_3"]
     target_cols = ["seq_target_1", "seq_target_2", "seq_target_3"]
-    result = _calculate_poisson_enrichment(df, control_cols, target_cols)
+    result = calculate_poisson_enrichment(df, control_cols, target_cols)
     np.testing.assert_allclose(result["Poisson_Enrichment"].values, df["target_enrichment"].values, rtol=1e-5)
 
 

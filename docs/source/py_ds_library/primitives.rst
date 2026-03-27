@@ -155,3 +155,33 @@ The TVTSplit primitive performs train-validation-test splitting on datasets usin
           frac_valid=0.1,
           frac_test=0.1
       )
+
+DEL Denoise Primitive
+---------------------
+
+The DEL Denoise primitive scores DNA-encoded library (DEL) screening data to
+identify compounds strongly enriched in the target selection over background noise.
+
+.. autoclass:: pyds.primitives.del_denoising.DelDenoise
+   :members:
+   :undoc-members:
+
+   **Scoring Strategies:**
+
+   * **unified**: Poisson confidence-interval ratio across all replicates.
+     Values above 1.0 indicate enrichment above background.
+   * **non_unified**: Z-score computed from summed replicate counts,
+     independently for target and control.
+
+   **Example Usage:**
+
+   .. code-block:: python
+
+      del_denoise = DelDenoise(settings)
+      response = del_denoise.run(
+          dataset_address="deepchem://project/profile/raw_del.csv",
+          output_key="denoised",
+          strategy="unified",
+          add_hit_labels=True,
+          hit_percentile=90.0,
+      )

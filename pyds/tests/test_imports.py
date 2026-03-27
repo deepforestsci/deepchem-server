@@ -16,9 +16,10 @@ class TestImports:
 
     def test_primitive_imports(self):
         """Test importing primitive classes."""
-        from pyds import Evaluate, Featurize, Infer, Partition, Primitive, Train, TVTSplit
+        from pyds import DelDenoise, Evaluate, Featurize, Infer, Partition, Primitive, Train, TVTSplit
 
         assert Primitive is not None
+        assert DelDenoise is not None
         assert Featurize is not None
         assert Train is not None
         assert Evaluate is not None
@@ -35,6 +36,7 @@ class TestImports:
             "Data",
             "BaseClient",
             "Primitive",
+            "DelDenoise",
             "Featurize",
             "Train",
             "Evaluate",
@@ -60,6 +62,7 @@ class TestImports:
         import pyds.primitives.infer  # noqa: F401
         import pyds.primitives.partition  # noqa: F401
         import pyds.primitives.splitter  # noqa: F401
+        import pyds.primitives.del_denoising  # noqa: F401
         import pyds.primitives.train  # noqa: F401
         import pyds.settings  # noqa: F401
 

@@ -11,7 +11,7 @@ import responses
 from pyds import Settings
 from pyds.base.client import BaseClient
 from pyds.data import Data
-from pyds.primitives import Evaluate, Featurize, Infer, Partition, Train
+from pyds.primitives import DelDenoise, Evaluate, Featurize, Infer, Partition, Train
 
 from .test_utils import (
     cleanup_temp_file,
@@ -90,6 +90,12 @@ def infer_client(test_settings: Settings) -> Infer:
 def partition_client(test_settings: Settings) -> Partition:
     """Create Partition primitive client for testing."""
     return Partition(settings=test_settings)
+
+
+@pytest.fixture
+def del_denoise_client(test_settings: Settings) -> DelDenoise:
+    """Create DelDenoise primitive client for testing."""
+    return DelDenoise(settings=test_settings)
 
 
 @pytest.fixture
@@ -236,6 +242,12 @@ def live_infer_client(live_settings: Settings) -> Infer:
 def live_partition_client(live_settings: Settings) -> Partition:
     """Create Partition client for live server testing."""
     return Partition(settings=live_settings)
+
+
+@pytest.fixture
+def live_del_denoise_client(live_settings: Settings) -> DelDenoise:
+    """Create DelDenoise client for live server testing."""
+    return DelDenoise(settings=live_settings)
 
 
 # ===========================
