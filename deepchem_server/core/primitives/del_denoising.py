@@ -532,6 +532,12 @@ def del_denoise(
     ValueError
         If strategy is invalid or the datastore is not configured.
 
+    References
+    ----------
+    "DeepChem-DEL: An Open Source Framework for
+    Reproducible DEL Modeling and Benchmarking." (2025).
+    https://doi.org/10.26434/chemrxiv-2025-f11mk
+
     Examples
     --------
     Unified scoring:
