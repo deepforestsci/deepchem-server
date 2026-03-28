@@ -40,7 +40,7 @@ class Data(BaseClient):
     def _to_datastore_key(self, address: str) -> str:
         """Normalize deepchem:// address to datastore key."""
         if address.startswith("deepchem://"):
-            parts = address[len("deepchem://") :].split("/", 2)
+            parts = address[len("deepchem://"):].split("/", 2)
             if len(parts) == 3:
                 return parts[2]
         return address
@@ -208,7 +208,7 @@ class Data(BaseClient):
         .zip / dataset directory -> dc.data.DiskDataset
         anything else -> bytes
 
-        If ``destination_path`` is supplied the raw file is also saved
+        If destination_path is supplied the raw file is also saved
         there.  When omitted a named temporary file is used for formats
         that require disk access (e.g. DiskDataset).
 
@@ -237,29 +237,25 @@ class Data(BaseClient):
             with open(destination_path, "wb") as f:
                 f.write(response.content)
 
-        parsed_data = self._parse_content(
-            response.content, key, response.headers.get("content-type", "")
-        )
+        parsed_data = self._parse_content(response.content, key, response.headers.get("content-type", ""))
         if parsed_data is None:
             return f"Unkown data type - Unable to get data {address}"
         return parsed_data
 
-    _TEXT_EXTENSIONS = frozenset(
-        {
-            "pdb",
-            "fasta",
-            "fastq",
-            "sdf",
-            "txt",
-            "xml",
-            "pdbqt",
-            "smi",
-            "smiles",
-            "cxsmiles",
-            "py",
-            "log",
-        }
-    )
+    _TEXT_EXTENSIONS = frozenset({
+        "pdb",
+        "fasta",
+        "fastq",
+        "sdf",
+        "txt",
+        "xml",
+        "pdbqt",
+        "smi",
+        "smiles",
+        "cxsmiles",
+        "py",
+        "log",
+    })
 
     def _parse_content(self, content: bytes, address: str, content_type: str = "") -> Any:
         """Parse raw bytes into a Python object based on the file extension."""
