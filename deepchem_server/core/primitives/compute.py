@@ -1,5 +1,6 @@
 from typing import Any, Dict
 
+from deepchem_server.core.primitives.del_denoising import del_denoise
 from deepchem_server.core.primitives.docking import generate_pose
 from deepchem_server.core.primitives.evaluator import model_evaluator
 from deepchem_server.core.primitives.feat import featurize
@@ -21,6 +22,7 @@ program_map = {
     "generate_pose": generate_pose,
     "relative_binding_free_energy": run_rbfe,
     "collate_rbfe_results": collate_rbfe_results,
+    "del_denoise": del_denoise,
 }
 
 
