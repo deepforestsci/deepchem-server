@@ -11,6 +11,8 @@ from .evaluate import Evaluate
 from .featurize import Featurize
 from .docking import Docking
 from .infer import Infer
+from .ligand_prep import LigandPrep
+from .pdb_clean import PdbClean
 from .partition import Partition
 from .splitter import TVTSplit
 from .train import Train
@@ -21,6 +23,8 @@ __all__ = [
     "DelDenoise",
     "Featurize",
     "Docking",
+    "LigandPrep",
+    "PdbClean",
     "Train",
     "Evaluate",
     "Infer",

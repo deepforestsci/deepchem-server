@@ -444,6 +444,146 @@ async def docking_generate_pose(
     return {"docking_results_address": str(result)}
 
 
+@router.post("/pdb-clean")
+async def pdb_clean_primitive(
+    profile_name: Annotated[str, Body()],
+    project_name: Annotated[str, Body()],
+    pdb_address: Annotated[str, Body()],
+    output: Annotated[str, Body()],
+    remove_chains: Annotated[Optional[List[str]], Body()] = None,
+    remove_heterogens: Annotated[bool, Body()] = True,
+    remove_water: Annotated[bool, Body()] = True,
+    add_hydrogens: Annotated[bool, Body()] = True,
+    ph: Annotated[float, Body()] = 7.0,
+) -> dict:
+    """
+    Submits a PDB cleaning job (PDBFixer and OpenMM).
+
+    Parameters
+    ----------
+    profile_name: str
+        Name of the Profile where the job is run
+    project_name: str
+        Name of the Project where the job is run
+    pdb_address: str
+        Datastore address of the input PDB file
+    output: str
+        Output key for the cleaned PDB in the datastore
+    remove_chains: Optional[List[str]]
+        Chain IDs to remove before cleaning
+    remove_heterogens: bool
+        Whether to strip heteroatom records (default True)
+    remove_water: bool
+        Whether to also remove water when removing heterogens (default True)
+    add_hydrogens: bool
+        Whether to add missing hydrogens (default True)
+    ph: float
+        pH for protonation when adding hydrogens (default 7.0)
+
+    Returns
+    -------
+    dict
+        Dictionary with the datastore address of the cleaned PDB.
+
+    Raises
+    ------
+    HTTPException
+        If the job submission fails.
+    """
+    if isinstance(remove_chains, str):
+        if not remove_chains or remove_chains.lower() == "none":
+            remove_chains = None
+        else:
+            remove_chains = json.loads(remove_chains)
+
+    if isinstance(ph, str):
+        try:
+            ph = float(ph)
+        except ValueError:
+            raise HTTPException(status_code=400, detail=f"Invalid ph value: {ph}")
+
+    program: Dict = {
+        "program_name": "pdb_clean",
+        "pdb_address": pdb_address,
+        "output": output,
+        "remove_chains": remove_chains,
+        "remove_heterogens": remove_heterogens,
+        "remove_water": remove_water,
+        "add_hydrogens": add_hydrogens,
+        "ph": ph,
+    }
+
+    try:
+        result = run_job(profile_name=profile_name, project_name=project_name, program=program)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"PDB cleaning failed: {str(e)}")
+
+    return {"cleaned_pdb_address": str(result)}
+
+
+@router.post("/ligand-prep")
+async def ligand_prep_primitive(
+    profile_name: Annotated[str, Body()],
+    project_name: Annotated[str, Body()],
+    smiles: Annotated[str, Body()],
+    output: Annotated[str, Body()],
+    ligand_name: Annotated[str, Body()] = "",
+    random_seed: Annotated[int, Body()] = 42,
+    optimize: Annotated[bool, Body()] = True,
+) -> dict:
+    """
+    Submits a ligand preparation job (SMILES to 3D SDF via RDKit).
+
+    Parameters
+    ----------
+    profile_name: str
+        Name of the Profile where the job is run
+    project_name: str
+        Name of the Project where the job is run
+    smiles: str
+        Input SMILES string
+    output: str
+        Output key for the SDF in the datastore
+    ligand_name: str
+        Optional molecule name stored in the SDF
+    random_seed: int
+        Seed for 3D embedding (default 42)
+    optimize: bool
+        Whether to run MMFF94 optimization (default True)
+
+    Returns
+    -------
+    dict
+        Dictionary with the datastore address of the prepared SDF.
+
+    Raises
+    ------
+    HTTPException
+        If the job submission fails.
+    """
+    if isinstance(random_seed, str):
+        try:
+            random_seed = int(random_seed)
+        except ValueError:
+            raise HTTPException(status_code=400, detail=f"Invalid random_seed value: {random_seed}")
+
+    program: Dict = {
+        "program_name": "ligand_prep",
+        "smiles": smiles,
+        "output": output,
+        "ligand_name": ligand_name,
+        "random_seed": random_seed,
+        "optimize": optimize,
+    }
+
+    try:
+        result = run_job(profile_name=profile_name, project_name=project_name, program=program)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Ligand preparation failed: {str(e)}")
+
+    return {"ligand_sdf_address": str(result)}
+
+
 @router.post("/fep/calculate_rbfe")
 async def relative_binding_free_energy(
     profile_name: Annotated[str, Body()],
