@@ -41,7 +41,7 @@ class TestLigandPrep:
 
         assert result["ligand_sdf_address"] == "test_profile/test_project/out.sdf"
         assert len(responses.calls) == 1
-        body = json.loads(responses.calls[0].request.body)
+        body = json.loads(responses.calls[0].request.body)  # type: ignore
         assert body["profile_name"] == "test_profile"
         assert body["project_name"] == "test_project"
         assert body["smiles"] == "CCO"

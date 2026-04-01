@@ -43,7 +43,7 @@ class TestPdbClean:
 
         assert result["cleaned_pdb_address"] == "test_profile/test_project/cleaned.pdb"
         assert len(responses.calls) == 1
-        body = json.loads(responses.calls[0].request.body)
+        body = json.loads(responses.calls[0].request.body)  # type: ignore
         assert body["profile_name"] == "test_profile"
         assert body["project_name"] == "test_project"
         assert body["pdb_address"] == "deepchem://test_profile/test_project/raw.pdb"
