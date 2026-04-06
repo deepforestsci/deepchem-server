@@ -529,7 +529,6 @@ async def ligand_prep_primitive(
     output: Annotated[str, Body()],
     ligand_name: Annotated[str, Body()] = "",
     random_seed: Annotated[int, Body()] = 42,
-    optimize: Annotated[bool, Body()] = True,
 ) -> dict:
     """
     Submits a ligand preparation job (SMILES to 3D SDF via RDKit).
@@ -548,8 +547,6 @@ async def ligand_prep_primitive(
         Optional molecule name stored in the SDF
     random_seed: int
         Seed for 3D embedding (default 42)
-    optimize: bool
-        Whether to run MMFF94 optimization (default True)
 
     Returns
     -------
@@ -573,7 +570,6 @@ async def ligand_prep_primitive(
         "output": output,
         "ligand_name": ligand_name,
         "random_seed": random_seed,
-        "optimize": optimize,
     }
 
     try:

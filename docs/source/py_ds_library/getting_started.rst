@@ -46,7 +46,9 @@ The pyds library follows a clean inheritance structure designed for modularity a
        ├── Train (model training)
        ├── Evaluate (model evaluation)
        ├── Infer (inference/predictions)
-       └── TVTSplit (train-valid-test splitting)
+       ├── TVTSplit (train-valid-test splitting)
+       ├── PdbClean (PDB cleaning via server-side PDBFixer/OpenMM)
+       └── LigandPrep (SMILES to 3D SDF via server-side RDKit)
 
 **Key Design Principles:**
 

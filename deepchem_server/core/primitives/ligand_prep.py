@@ -1,4 +1,5 @@
 import io
+from typing import Optional
 
 from deepchem_server.core.common import config
 from deepchem_server.core.common.cards import DataCard
@@ -15,15 +16,13 @@ except ImportError:
 def ligand_prep(
     smiles: str,
     output: str,
-    ligand_name: str = '',
-    random_seed: int = 42,
-    optimize: bool = True,
+    ligand_name: Optional[str] = "",
+    random_seed: Optional[int] = None,
 ) -> str:
     """
     Convert a SMILES string to a 3D SDF file using RDKit.
 
-    Generates 3D coordinates via the ETKDGv3 algorithm and optionally
-    optimizes geometry with the MMFF94 force field. The resulting SDF
+    Generates 3D coordinates via the ETKDG algorithm. The resulting SDF
     is uploaded to the configured datastore.
 
     Parameters
@@ -36,8 +35,6 @@ def ligand_prep(
         Name to embed in the SDF molecule block.
     random_seed : int, optional
         Reproducibility seed for 3D embedding (default 42).
-    optimize : bool, optional
-        Whether to apply MMFF94 geometry optimization (default True).
 
     Returns
     -------
@@ -54,7 +51,8 @@ def ligand_prep(
     Examples
     --------
     >>> address = ligand_prep(smiles='CC(=O)Oc1ccccc1C(=O)O', output='aspirin')
-    >>> print(address)  # deepchem://profile/project/aspirin.sdf
+    >>> print(address)
+    deepchem://profile/project/aspirin.sdf
     """
     datastore = config.get_datastore()
     if datastore is None:
@@ -78,20 +76,14 @@ def ligand_prep(
     mol = Chem.AddHs(mol)
 
     log_progress('ligand_prep', 50, 'generating 3D coordinates with ETKDGv3')
-    params = AllChem.ETKDGv3()  # type: ignore
-    params.randomSeed = random_seed
+    params = AllChem.ETKDG()  # type: ignore
+    if random_seed is not None:
+        params.randomSeed = random_seed
     result = AllChem.EmbedMolecule(mol, params)  # type: ignore
     if result == -1:
         raise ValueError(f"3D embedding failed for SMILES: {smiles}")
 
-    if optimize:
-        log_progress('ligand_prep', 70, 'optimizing geometry with MMFF94')
-        try:
-            AllChem.MMFFOptimizeMolecule(mol)  # type: ignore
-        except Exception as e:
-            log_progress('ligand_prep', 72, f'MMFF94 optimization skipped: {e}')
-
-    log_progress('ligand_prep', 85, 'serializing to SDF')
+    log_progress("ligand_prep", 80, "serializing to SDF")
     sdf_buffer = io.StringIO()
     writer = Chem.SDWriter(sdf_buffer)
     writer.write(mol)

@@ -9,7 +9,9 @@ from deepchem_server.core.primitives.pdb_clean import pdb_clean
 
 
 ASSETS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets")
-RAW_PDB = os.path.join(ASSETS, "cleaned_3cyx.pdb")  # use existing test PDB as "raw" input
+RAW_PDB = os.path.join(ASSETS, "cleaned_3cyx.pdb")
+LARGE_PDB = os.path.join(ASSETS, "181L_mod_capped_protonated.pdb")
+TWO_CHAIN_PDB = os.path.join(ASSETS, "test_protein_2chain.pdb")
 
 
 def _upload_pdb(datastore, filename, key):
@@ -83,7 +85,6 @@ def test_pdb_clean_no_heterogens(disk_datastore):
         if os.path.exists(tmp_path):
             os.remove(tmp_path)
 
-    # Water lines start with HETATM and have HOH residue name; after cleaning, none should remain
     water_lines = [l for l in content.splitlines() if l.startswith('HETATM') and 'HOH' in l]  # noqa: E741
     assert len(water_lines) == 0
 
@@ -135,3 +136,127 @@ def test_pdb_clean_without_hydrogens(disk_datastore):
     cleaned_addr = pdb_clean(pdb_address=pdb_addr, output='cleaned_noh', add_hydrogens=False)
 
     assert cleaned_addr.startswith('deepchem://')
+
+
+def _download_pdb_content(datastore, address):
+    """Download a PDB from the datastore and return its text content."""
+    with tempfile.NamedTemporaryFile(suffix='.pdb', delete=False) as tmp:
+        tmp_path = tmp.name
+    try:
+        datastore.download_object(address, tmp_path)
+        with open(tmp_path, 'r') as f:
+            return f.read()
+    finally:
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
+
+
+def test_pdb_clean_two_chain_protein(disk_datastore):
+    """Cleaning the two-chain fixture returns a valid deepchem address."""
+    config.set_datastore(disk_datastore)
+
+    pdb_addr = _upload_pdb(disk_datastore, TWO_CHAIN_PDB, 'two_chain.pdb')
+    cleaned_addr = pdb_clean(pdb_address=pdb_addr, output='cleaned_two_chain')
+
+    assert cleaned_addr.startswith('deepchem://')
+    assert cleaned_addr.endswith('.pdb')
+
+
+def test_pdb_clean_two_chain_has_atom_records(disk_datastore):
+    """Cleaned two-chain structure contains ATOM records."""
+    config.set_datastore(disk_datastore)
+
+    pdb_addr = _upload_pdb(disk_datastore, TWO_CHAIN_PDB, 'two_chain_atoms.pdb')
+    cleaned_addr = pdb_clean(pdb_address=pdb_addr, output='cleaned_two_chain_atoms')
+
+    content = _download_pdb_content(disk_datastore, cleaned_addr)
+    atom_lines = [line for line in content.splitlines() if line.startswith('ATOM')]
+    assert len(atom_lines) > 0
+
+
+def test_pdb_clean_water_retained(disk_datastore):
+    """remove_water=False preserves HOH records in the cleaned structure."""
+    config.set_datastore(disk_datastore)
+
+    pdb_addr = _upload_pdb(disk_datastore, TWO_CHAIN_PDB, 'two_chain_keepwater.pdb')
+    cleaned_addr = pdb_clean(
+        pdb_address=pdb_addr,
+        output='cleaned_keepwater',
+        remove_heterogens=True,
+        remove_water=False,
+    )
+
+    content = _download_pdb_content(disk_datastore, cleaned_addr)
+    hoh_lines = [line for line in content.splitlines() if 'HOH' in line]
+    assert len(hoh_lines) > 0, "Expected HOH water records to be retained"
+
+
+def test_pdb_clean_heterogens_kept_when_disabled(disk_datastore):
+    """remove_heterogens=False leaves all HETATM records intact."""
+    config.set_datastore(disk_datastore)
+
+    pdb_addr = _upload_pdb(disk_datastore, TWO_CHAIN_PDB, 'two_chain_kephets.pdb')
+    cleaned_addr = pdb_clean(
+        pdb_address=pdb_addr,
+        output='cleaned_keephets',
+        remove_heterogens=False,
+        remove_water=False,
+    )
+
+    content = _download_pdb_content(disk_datastore, cleaned_addr)
+    hetatm_lines = [line for line in content.splitlines() if line.startswith('HETATM')]
+    assert len(hetatm_lines) > 0, "Expected HETATM records to be kept"
+
+
+def test_pdb_clean_large_protein(disk_datastore):
+    """Cleaning the 181L structure (2612 atoms) returns a valid address."""
+    config.set_datastore(disk_datastore)
+
+    pdb_addr = _upload_pdb(disk_datastore, LARGE_PDB, 'large_protein.pdb')
+    cleaned_addr = pdb_clean(pdb_address=pdb_addr, output='cleaned_large')
+
+    assert cleaned_addr.startswith('deepchem://')
+    assert cleaned_addr.endswith('.pdb')
+
+
+def test_pdb_clean_large_protein_has_atoms(disk_datastore):
+    """Cleaned 181L structure retains ATOM records."""
+    config.set_datastore(disk_datastore)
+
+    pdb_addr = _upload_pdb(disk_datastore, LARGE_PDB, 'large_protein_atoms.pdb')
+    cleaned_addr = pdb_clean(pdb_address=pdb_addr, output='cleaned_large_atoms')
+
+    content = _download_pdb_content(disk_datastore, cleaned_addr)
+    atom_lines = [line for line in content.splitlines() if line.startswith('ATOM')]
+    assert len(atom_lines) > 0
+
+
+def test_pdb_clean_large_protein_no_water(disk_datastore):
+    """After cleaning 181L with remove_water=True, no HOH records remain."""
+    config.set_datastore(disk_datastore)
+
+    pdb_addr = _upload_pdb(disk_datastore, LARGE_PDB, 'large_protein_nohoh.pdb')
+    cleaned_addr = pdb_clean(
+        pdb_address=pdb_addr,
+        output='cleaned_large_nohoh',
+        remove_heterogens=True,
+        remove_water=True,
+    )
+
+    content = _download_pdb_content(disk_datastore, cleaned_addr)
+    hoh_lines = [line for line in content.splitlines() if line.startswith('HETATM') and 'HOH' in line]
+    assert len(hoh_lines) == 0
+
+
+def test_pdb_clean_ph_range(disk_datastore):
+    """Cleaning at acidic (pH 5.0) and basic (pH 9.0) both complete without error."""
+    config.set_datastore(disk_datastore)
+
+    for ph_val in (5.0, 9.0):
+        pdb_addr = _upload_pdb(disk_datastore, RAW_PDB, f'raw_ph{int(ph_val)}.pdb')
+        cleaned_addr = pdb_clean(
+            pdb_address=pdb_addr,
+            output=f'cleaned_ph{int(ph_val)}',
+            ph=ph_val,
+        )
+        assert cleaned_addr.startswith('deepchem://')

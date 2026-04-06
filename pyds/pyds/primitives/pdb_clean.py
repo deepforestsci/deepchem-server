@@ -1,7 +1,5 @@
 """
 PDB cleaning primitive module for DeepChem Server.
-
-Contains the PdbClean class for PDBFixer-based structure preparation.
 """
 
 from typing import Any, Dict, List, Optional

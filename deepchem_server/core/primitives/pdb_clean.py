@@ -1,6 +1,6 @@
 import os
 import tempfile
-from typing import Optional, List
+from typing import List, Optional
 
 from deepchem_server.core.common import config
 from deepchem_server.core.common.cards import DataCard
@@ -20,13 +20,12 @@ def pdb_clean(
     Clean a PDB file using PDBFixer and OpenMM.
 
     Removes heterogens and water, optionally removes extra chains, and
-    adds missing hydrogens at a given pH. The algorithm mirrors the
-    ProteomeScan ``pdb_cleaner`` function:
+    adds missing hydrogens at a given pH.
 
     1. Load the raw PDB via PDBFixer.
     2. (Optional) Remove specified chains.
-    3. Remove heterogens (with or without water).
-    4. Add missing hydrogens at ``ph``.
+    3. Remove heterogens if remove_heterogens is True (with or without water) (default True).
+    4. Add missing hydrogens if add_hydrogens is True at ph (default True).
     5. Write the cleaned structure with OpenMM PDBFile.
 
     Parameters
@@ -41,7 +40,7 @@ def pdb_clean(
         Whether to strip heteroatom records (default True).
     remove_water : bool, optional
         Whether to also remove water molecules (default True).
-        Only has effect when ``remove_heterogens`` is True.
+        Only has effect when remove_heterogens is True.
     add_hydrogens : bool, optional
         Whether to add missing hydrogens (default True).
     ph : float, optional
@@ -57,16 +56,18 @@ def pdb_clean(
     ImportError
         If PDBFixer or OpenMM are not installed.
     ValueError
-        If ``pdb_address`` is empty or the datastore is not set.
+        If pdb_address is empty or the datastore is not set.
     RuntimeError
         If PDBFixer fails to clean the structure.
 
     Examples
     --------
     >>> cleaned_addr = pdb_clean(
-    ...     pdb_address="deepchem://user/raw_protein.pdb",
+    ...     pdb_address="deepchem://profile/project/raw_protein.pdb",
     ...     output="cleaned_protein",
     ... )
+    >>> print(cleaned_addr)
+    deepchem://profile/project/cleaned_protein.pdb
     """
     datastore = config.get_datastore()
     if datastore is None:
@@ -120,7 +121,7 @@ def pdb_clean(
             with open(cleaned_pdb_path, 'w') as f:
                 PDBFile.writeFile(fixer.topology, fixer.positions, f)
         except Exception as e:
-            raise RuntimeError(f"PDBFixer failed to write cleaned structure: {e}")
+            raise RuntimeError(f"Failed to write cleaned structure: {e}")
 
         with open(cleaned_pdb_path, 'r') as f:
             cleaned_content = f.read()

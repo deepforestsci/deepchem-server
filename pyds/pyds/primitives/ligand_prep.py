@@ -22,7 +22,6 @@ class LigandPrep(Primitive):
         output: str,
         ligand_name: str = "",
         random_seed: int = 42,
-        optimize: bool = True,
         profile_name: Optional[str] = None,
         project_name: Optional[str] = None,
     ) -> Dict[str, Any]:
@@ -64,8 +63,7 @@ class LigandPrep(Primitive):
             "smiles": smiles,
             "output": output,
             "ligand_name": ligand_name,
-            "random_seed": random_seed,
-            "optimize": optimize,
+            "random_seed": random_seed
         }
 
         response = self._post("/primitive/ligand-prep", json=data)

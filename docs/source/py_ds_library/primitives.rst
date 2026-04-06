@@ -156,6 +156,60 @@ The TVTSplit primitive performs train-validation-test splitting on datasets usin
           frac_test=0.1
       )
 
+PdbClean primitive
+------------------
+
+The PdbClean primitive submits a PDB cleaning job to the server endpoint ``POST /primitive/pdb-clean``.
+The server runs PDBFixer/OpenMM and returns the datastore address of the cleaned PDB.
+
+**Requirements:** Server must have PDBFixer and OpenMM available for the job worker.
+
+.. autoclass:: pyds.primitives.pdb_clean.PdbClean
+   :members:
+   :undoc-members:
+
+   **Example usage:**
+
+   .. code-block:: python
+
+      cleaner = PdbClean(settings)
+      response = cleaner.run(
+          pdb_address="deepchem://profile/project/raw.pdb",
+          output="cleaned_receptor",
+          remove_chains=["B"],
+          remove_heterogens=True,
+          remove_water=True,
+          add_hydrogens=True,
+          ph=7.4,
+      )
+      address = response["cleaned_pdb_address"]
+
+LigandPrep primitive
+--------------------
+
+The LigandPrep primitive submits a SMILES-to-3D-SDF job to ``POST /primitive/ligand-prep``.
+The server uses RDKit embedding and optional MMFF optimization.
+
+**Requirements:** Server must have RDKit available for the job worker.
+
+.. autoclass:: pyds.primitives.ligand_prep.LigandPrep
+   :members:
+   :undoc-members:
+
+   **Example usage:**
+
+   .. code-block:: python
+
+      prep = LigandPrep(settings)
+      response = prep.run(
+          smiles="CCO",
+          output="ethanol_3d",
+          ligand_name="ethanol",
+          random_seed=42,
+          optimize=True,
+      )
+      address = response["ligand_sdf_address"]
+
 DEL Denoise Primitive
 ---------------------
 
