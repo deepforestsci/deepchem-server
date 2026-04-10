@@ -49,13 +49,14 @@ class BaseClient:
             raise ValueError(f"Missing required settings: {', '.join(missing)}. "
                              f"Please configure using settings.set_profile() and settings.set_project()")
 
-    def _make_request(self, method: str, endpoint: str, **kwargs) -> requests.Response:
+    def _make_request(self, method: str, endpoint: str, timeout: Optional[float] = 600, **kwargs) -> requests.Response:
         """
         Make HTTP request to the API.
 
         Args:
             method: HTTP method ('GET', 'POST', etc.)
             endpoint: API endpoint (without base URL)
+            timeout: Timeout for the request (default: 600 seconds or 10 minutes)
             **kwargs: Additional arguments for requests
 
         Returns:
@@ -67,7 +68,7 @@ class BaseClient:
         url = f"{self.base_url}{endpoint}"
 
         try:
-            response = self.session.request(method, url, **kwargs)
+            response = self.session.request(method, url, timeout=timeout, **kwargs)
             return response
         except Exception as e:
             raise Exception(f"API request failed: {e}")
@@ -245,17 +246,26 @@ class BaseClient:
         assert profile is not None and project is not None
         return profile, project
 
-    def healthcheck(self) -> Dict[str, Any]:
+    def healthcheck(self, **request_kwargs: Any) -> Dict[str, Any]:
         """
         Check server health status.
 
-        Returns:
+        Parameters
+        ----------
+        **request_kwargs : Any
+            Optional arguments forwarded to the underlying GET request
+
+        Returns
+        -------
+        Dict[str, Any]
             Health status response
 
-        Raises:
-            Exception: If API request fails
+        Raises
+        ------
+        Exception
+            If API request fails
         """
-        response = self._get("/healthcheck")
+        response = self._get("/healthcheck", **request_kwargs)
         return self._validate_response(response)
 
     def get_settings(self) -> Settings:
