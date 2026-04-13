@@ -22,7 +22,7 @@ def ligand_prep(
     """
     Convert a SMILES string to a 3D SDF file using RDKit.
 
-    Generates 3D coordinates via the ETKDG algorithm. The resulting SDF
+    Generates 3D coordinates via the ETKDGv3 algorithm. The resulting SDF
     is uploaded to the configured datastore.
 
     Parameters
@@ -75,8 +75,8 @@ def ligand_prep(
     log_progress('ligand_prep', 30, 'adding hydrogens')
     mol = Chem.AddHs(mol)
 
-    log_progress('ligand_prep', 50, 'generating 3D coordinates with ETKDGv3')
-    params = AllChem.ETKDG()  # type: ignore
+    log_progress("ligand_prep", 50, "generating 3D coordinates with ETKDG")
+    params = AllChem.ETKDGv3()  # type: ignore
     if random_seed is not None:
         params.randomSeed = random_seed
     result = AllChem.EmbedMolecule(mol, params)  # type: ignore
