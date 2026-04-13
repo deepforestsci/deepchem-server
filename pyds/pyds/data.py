@@ -12,8 +12,6 @@ from typing import Any, Dict, Optional, Union
 
 from requests_toolbelt import MultipartEncoder
 
-from deepchem_server.core.common.address import DeepchemAddress
-
 from .base import BaseClient
 from .settings import Settings
 
@@ -37,6 +35,44 @@ class Data(BaseClient):
                 Base URL for the API (overrides settings if provided)
         """
         super().__init__(settings, base_url)
+
+    def _get_address_key(self, address: str) -> str:
+        """Return the key from an address.
+
+        A key is used to refer to one of DeepChem's dataset or model.
+
+        Parameters
+        ----------
+        address : str
+            The address string whose key we are extracting.
+
+        Returns
+        -------
+        str
+            The extracted key from the address.
+
+        Examples
+        --------
+        The following are all examples for different formats of the same address
+
+        Example 1:
+        ----------
+        >>> dataset_address = 'deepchem://deepchem/data/delaney'
+        >>> key = DeepchemAddress.get_key(dataset_address)
+        >>> key
+        delaney
+
+        Example 2:
+        ----------
+        >>> dataset_address = 'deepchem/data/delaney'
+        >>> key = DeepchemAddress.get_key(dataset_address)
+        >>> key
+        deepchem/data/delaney
+        """
+        if address.startswith("deepchem://"):
+            address = address[len("deepchem://"):]
+            return "/".join(address.split("/")[2:])
+        return address
 
     def upload_data(
         self,
@@ -221,7 +257,7 @@ class Data(BaseClient):
             Parsed data object.
         """
         profile, project = self._get_profile_and_project(profile_name, project_name)
-        key = DeepchemAddress.get_key(address)
+        key = self._get_address_key(address)
         response = self._get(f"/data/{key}?profile_name={profile}&project_name={project}")
         self._handle_http_error(response)
 
