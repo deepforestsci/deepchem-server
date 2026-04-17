@@ -9,6 +9,7 @@ import uuid
 
 import pytest
 import responses
+import tempfile
 from pyds.data import Data
 from pyds.primitives import LigandPrep
 from pyds.settings import Settings
@@ -123,7 +124,6 @@ class TestLigandPrepLive:
         addr = result["ligand_sdf_address"]
         filename = addr.split("/")[-1] if "/" in addr else addr
 
-        import tempfile
         with tempfile.NamedTemporaryFile(suffix=".sdf", delete=False) as tmp:
             tmp_path = tmp.name
         try:
@@ -151,7 +151,6 @@ class TestLigandPrepLive:
         addr = result["ligand_sdf_address"]
         filename = addr.split("/")[-1] if "/" in addr else addr
 
-        import tempfile
         with tempfile.NamedTemporaryFile(suffix=".sdf", delete=False) as tmp:
             tmp_path = tmp.name
         try:
@@ -186,7 +185,6 @@ class TestLigandPrepLive:
             output=_unique_name("smiles_1_seed2"),
             random_seed=42,
         )
-        # Both should succeed
         assert "ligand_sdf_address" in result1
         assert "ligand_sdf_address" in result2
 
@@ -240,9 +238,7 @@ class TestLigandPrepLive:
         live_data_client: Data,
     ) -> None:
         """Ligand names from the ProteomeScan dataset appear in the SDF block."""
-        import tempfile
 
-        # Test with one representative molecule to keep the test focused
         name = "Erlotinib"
         smiles = PROTEOME_SCAN_SUBSET[name]
         result = live_ligand_prep_client.run(

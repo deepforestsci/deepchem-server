@@ -96,7 +96,6 @@ def test_ligand_prep_reproducible_with_seed(disk_datastore):
     text1 = ''.join(sdf1) if isinstance(sdf1, list) else sdf1
     text2 = ''.join(sdf2) if isinstance(sdf2, list) else sdf2
 
-    # Both should be valid SDF files
     assert 'M  END' in text1
     assert 'M  END' in text2
 

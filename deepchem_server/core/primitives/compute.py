@@ -2,6 +2,7 @@ from typing import Any, Dict
 
 from deepchem_server.core.primitives.del_denoising import del_denoise
 from deepchem_server.core.primitives.docking import generate_pose
+from deepchem_server.core.primitives.filter_promiscuous_targets import filter_promiscuous_targets
 from deepchem_server.core.primitives.evaluator import model_evaluator
 from deepchem_server.core.primitives.feat import featurize
 from deepchem_server.core.primitives.fep.rbfe.collate_rbfe_results import collate_rbfe_results
@@ -22,6 +23,7 @@ program_map = {
     "partition": partition,
     "train_valid_test_split": train_valid_test_split,
     "generate_pose": generate_pose,
+    "filter_promiscuous_targets": filter_promiscuous_targets,
     "pdb_clean": pdb_clean,
     "ligand_prep": ligand_prep,
     "relative_binding_free_energy": run_rbfe,

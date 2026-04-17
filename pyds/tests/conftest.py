@@ -14,6 +14,7 @@ from pyds.primitives import (
     DelDenoise,
     Evaluate,
     Featurize,
+    FilterPromiscuousTargets,
     Infer,
     LigandPrep,
     Partition,
@@ -349,3 +350,15 @@ def live_pdb_clean_client(live_settings: Settings) -> PdbClean:
 def live_ligand_prep_client(live_settings: Settings) -> LigandPrep:
     """Create LigandPrep client for live server testing."""
     return LigandPrep(settings=live_settings)
+
+
+@pytest.fixture
+def filter_promiscuous_targets_client(test_settings: Settings) -> FilterPromiscuousTargets:
+    """Create FilterPromiscuousTargets primitive client for testing."""
+    return FilterPromiscuousTargets(settings=test_settings)
+
+
+@pytest.fixture
+def live_filter_promiscuous_targets_client(live_settings: Settings) -> FilterPromiscuousTargets:
+    """Create FilterPromiscuousTargets client for live server testing."""
+    return FilterPromiscuousTargets(settings=live_settings)
