@@ -210,6 +210,40 @@ The server uses RDKit embedding and optional MMFF optimization.
       )
       address = response["ligand_sdf_address"]
 
+FilterPromiscuousTargets primitive
+----------------------------------
+
+The FilterPromiscuousTargets primitive submits a job to `POST /primitive/filter-promiscuous-targets`
+to identify and remove promiscuous binding targets from per-ligand docking scan results.
+
+A promiscuous target is a gene that appears in the top-M% of docking results across N or more ligands,
+suggesting non-selective binding that may indicate artifactual enrichment rather than genuine affinity.
+
+**Inputs:**
+
+* Per-ligand scan result CSV files from docking workflows
+* Each CSV must contain a `gene_name` column
+* Rows should be sorted from best (top) to worst docking score
+
+.. autoclass:: pyds.primitives.filter_promiscuous_targets.FilterPromiscuousTargets
+   :members:
+   :undoc-members:
+
+   **Example usage:**
+
+   .. code-block:: python
+
+      filter = FilterPromiscuousTargets(settings)
+      response = filter.run(
+          scan_result_addresses=[
+              "deepchem://profile/project/ligand_a_scan.csv",
+              "deepchem://profile/project/ligand_b_scan.csv",
+          ],
+          thresholds=[[15, 1], [25, 2]],
+          output="filtered_scan_results",
+      )
+      results_address = response["filter_results_address"]
+
 DEL Denoise Primitive
 ---------------------
 

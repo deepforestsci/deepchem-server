@@ -15,6 +15,7 @@ Currently, Deepchem Server provides the following primitives: (Other primitives 
 * **DEL Denoise**: Score DEL screening data to identify strong binders
 * **PDB clean**: Prepare protein structures (PDBFixer/OpenMM: heterogens, water, chains, hydrogens)
 * **Ligand prep**: Build 3D ligand conformers from SMILES (RDKit) and store as SDF in the datastore
+* **Filter promiscuous targets**: Identify and remove promiscuous binding targets from per-ligand docking scan results
 
 These primitives are designed to work seamlessly together while also being usable independently for specific tasks.
 
@@ -162,6 +163,33 @@ serializes it as SDF, and uploads the file to the datastore.
 
 .. autofunction:: deepchem_server.core.primitives.ligand_prep.ligand_prep
 
+Filter promiscuous targets
+--------------------------
+
+The filter promiscuous targets primitive identifies and removes promiscuous binding targets from
+per-ligand docking scan results. A promiscuous target is a gene that appears in the top-M% of
+results across N or more ligands, suggesting non-selective binding.
+
+**Input Requirements:**
+
+* Per-ligand scan result CSV files from docking workflows
+* Each CSV must contain a `gene_name` column
+* Rows should be sorted from best (top) to worst docking score
+
+**Threshold Parameters:**
+
+The primitive accepts a list of [m, n] threshold pairs:
+
+* **m**: Percentile cutoff (0-100) — top m% of results to consider
+* **n**: Minimum occurrence count — gene must appear in at least n ligands' top results
+
+**Outputs:**
+
+* JSON file mapping thresholds to promiscuous gene lists
+* Filtered CSV files with promiscuous targets removed
+
+.. autofunction:: deepchem_server.core.primitives.filter_promiscuous_targets.filter_promiscuous_targets
+
 Available Metrics
 ~~~~~~~~~~~~~~~~~
 
@@ -232,6 +260,7 @@ These primitives are designed to work together in typical machine learning workf
 7. **Docking**: Use ``generate_pose()`` to predict protein-ligand binding interactions
 8. **PDB clean** (optional): Use ``pdb_clean()`` to standardize a receptor PDB before docking or simulation
 9. **Ligand prep** (optional): Use ``ligand_prep()`` to generate a 3D SDF for a ligand from SMILES
+10. **Filter promiscuous targets** (optional): Use ``filter_promiscuous_targets()`` to remove non-selective targets from per-ligand docking results
 
 Example Workflow
 ~~~~~~~~~~~~~~~~
