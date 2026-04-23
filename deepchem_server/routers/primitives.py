@@ -760,3 +760,62 @@ async def collate_rbfe_results(
         raise HTTPException(status_code=500, detail=f"Collate relative binding free energy results failed: {str(e)}")
 
     return {"collate_relative_binding_free_energy_results_address": str(result)}
+
+
+@router.post("/ligand-prep")
+async def ligand_prep_primitive(
+    profile_name: Annotated[str, Body()],
+    project_name: Annotated[str, Body()],
+    smiles: Annotated[str, Body()],
+    output: Annotated[str, Body()],
+    ligand_name: Annotated[str, Body()] = "",
+    random_seed: Annotated[int, Body()] = 42,
+) -> dict:
+    """
+    Submits a ligand preparation job (SMILES to 3D SDF via RDKit).
+
+    Parameters
+    ----------
+    profile_name: str
+        Name of the Profile where the job is run
+    project_name: str
+        Name of the Project where the job is run
+    smiles: str
+        Input SMILES string
+    output: str
+        Output key for the SDF in the datastore
+    ligand_name: str
+        Optional molecule name stored in the SDF
+    random_seed: int
+        Seed for 3D embedding (default 42)
+
+    Returns
+    -------
+    dict
+        Dictionary with the datastore address of the prepared SDF.
+
+    Raises
+    ------
+    HTTPException
+        If the job submission fails.
+    """
+    if isinstance(random_seed, str):
+        try:
+            random_seed = int(random_seed)
+        except ValueError:
+            raise HTTPException(status_code=400, detail=f"Invalid random_seed value: {random_seed}")
+
+    program: Dict = {
+        "program_name": "ligand_prep",
+        "smiles": smiles,
+        "output": output,
+        "ligand_name": ligand_name,
+        "random_seed": random_seed,
+    }
+
+    try:
+        result = run_job(profile_name=profile_name, project_name=project_name, program=program)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Ligand preparation failed: {str(e)}")
+
+    return {"ligand_sdf_address": str(result)}
