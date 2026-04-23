@@ -61,6 +61,7 @@ class TestImports:
             "Infer",
             "Partition",
             "TVTSplit",
+            "ProteomeScan",
         ]
 
         for export in expected_exports:
@@ -79,9 +80,8 @@ class TestImports:
         import pyds.primitives.evaluate  # noqa: F401
         import pyds.primitives.featurize  # noqa: F401
         import pyds.primitives.infer  # noqa: F401
-        import pyds.primitives.ligand_prep  # noqa: F401
         import pyds.primitives.partition  # noqa: F401
-        import pyds.primitives.pdb_clean  # noqa: F401
+        import pyds.primitives.proteome_scan  # noqa: F401
         import pyds.primitives.splitter  # noqa: F401
         import pyds.primitives.train  # noqa: F401
         import pyds.settings  # noqa: F401

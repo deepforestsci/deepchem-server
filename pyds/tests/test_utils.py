@@ -407,28 +407,6 @@ def create_regression_csv(complexity: str = "simple", headers: Optional[list] = 
     return create_test_csv_file(dataset_map[complexity], headers)
 
 
-def skip_if_server_unavailable(func):
-    """
-    Decorator to skip tests if server is not available.
-    """
-    import functools
-
-    import pytest
-
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except Exception as e:
-            error_msg = str(e).lower()
-            if any(keyword in error_msg for keyword in ["connection", "refused", "timeout", "network", "unavailable"]):
-                pytest.skip(f"Server not available: {e}")
-            else:
-                raise
-
-    return wrapper
-
-
 def assert_valid_address(address: str, expected_parts: Optional[list] = None):
     """
     Assert that an address has the expected format.

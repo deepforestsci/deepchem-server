@@ -20,6 +20,7 @@ from pyds.primitives import (
     Partition,
     PdbClean,
     Train,
+    ProteomeScan,
 )
 
 from .test_utils import (
@@ -353,12 +354,28 @@ def live_ligand_prep_client(live_settings: Settings) -> LigandPrep:
 
 
 @pytest.fixture
-def filter_promiscuous_targets_client(test_settings: Settings) -> FilterPromiscuousTargets:
+def filter_promiscuous_targets_client(
+    test_settings: Settings,
+) -> FilterPromiscuousTargets:
     """Create FilterPromiscuousTargets primitive client for testing."""
     return FilterPromiscuousTargets(settings=test_settings)
 
 
 @pytest.fixture
-def live_filter_promiscuous_targets_client(live_settings: Settings) -> FilterPromiscuousTargets:
+def live_filter_promiscuous_targets_client(
+    live_settings: Settings,
+) -> FilterPromiscuousTargets:
     """Create FilterPromiscuousTargets client for live server testing."""
     return FilterPromiscuousTargets(settings=live_settings)
+
+
+@pytest.fixture
+def proteome_scan_client(test_settings: Settings) -> ProteomeScan:
+    """Create ProteomeScan client for testing."""
+    return ProteomeScan(settings=test_settings)
+
+
+@pytest.fixture
+def live_proteome_scan_client(live_settings: Settings) -> ProteomeScan:
+    """Create ProteomeScan client for live server testing."""
+    return ProteomeScan(settings=live_settings)

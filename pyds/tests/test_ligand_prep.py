@@ -60,7 +60,7 @@ class TestLigandPrepUnit:
         """Test POST body and endpoint for ligand-prep."""
         responses.add(
             responses.POST,
-            "http://localhost:8000/primitive/ligand-prep",
+            "http://localhost:8000/primitive/proteome-scan/ligand-prep",
             json={"ligand_sdf_address": "test_profile/test_project/out.sdf"},
             status=200,
         )

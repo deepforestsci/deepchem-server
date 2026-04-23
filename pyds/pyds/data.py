@@ -172,3 +172,38 @@ class Data(BaseClient):
         profile, project = self._get_profile_and_project(profile_name, project_name)
         response = self._get(f"/data/{address}?profile_name={profile}&project_name={project}")
         return self._validate_file_response(response, destination_path)
+
+    def get_data(
+        self,
+        address: str,
+        profile_name: Optional[str] = None,
+        project_name: Optional[str] = None,
+    ) -> Any:
+        """Fetch an object from the datastore by deepchem address.
+
+        This is a convenience wrapper used throughout tests/examples. It
+        downloads the addressed object via the server's ``/data/{file}``
+        endpoint and returns the raw text payload.
+
+        Notes
+        -----
+        - For JSON/CSV/text-like objects, this returns ``str``.
+        - For binary objects, this returns ``bytes``.
+        """
+        if not address:
+            raise ValueError("address is required")
+
+        profile, project = self._get_profile_and_project(profile_name, project_name)
+
+        # Accept either a full deepchem:// address or a bare filename.
+        file_name = address
+        if "://" in address:
+            file_name = address.split("/")[-1]
+
+        response = self._get(f"/data/{file_name}?profile_name={profile}&project_name={project}")
+        self._handle_http_error(response)
+
+        content_type = (response.headers.get("content-type") or "").lower()
+        if "application/octet-stream" in content_type:
+            return response.content
+        return response.text

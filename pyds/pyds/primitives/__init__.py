@@ -10,11 +10,17 @@ from .del_denoising import DelDenoise
 from .evaluate import Evaluate
 from .featurize import Featurize
 from .docking import Docking
-from .filter_promiscuous_targets import FilterPromiscuousTargets
 from .infer import Infer
-from .ligand_prep import LigandPrep
-from .pdb_clean import PdbClean
 from .partition import Partition
+from .proteome_scan import (
+    FilterPromiscuousTargets,
+    PdbClean,
+    LigandPrep,
+    ParseResults,
+    ProteomeScan,
+    RunDocking,
+    RunMultiPoseAnalysis,
+)
 from .splitter import TVTSplit
 from .train import Train
 
@@ -25,8 +31,12 @@ __all__ = [
     "Featurize",
     "Docking",
     "FilterPromiscuousTargets",
-    "LigandPrep",
     "PdbClean",
+    "LigandPrep",
+    "ParseResults",
+    "ProteomeScan",
+    "RunDocking",
+    "RunMultiPoseAnalysis",
     "Train",
     "Evaluate",
     "Infer",

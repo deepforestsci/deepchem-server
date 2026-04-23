@@ -15,11 +15,10 @@ from .primitives.evaluate import Evaluate
 from .primitives.featurize import Featurize
 from .primitives.docking import Docking
 from .primitives.infer import Infer
-from .primitives.ligand_prep import LigandPrep
-from .primitives.pdb_clean import PdbClean
 from .primitives.partition import Partition
 from .primitives.splitter import TVTSplit
 from .primitives.train import Train
+from .primitives.proteome_scan import LigandPrep, PdbClean, ProteomeScan
 from .settings import Settings
 
 
@@ -38,4 +37,5 @@ __all__ = [
     "Infer",
     "Partition",
     "TVTSplit",
+    "ProteomeScan",
 ]
