@@ -3,7 +3,9 @@ import pytest
 
 from deepchem_server.core import config
 from deepchem_server.core.common.cards import DataCard
-from deepchem_server.core.primitives.filter_promiscuous_targets import filter_promiscuous_targets
+from deepchem_server.core.primitives.proteome_scan.filter_promiscuous_targets import (
+    filter_promiscuous_targets,
+)
 
 
 class TestFilterPromiscuousTargets:
