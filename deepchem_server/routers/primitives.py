@@ -942,3 +942,67 @@ async def collate_rbfe_results(
         raise HTTPException(status_code=500, detail=f"Collate relative binding free energy results failed: {str(e)}")
 
     return {"collate_relative_binding_free_energy_results_address": str(result)}
+
+
+@router.post("/proteome-scan/docking")
+async def proteome_scan_docking(
+    profile_name: Annotated[str, Body()],
+    project_name: Annotated[str, Body()],
+    gene_name: Annotated[str, Body()],
+    ligand_name: Annotated[str, Body()],
+    ligand_address: Annotated[str, Body()],
+    scan_id: Annotated[str, Body()],
+    output: Annotated[str, Body()],
+    exhaustiveness: Annotated[int, Body()] = 32,
+    num_modes: Annotated[int, Body()] = 8,
+) -> dict:
+    """
+    Run gene-guided docking for a single (gene, ligand) pair.
+
+    Parameters
+    ----------
+    profile_name: str
+        Name of the Profile where the job is run.
+    project_name: str
+        Name of the Project where the job is run.
+    gene_name: str
+        Gene symbol. ``pdb_clean`` must have run already for
+        the same ``scan_id``.
+    ligand_name: str
+        Display name for the ligand. Used to namespace on-disk
+        artifacts and CSVs.
+    ligand_address: str
+        DeepChem address of the prepared ligand SDF.
+    scan_id: str
+        Scan identifier used to locate the per-gene PDB CSV and to
+        group all outputs on disk.
+    output: str
+        Output name prefix for uploaded datastore artifacts.
+    exhaustiveness: int
+        VINA exhaustiveness (default: 32).
+    num_modes: int
+        Number of binding modes (default: 8).
+
+    Returns
+    -------
+    dict
+        Dictionary containing ``results_address`` - the datastore
+        address of the run summary JSON.
+    """
+    program = {
+        "program_name": "run_docking",
+        "gene_name": gene_name,
+        "ligand_name": ligand_name,
+        "ligand_address": ligand_address,
+        "scan_id": scan_id,
+        "output": output,
+        "exhaustiveness": exhaustiveness,
+        "num_modes": num_modes,
+    }
+
+    try:
+        result = run_job(profile_name=profile_name, project_name=project_name, program=program)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"run_docking failed: {str(e)}")
+
+    return {"results_address": str(result)}
