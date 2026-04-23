@@ -490,81 +490,58 @@ async def filter_promiscuous_targets_endpoint(
     return {"filter_results_address": str(result)}
 
 
-@router.post("/pdb-clean")
-async def pdb_clean_primitive(
+@router.post("/proteome-scan/pdb-clean")
+async def proteome_scan_pdb_clean(
     profile_name: Annotated[str, Body()],
     project_name: Annotated[str, Body()],
-    pdb_address: Annotated[str, Body()],
+    gene_name: Annotated[str, Body()],
+    entry_id: Annotated[str, Body()],
+    scan_id: Annotated[str, Body()],
     output: Annotated[str, Body()],
-    remove_chains: Annotated[Optional[List[str]], Body()] = None,
-    remove_heterogens: Annotated[bool, Body()] = True,
-    remove_water: Annotated[bool, Body()] = True,
-    add_hydrogens: Annotated[bool, Body()] = True,
-    ph: Annotated[float, Body()] = 7.0,
+    min_res_val: Annotated[float, Body()] = 2.5,
 ) -> dict:
     """
-    Submits a PDB cleaning job (PDBFixer and OpenMM).
+    Fetch and clean PDB structures for a gene
 
     Parameters
     ----------
     profile_name: str
-        Name of the Profile where the job is run
+        Name of the Profile where the job is run.
     project_name: str
-        Name of the Project where the job is run
-    pdb_address: str
-        Datastore address of the input PDB file
+        Name of the Project where the job is run.
+    gene_name: str
+        Gene symbol (e.g., "GBA3").
+    entry_id: str
+        UniProt entry ID (e.g., "Q9H3H0").
+    scan_id: str
+        Scan identifier. All artifacts are written under
+        ``<cache_root>/<scan_id>/<gene_name>/``.
     output: str
-        Output key for the cleaned PDB in the datastore
-    remove_chains: Optional[List[str]]
-        Chain IDs to remove before cleaning
-    remove_heterogens: bool
-        Whether to strip heteroatom records (default True)
-    remove_water: bool
-        Whether to also remove water when removing heterogens (default True)
-    add_hydrogens: bool
-        Whether to add missing hydrogens (default True)
-    ph: float
-        pH for protonation when adding hydrogens (default 7.0)
+        Output name prefix for uploaded datastore artifacts.
+    min_res_val: float
+        Minimum resolution cutoff (default: 2.5).
 
     Returns
     -------
     dict
-        Dictionary with the datastore address of the cleaned PDB.
-
-    Raises
-    ------
-    HTTPException
-        If the job submission fails.
+        Dictionary containing ``results_address`` - the datastore
+        address of the per-gene metadata JSON.
     """
-    if isinstance(remove_chains, str):
-        if not remove_chains or remove_chains.lower() == "none":
-            remove_chains = None
-        else:
-            remove_chains = json.loads(remove_chains)
-
-    if isinstance(ph, str):
-        try:
-            ph = float(ph)
-        except ValueError:
-            raise HTTPException(status_code=400, detail=f"Invalid ph value: {ph}")
-
-    program: Dict = {
+    program = {
         "program_name": "pdb_clean",
-        "pdb_address": pdb_address,
+        "gene_name": gene_name,
+        "entry_id": entry_id,
+        "scan_id": scan_id,
         "output": output,
-        "remove_chains": remove_chains,
-        "remove_heterogens": remove_heterogens,
-        "remove_water": remove_water,
-        "add_hydrogens": add_hydrogens,
-        "ph": ph,
+        "min_res_val": min_res_val,
     }
 
     try:
         result = run_job(profile_name=profile_name, project_name=project_name, program=program)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"PDB cleaning failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"pdb_clean failed: {str(e)}")
 
-    return {"cleaned_pdb_address": str(result)}
+    return {"results_address": str(result)}
 
 
 @router.post("/ligand-prep")

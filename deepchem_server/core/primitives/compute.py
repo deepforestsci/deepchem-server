@@ -12,10 +12,12 @@ from deepchem_server.core.primitives.fep.rbfe.run_rbfe import run_rbfe
 from deepchem_server.core.primitives.inference import infer
 from deepchem_server.core.primitives.ligand_prep import ligand_prep
 from deepchem_server.core.primitives.partition import partition
-from deepchem_server.core.primitives.pdb_clean import pdb_clean
 from deepchem_server.core.primitives.splitter import train_valid_test_split
 from deepchem_server.core.primitives.train import train
-from deepchem_server.core.primitives.proteome_scan.docking import run_docking
+from deepchem_server.core.primitives.proteome_scan import (
+    pdb_clean,
+    run_docking,
+)
 
 
 program_map = {
