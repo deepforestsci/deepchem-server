@@ -5,7 +5,7 @@ import pytest
 from rdkit import Chem
 
 from deepchem_server.core import config
-from deepchem_server.core.primitives.ligand_prep import ligand_prep
+from deepchem_server.core.primitives.proteome_scan.ligand_prep import ligand_prep
 
 
 ASSETS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets")

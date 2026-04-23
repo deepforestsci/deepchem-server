@@ -1,3 +1,7 @@
+"""
+Prepare a ligand for docking.
+"""
+
 import io
 from typing import Optional
 
@@ -22,9 +26,6 @@ def ligand_prep(
     """
     Convert a SMILES string to a 3D SDF file using RDKit.
 
-    Generates 3D coordinates via the ETKDGv3 algorithm. The resulting SDF
-    is uploaded to the configured datastore.
-
     Parameters
     ----------
     smiles : str
@@ -34,25 +35,16 @@ def ligand_prep(
     ligand_name : str, optional
         Name to embed in the SDF molecule block.
     random_seed : int, optional
-        Reproducibility seed for 3D embedding (default 42).
+        Reproducibility seed for 3D embedding.
 
     Returns
     -------
     str
         DeepChem address of the generated SDF file.
 
-    Raises
-    ------
-    ImportError
-        If RDKit is not installed.
-    ValueError
-        If SMILES is empty, invalid, or 3D embedding fails.
-
     Examples
     --------
-    >>> address = ligand_prep(smiles='CC(=O)Oc1ccccc1C(=O)O', output='aspirin')
-    >>> print(address)
-    deepchem://profile/project/aspirin.sdf
+    >>> addr = ligand_prep("CCO", output="ethanol", ligand_name="EtOH")
     """
     datastore = config.get_datastore()
     if datastore is None:
@@ -62,7 +54,8 @@ def ligand_prep(
         raise ValueError("SMILES string is required")
 
     if not RDKIT_AVAILABLE:
-        raise ImportError("RDKit is required for ligand preparation but not installed")
+        raise ImportError(
+            "RDKit is required for ligand preparation but not installed")
 
     log_progress('ligand_prep', 10, f'parsing SMILES: {smiles}')
     mol = Chem.MolFromSmiles(smiles)
@@ -75,7 +68,8 @@ def ligand_prep(
     log_progress('ligand_prep', 30, 'adding hydrogens')
     mol = Chem.AddHs(mol)
 
-    log_progress("ligand_prep", 50, "generating 3D coordinates with ETKDG")
+    log_progress("ligand_prep", 50,
+                 "generating 3D coordinates with ETKDG")
     params = AllChem.ETKDGv3()  # type: ignore
     if random_seed is not None:
         params.randomSeed = random_seed
@@ -94,7 +88,8 @@ def ligand_prep(
     card = DataCard(address='', file_type='sdf', data_type='sdf')
 
     log_progress('ligand_prep', 95, 'uploading SDF to datastore')
-    address = datastore.upload_data_from_memory(sdf_content, output_key, card)
+    address = datastore.upload_data_from_memory(sdf_content, output_key,
+                                                card)
 
     log_progress('ligand_prep', 100, 'ligand preparation complete')
     return address

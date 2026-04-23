@@ -5,14 +5,16 @@ from deepchem_server.core.primitives.docking import generate_pose
 from deepchem_server.core.primitives.filter_promiscuous_targets import filter_promiscuous_targets
 from deepchem_server.core.primitives.evaluator import model_evaluator
 from deepchem_server.core.primitives.feat import featurize
-from deepchem_server.core.primitives.fep.rbfe.collate_rbfe_results import collate_rbfe_results
+from deepchem_server.core.primitives.fep.rbfe.collate_rbfe_results import (
+    collate_rbfe_results,
+)
 from deepchem_server.core.primitives.fep.rbfe.run_rbfe import run_rbfe
 from deepchem_server.core.primitives.inference import infer
-from deepchem_server.core.primitives.ligand_prep import ligand_prep
 from deepchem_server.core.primitives.partition import partition
 from deepchem_server.core.primitives.pdb_clean import pdb_clean
 from deepchem_server.core.primitives.splitter import train_valid_test_split
 from deepchem_server.core.primitives.train import train
+from deepchem_server.core.primitives.proteome_scan.ligand_prep import ligand_prep
 
 
 program_map = {
@@ -79,10 +81,12 @@ class ComputeWorkflow:
             If 'program_name' is not found in program or if the program_name
             is not available in the program map.
         """
-        if 'program_name' not in self.program:
+        if "program_name" not in self.program:
             raise ValueError("program_name not found in program")
-        program_name: str = self.program['program_name']
-        params: Dict = {key: value for key, value in self.program.items() if key != 'program_name'}
+        program_name: str = self.program["program_name"]
+        params: Dict = {
+            key: value for key, value in self.program.items() if key != "program_name"
+        }
         if program_name not in program_map:
             raise ValueError(f"{program_name} not in available programs")
 

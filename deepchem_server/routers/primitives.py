@@ -567,7 +567,7 @@ async def pdb_clean_primitive(
     return {"cleaned_pdb_address": str(result)}
 
 
-@router.post("/ligand-prep")
+@router.post("/proteome-scan/ligand-prep")
 async def ligand_prep_primitive(
     profile_name: Annotated[str, Body()],
     project_name: Annotated[str, Body()],
