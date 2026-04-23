@@ -1006,3 +1006,49 @@ async def proteome_scan_docking(
         raise HTTPException(status_code=500, detail=f"run_docking failed: {str(e)}")
 
     return {"results_address": str(result)}
+
+
+@router.post("/proteome-scan/parse-results")
+async def proteome_scan_parse_results(
+    profile_name: Annotated[str, Body()],
+    project_name: Annotated[str, Body()],
+    scan_id: Annotated[str, Body()],
+    ligands: Annotated[List[str], Body()],
+    output: Annotated[str, Body()],
+) -> dict:
+    """
+    Aggregate per-ligand docking results
+
+    Parameters
+    ----------
+    profile_name: str
+        Name of the Profile where the job is run.
+    project_name: str
+        Name of the Project where the job is run.
+    scan_id: str
+        Scan identifier (same ``scan_id`` used for ``pdb_clean``
+        and ``run_docking``).
+    ligands: List[str]
+        Ligand names whose per-gene CSVs should be aggregated.
+    output: str
+        Output name prefix for uploaded datastore artifacts.
+
+    Returns
+    -------
+    dict
+        Dictionary containing ``results_address`` - the datastore
+        address of the aggregation summary JSON.
+    """
+    program = {
+        "program_name": "parse_results",
+        "scan_id": scan_id,
+        "ligands": ligands,
+        "output": output,
+    }
+
+    try:
+        result = run_job(profile_name=profile_name, project_name=project_name, program=program)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"parse_results failed: {str(e)}")
+
+    return {"results_address": str(result)}
