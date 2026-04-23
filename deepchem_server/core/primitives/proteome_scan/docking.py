@@ -52,8 +52,7 @@ def _vina_docking(
     """
     try:
         from deepchem.dock.pose_generation import (
-            VinaPoseGenerator,
-        )  # type: ignore
+            VinaPoseGenerator,)  # type: ignore
     except ImportError:
         raise ImportError("DeepChem is required for run_docking but not installed")
 
@@ -134,9 +133,8 @@ def _load_gene_pdbs_df(
     """
     csv_path = ps_cache.gene_pdbs_csv_path(scan_id, gene_name)
     if not csv_path.exists():
-        raise FileNotFoundError(
-            f"pdbs file not found for {gene_name}: {csv_path}. " "Run pdb_clean first."
-        )
+        raise FileNotFoundError(f"pdbs file not found for {gene_name}: {csv_path}. "
+                                "Run pdb_clean first.")
     return pd.read_csv(csv_path, index_col="id")
 
 
@@ -312,9 +310,7 @@ def run_docking(
     complexes_dir = ps_cache.get_gene_complexes_dir(scan_id, gene_name)
 
     if top_csv_path.exists():
-        log_progress(
-            "run_docking", 10, f"Skipping {gene_name} {ligand_name}: {top_csv_path} exists"
-        )
+        log_progress("run_docking", 10, f"Skipping {gene_name} {ligand_name}: {top_csv_path} exists")
         sorted_maindf = pd.read_csv(top_csv_path)
     else:
         log_progress("run_docking", 5, f"Preparing docking for {gene_name} {ligand_name}")
@@ -354,20 +350,16 @@ def run_docking(
 
             shutil.rmtree(work_dir, ignore_errors=True)
 
-        df_docked = pd.DataFrame(
-            {
-                "id": list(docking_scores.keys()),
-                "scores": list(docking_scores.values()),
-            }
-        )
+        df_docked = pd.DataFrame({
+            "id": list(docking_scores.keys()),
+            "scores": list(docking_scores.values()),
+        })
         df_docked = df_docked.dropna()
         df_docked["top_score"] = df_docked["scores"].apply(lambda x: x[0] if x else None)
         df_docked = df_docked.set_index("id")
 
         merged_df = pd.merge(df, df_docked, how="left", left_index=True, right_index=True)
-        top_df = merged_df[["chains", "resolution", "coverage", "top_score", "scores"]].sort_values(
-            by="top_score"
-        )
+        top_df = merged_df[["chains", "resolution", "coverage", "top_score", "scores"]].sort_values(by="top_score")
         top2_df = top_df.iloc[[0, 1]] if len(top_df) > 2 else top_df
         top2_df = top2_df.copy()
         top2_df["gene_name"] = [gene_name] * len(top2_df)
@@ -388,9 +380,7 @@ def run_docking(
         with open(complex_file, "r") as f:
             pdb_content = f.read()
         key = f"{output}_{complex_file.stem}.pdb"
-        complex_addresses[complex_file.stem] = datastore.upload_data_from_memory(
-            pdb_content, key, pdb_card
-        )
+        complex_addresses[complex_file.stem] = datastore.upload_data_from_memory(pdb_content, key, pdb_card)
 
     summary = {
         "gene_name": gene_name,

@@ -21,6 +21,7 @@ import shutil
 from pathlib import Path
 from typing import Optional
 
+
 DEFAULT_SUBDIR = "proteome_scan"
 
 
@@ -293,10 +294,7 @@ def complex_path(scan_id: str, gene_name: str, pdb_id: str, ligand_name: str) ->
     >>> p.name.startswith("complex_")
     True
     """
-    return (
-        get_gene_complexes_dir(scan_id, gene_name)
-        / f"complex_{gene_name}_{pdb_id}_{ligand_name}.pdb"
-    )
+    return (get_gene_complexes_dir(scan_id, gene_name) / f"complex_{gene_name}_{pdb_id}_{ligand_name}.pdb")
 
 
 def top_score_gene_ligand_csv_path(scan_id: str, gene_name: str, ligand_name: str) -> Path:

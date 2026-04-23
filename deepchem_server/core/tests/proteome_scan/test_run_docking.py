@@ -37,18 +37,16 @@ def _write_dummy_pdb(path: str) -> None:
 
 @pytest.fixture
 def ligand_address(disk_datastore):
-    sdf = (
-        "LIG\n  test\n\n  1  0  0  0  0  0  0  0  0  0999 V2000\n"
-        "    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n"
-        "M  END\n$$$$\n"
-    )
+    sdf = ("LIG\n  test\n\n  1  0  0  0  0  0  0  0  0  0999 V2000\n"
+           "    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n"
+           "M  END\n$$$$\n")
     card = DataCard(address="", file_type="sdf", data_type="sdf")
     return disk_datastore.upload_data_from_memory(sdf, "test_lig.sdf", card)
 
 
 @pytest.fixture
 def prepared_gene(proteome_scan_cache):
-    """Pre-populate ``<cache>/<scan>/<gene>/`` with a cleaned PDB + CSV."""
+    """Pre-populate <cache>/<scan>/<gene>/ with a cleaned PDB + CSV."""
     scan_id = "scan_dock"
     gene_name = "GENE1"
     pdb_id = "1ABC"
@@ -56,18 +54,16 @@ def prepared_gene(proteome_scan_cache):
     cleaned_path = str(gene_dir / f"cleaned_g_{gene_name}_p_{pdb_id}.pdb")
     _write_dummy_pdb(cleaned_path)
 
-    df = pd.DataFrame(
-        {
-            "id": [pdb_id],
-            "chain_type": ["[A]"],
-            "chain_start": [1],
-            "chain_end": [100],
-            "resolution": [1.5],
-            "chains": ["A=1-100"],
-            "coverage": [99],
-            "path": [cleaned_path],
-        }
-    ).set_index("id", drop=False)
+    df = pd.DataFrame({
+        "id": [pdb_id],
+        "chain_type": ["[A]"],
+        "chain_start": [1],
+        "chain_end": [100],
+        "resolution": [1.5],
+        "chains": ["A=1-100"],
+        "coverage": [99],
+        "path": [cleaned_path],
+    }).set_index("id", drop=False)
     df.to_csv(str(gene_dir / f"{gene_name}_pdbs.csv"))
     return {
         "scan_id": scan_id,
@@ -79,9 +75,7 @@ def prepared_gene(proteome_scan_cache):
 
 class TestRunDocking:
 
-    def test_run_docking_writes_expected_layout(
-        self, disk_datastore, ligand_address, prepared_gene, monkeypatch
-    ):
+    def test_run_docking_writes_expected_layout(self, disk_datastore, ligand_address, prepared_gene, monkeypatch):
         """run_docking must write complexes + top_score CSV under the
         server cache and upload everything to the datastore."""
         config.set_datastore(disk_datastore)
@@ -138,9 +132,7 @@ class TestRunDocking:
         assert "complex_addresses" in summary
         assert any(complex_path.stem == k for k in summary["complex_addresses"])
 
-    def test_run_docking_resumes_when_csv_exists(
-        self, disk_datastore, ligand_address, prepared_gene, monkeypatch
-    ):
+    def test_run_docking_resumes_when_csv_exists(self, disk_datastore, ligand_address, prepared_gene, monkeypatch):
         config.set_datastore(disk_datastore)
         scan_id = prepared_gene["scan_id"]
         gene_name = prepared_gene["gene_name"]
@@ -148,17 +140,15 @@ class TestRunDocking:
 
         top_csv = ps_cache.top_score_gene_ligand_csv_path(scan_id, gene_name, ligand_name)
         top_csv.parent.mkdir(parents=True, exist_ok=True)
-        pd.DataFrame(
-            {
-                "id": ["1ABC"],
-                "chains": ["A=1-100"],
-                "resolution": [1.5],
-                "coverage": [99],
-                "top_score": [-9.0],
-                "scores": [[-9.0]],
-                "gene_name": [gene_name],
-            }
-        ).to_csv(top_csv, index=False)
+        pd.DataFrame({
+            "id": ["1ABC"],
+            "chains": ["A=1-100"],
+            "resolution": [1.5],
+            "coverage": [99],
+            "top_score": [-9.0],
+            "scores": [[-9.0]],
+            "gene_name": [gene_name],
+        }).to_csv(top_csv, index=False)
 
         called = {"n": 0}
 
@@ -183,9 +173,7 @@ class TestRunDocking:
         assert summary["gene_name"] == gene_name
         assert summary["top_score_csv_address"].startswith("deepchem://")
 
-    def test_run_docking_requires_gene_csv(
-        self, disk_datastore, ligand_address, proteome_scan_cache
-    ):
+    def test_run_docking_requires_gene_csv(self, disk_datastore, ligand_address, proteome_scan_cache):
         config.set_datastore(disk_datastore)
         with pytest.raises(FileNotFoundError):
             dk.run_docking(
