@@ -760,3 +760,49 @@ async def collate_rbfe_results(
         raise HTTPException(status_code=500, detail=f"Collate relative binding free energy results failed: {str(e)}")
 
     return {"collate_relative_binding_free_energy_results_address": str(result)}
+
+
+@router.post("/filter-promiscuous-targets")
+async def filter_promiscuous_targets_endpoint(
+    profile_name: Annotated[str, Body()],
+    project_name: Annotated[str, Body()],
+    scan_result_addresses: Annotated[List[str], Body()],
+    thresholds: Annotated[List[List[int]], Body()],
+    output: Annotated[str, Body()],
+) -> dict:
+    """
+    Filter promiscuous targets from per-ligand docking scan result CSVs.
+
+    Parameters
+    ----------
+    profile_name : str
+        Name of the Profile where the job is run
+    project_name : str
+        Name of the Project where the job is run
+    scan_result_addresses : List[str]
+        DeepChem addresses of per-ligand scan result CSV files. Each CSV must
+        contain a ``gene_name`` column.
+    thresholds : List[List[int]]
+        List of [m, n] pairs where m is the percentile cutoff (0-100) and n is
+        the minimum occurrence count. E.g. ``[[15, 1]]``.
+    output : str
+        Output name prefix for all uploaded result files.
+
+    Returns
+    -------
+    dict
+        A dictionary containing ``filter_results_address``, the DeepChem address
+        of a JSON file with promiscuous targets and filtered CSV addresses.
+    """
+    program = {
+        'program_name': 'filter_promiscuous_targets',
+        'scan_result_addresses': scan_result_addresses,
+        'thresholds': thresholds,
+        'output': output,
+    }
+    try:
+        result = run_job(profile_name=profile_name, project_name=project_name, program=program)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"filter_promiscuous_targets failed: {str(e)}")
+
+    return {"filter_results_address": str(result)}
