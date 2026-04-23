@@ -1006,3 +1006,57 @@ async def proteome_scan_docking(
         raise HTTPException(status_code=500, detail=f"run_docking failed: {str(e)}")
 
     return {"results_address": str(result)}
+
+
+@router.post("/proteome-scan/multi-pose-analysis")
+async def proteome_scan_multi_pose_analysis(
+    profile_name: Annotated[str, Body()],
+    project_name: Annotated[str, Body()],
+    complex_addresses: Annotated[List[str], Body()],
+    output: Annotated[str, Body()],
+    num_processes: Annotated[int, Body()] = 4,
+    is_clean_up: Annotated[bool, Body()] = True,
+    scan_id: Annotated[Optional[str], Body()] = None,
+) -> dict:
+    """
+    Run pose-binding analysis on multiple docked complexes.
+
+    Parameters
+    ----------
+    profile_name: str
+        Name of the Profile where the job is run.
+    project_name: str
+        Name of the Project where the job is run.
+    complex_addresses: List[str]
+        DeepChem addresses of docked complex PDB files.
+    output: str
+        Output name prefix for uploaded datastore artifacts.
+    num_processes: int
+        Number of parallel workers (default: 4).
+    is_clean_up: bool
+        Whether to clean up per-complex temp dirs (default: True).
+    scan_id: str, optional
+        Scan identifier; when supplied, intermediate files live under
+        ``<cache_root>/<scan_id>/pose_analysis_*``.
+
+    Returns
+    -------
+    dict
+        Dictionary containing ``results_address`` - the datastore
+        address of the analysis summary JSON.
+    """
+    program = {
+        "program_name": "run_multi_pose_analysis",
+        "complex_addresses": complex_addresses,
+        "output": output,
+        "num_processes": num_processes,
+        "is_clean_up": is_clean_up,
+        "scan_id": scan_id,
+    }
+
+    try:
+        result = run_job(profile_name=profile_name, project_name=project_name, program=program)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"run_multi_pose_analysis failed: {str(e)}")
+
+    return {"results_address": str(result)}
