@@ -40,7 +40,7 @@ def ligand_address(disk_datastore):
     sdf = ("LIG\n  test\n\n  1  0  0  0  0  0  0  0  0  0999 V2000\n"
            "    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n"
            "M  END\n$$$$\n")
-    card = DataCard(address="", file_type="sdf", data_type="sdf")
+    card = DataCard(address="", file_type="sdf", data_type="text/plain")
     return disk_datastore.upload_data_from_memory(sdf, "test_lig.sdf", card)
 
 
