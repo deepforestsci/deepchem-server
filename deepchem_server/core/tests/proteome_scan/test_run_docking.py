@@ -1,14 +1,10 @@
 """
-Tests for the ``proteome_scan.run_docking`` primitive.
-
-These tests exercise the deepchem-server boundary and the
-ProteomeScan-style on-disk layout. They stub out the VINA docking
-call so the suite does not require a functional ``VinaPoseGenerator``
-installation.
+Tests for the proteome_scan.run_docking primitive.
 """
 
 import json
 import os
+from pathlib import Path
 
 import pandas as pd
 import pytest
@@ -27,20 +23,11 @@ def proteome_scan_cache(tmp_path, monkeypatch):
     return cache_root
 
 
-def _write_dummy_pdb(path: str) -> None:
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, "w") as f:
-        f.write("HEADER    DUMMY PDB\n")
-        f.write("ATOM      1  N   ALA A   1       0.000   0.000   0.000  1.00  0.00           N\n")
-        f.write("END\n")
-
-
 @pytest.fixture
 def ligand_address(disk_datastore):
-    sdf = ("LIG\n  test\n\n  1  0  0  0  0  0  0  0  0  0999 V2000\n"
-           "    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n"
-           "M  END\n$$$$\n")
-    card = DataCard(address="", file_type="sdf", data_type="text/plain")
+    assets_dir = Path(__file__).resolve().parent / "assets"
+    sdf = (assets_dir / "ligand_3cyx.sdf").read_text()
+    card = DataCard(address="", file_type="sdf", data_type="sdf")
     return disk_datastore.upload_data_from_memory(sdf, "test_lig.sdf", card)
 
 
@@ -49,10 +36,12 @@ def prepared_gene(proteome_scan_cache):
     """Pre-populate <cache>/<scan>/<gene>/ with a cleaned PDB + CSV."""
     scan_id = "scan_dock"
     gene_name = "GENE1"
-    pdb_id = "1ABC"
+    pdb_id = "3CYX"
     gene_dir = ps_cache.get_gene_dir(scan_id, gene_name)
     cleaned_path = str(gene_dir / f"cleaned_g_{gene_name}_p_{pdb_id}.pdb")
-    _write_dummy_pdb(cleaned_path)
+    assets_dir = Path(__file__).resolve().parent / "assets"
+    os.makedirs(os.path.dirname(cleaned_path), exist_ok=True)
+    Path(cleaned_path).write_text((assets_dir / "cleaned_3cyx.pdb").read_text())
 
     df = pd.DataFrame({
         "id": [pdb_id],
@@ -84,20 +73,6 @@ class TestRunDocking:
         gene_name = prepared_gene["gene_name"]
         pdb_id = prepared_gene["pdb_id"]
         ligand_name = "LIG"
-
-        def _fake_vina(pdb_path, lig_path, work_dir, exhaustiveness=32, num_modes=8):
-            assert os.path.exists(pdb_path)
-            assert os.path.exists(lig_path)
-            return ("tuple",), [-7.5, -7.2]
-
-        def _fake_write_complex(complex_tuple, output_path):
-            os.makedirs(os.path.dirname(output_path), exist_ok=True)
-            with open(output_path, "w") as f:
-                f.write("HEADER    FAKE COMPLEX\nEND\n")
-            return True
-
-        monkeypatch.setattr(dk, "_vina_docking", _fake_vina)
-        monkeypatch.setattr(dk, "_write_complex_pdb", _fake_write_complex)
 
         result_addr = dk.run_docking(
             gene_name=gene_name,
