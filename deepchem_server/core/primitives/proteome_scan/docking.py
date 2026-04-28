@@ -6,8 +6,9 @@ import datetime as dt
 import json
 import os
 import tempfile
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple, Union
 
+from deepchem.dock.pose_generation import DOCKED_POSES
 import pandas as pd
 
 from deepchem_server.core.common import config
@@ -22,7 +23,8 @@ def _vina_docking(
     work_dir: str,
     exhaustiveness: int = 32,
     num_modes: int = 8,
-):
+    **kwargs: Any,
+) -> Union[Tuple[DOCKED_POSES, List[float]], DOCKED_POSES]:
     """
     Dock a ligand into a protein structure with Vina.
 
@@ -40,6 +42,8 @@ def _vina_docking(
         Search exhaustiveness passed to the docking engine.
     num_modes : int, default 8
         Maximum number of poses to generate.
+    **kwargs : Any
+        Additional keyword arguments passed to be passed to deepchem.dock.generate_poses method.
 
     Returns
     -------
@@ -67,6 +71,7 @@ def _vina_docking(
         num_modes=num_modes,
         out_dir=tmp,
         generate_scores=True,
+        **kwargs,
     )
     return complex, scores
 
@@ -330,7 +335,7 @@ def run_docking(
                 try:
                     assert os.path.exists(pdb_path), f"pdb file not found for {pdb_id}: {pdb_path}"
                     assert os.path.exists(ligand_path), f"ligand file not found: {ligand_path}"
-                    complex, score = _vina_docking(
+                    complex, score = _vina_docking(  # type: ignore
                         pdb_path,
                         ligand_path,
                         work_dir,
