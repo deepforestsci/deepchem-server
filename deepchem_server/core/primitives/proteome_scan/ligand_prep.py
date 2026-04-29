@@ -26,6 +26,15 @@ def ligand_prep(
     """
     Convert a SMILES string to a 3D SDF file using RDKit.
 
+    Ligand preparation steps
+    ------------------------
+    1. Parse the input SMILES into an RDKit molecule.
+    2. Optionally assign a molecule name (if ligand_name is provided).
+    3. Add explicit hydrogens.
+    4. Generate 3D coordinates using ETKDGv3 (optionally seeded for reproducibility).
+    5. Serialize the prepared molecule to SDF.
+    6. Upload the SDF content to the configured datastore.
+
     Parameters
     ----------
     smiles : str
