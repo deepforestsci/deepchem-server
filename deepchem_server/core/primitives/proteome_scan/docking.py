@@ -176,7 +176,7 @@ def _resolve_pdb_path(row_path: str, scan_id: str, gene_name: str) -> str:
     return str(candidate) if candidate else row_path
 
 
-def _write_complex_pdb(complex_tuple, output_path: str) -> bool:
+def _write_complex_pdb(complex_tuple: Union[Tuple[DOCKED_POSES, List[float]], DOCKED_POSES], output_path: str) -> bool:
     """
     Write a docked complex to disk as a PDB file.
 
