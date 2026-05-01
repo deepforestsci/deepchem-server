@@ -57,14 +57,14 @@ class Data(BaseClient):
 
         Example 1:
         ----------
-        >>> dataset_address = 'deepchem://deepchem/data/delaney'
+        >>> dataset_address = 'deepchem://profile/project/delaney'
         >>> key = DeepchemAddress.get_key(dataset_address)
         >>> key
         delaney
 
         Example 2:
         ----------
-        >>> dataset_address = 'deepchem/data/delaney'
+        >>> dataset_address = 'deepchem://profile/project/deepchem/data/delaney'
         >>> key = DeepchemAddress.get_key(dataset_address)
         >>> key
         deepchem/data/delaney
@@ -286,7 +286,22 @@ class Data(BaseClient):
     })
 
     def _parse_content(self, content: bytes, address: str, content_type: str = "") -> Any:
-        """Parse raw bytes into a Python object based on the file extension."""
+        """Parse raw bytes into a Python object based on the file extension.
+
+        Parameters
+        ----------
+        content : bytes
+            The raw bytes to parse.
+        address : str
+            The address of the data to parse.
+        content_type : str
+            The content type of the data to parse.
+
+        Returns
+        -------
+        Any
+            The parsed data object.
+        """
         ext = address.rsplit(".", 1)[-1].lower() if "." in address else ""
 
         if ext == "csv":

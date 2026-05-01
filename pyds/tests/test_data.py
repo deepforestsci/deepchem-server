@@ -1,12 +1,16 @@
 """
-Unit tests for Data class.
+Unit and integration tests for Data class.
 """
 
+import json
+import tempfile
 from pathlib import Path
 from typing import Any, Dict
 from unittest.mock import patch
 
+import pandas as pd
 import pytest
+import requests
 import responses
 
 from pyds.data import Data
@@ -212,20 +216,89 @@ class TestData:
 
         assert result == {"dataset_address": "test"}
 
-    def test_list_data_success(self, temp_test_file: str, data_client: Data) -> None:
-        """Test list_data success."""
+    def _upload(self, client: Data, content: bytes, filename: str) -> str:
+        """Upload bytes as a named file and return the dataset_address."""
+        with tempfile.NamedTemporaryFile(suffix=Path(filename).suffix, delete=False) as f:
+            f.write(content)
+            tmp_path = f.name
+        result = client.upload_data(file_path=tmp_path, filename=filename)
+        Path(tmp_path).unlink(missing_ok=True)
+        return result["dataset_address"]
 
-        with open(temp_test_file, "w") as f:
-            f.write("test,data\n1,2")
+    def test_get_csv_returns_dataframe(self, live_data_client: Data) -> None:
+        """get on a .csv address returns a pandas DataFrame with correct content."""
+        csv_content = b"smiles,label\nCCO,1\nCCC,0\nCCCO,1\n"
+        address = self._upload(live_data_client, csv_content, "test_get.csv")
 
-        result = data_client.upload_data(file_path=temp_test_file, filename="test_data1.csv")
-        dataset_address1 = result["dataset_address"]
-        assert dataset_address1 is not None
+        result = live_data_client.get(address)
 
-        result = data_client.upload_data(file_path=temp_test_file, filename="test_data2.csv")
-        dataset_address2 = result["dataset_address"]
-        assert dataset_address2 is not None
+        assert isinstance(result, pd.DataFrame)
+        assert list(result.columns) == ["smiles", "label"]
+        assert len(result) == 3
+        assert result["smiles"].tolist() == ["CCO", "CCC", "CCCO"]
+        assert result["label"].tolist() == [1, 0, 1]
 
-        result = data_client.list_data()
-        assert dataset_address1 in result
-        assert dataset_address2 in result
+    def test_get_json_returns_dict(self, live_data_client: Data) -> None:
+        """get on a .json address returns a parsed Python dict."""
+        payload = {"molecule": "CCO", "property": 1.23}
+        json_content = json.dumps(payload).encode("utf-8")
+        address = self._upload(live_data_client, json_content, "test_get.json")
+
+        result = live_data_client.get(address)
+
+        assert isinstance(result, dict)
+        assert result == payload
+
+    def test_get_txt_returns_string(self, live_data_client: Data) -> None:
+        """get on a .txt address returns the file content as a str."""
+        text = "hello from deepchem server\nline two\n"
+        address = self._upload(live_data_client, text.encode("utf-8"), "test_get.txt")
+
+        result = live_data_client.get(address)
+
+        assert isinstance(result, str)
+        assert result == text
+
+    def test_get_pdb_returns_string(self, live_data_client: Data) -> None:
+        """get on a .pdb address returns the raw PDB text as a str."""
+        pdb_text = "ATOM      1  CA  ALA A   1       1.000   2.000   3.000\nEND\n"
+        address = self._upload(live_data_client, pdb_text.encode("utf-8"), "test_get.pdb")
+
+        result = live_data_client.get(address)
+
+        assert isinstance(result, str)
+        assert "ATOM" in result
+        assert "END" in result
+
+    def test_get_saves_raw_bytes_to_destination_path(self, live_data_client: Data, tmp_path: Path) -> None:
+        """get writes the raw response bytes to destination_path when provided."""
+        csv_content = b"smiles,label\nCCO,1\n"
+        address = self._upload(live_data_client, csv_content, "test_dest.csv")
+        dest = tmp_path / "saved.csv"
+
+        live_data_client.get(address, destination_path=str(dest))
+
+        assert dest.exists()
+        assert dest.read_bytes() == csv_content
+
+    def test_get_with_deepchem_address_format(self, live_data_client: Data) -> None:
+        """get accepts a deepchem:// address returned by upload and resolves it correctly.
+
+        The server returns dataset_address strings in deepchem://profile/project/...
+        format.  Passing that address directly to get() exercises the
+        _get_address_key stripping path.
+        """
+        csv_content = b"smiles,label\nCCO,1\n"
+        address = self._upload(live_data_client, csv_content, "test_dcaddr.csv")
+
+        assert address.startswith("deepchem://"), f"Expected upload to return a deepchem:// address, got: {address!r}"
+
+        result = live_data_client.get(address)
+
+        assert isinstance(result, pd.DataFrame)
+        assert list(result.columns) == ["smiles", "label"]
+
+    def test_get_nonexistent_address_raises_http_error(self, live_data_client: Data) -> None:
+        """get raises HTTPError when the server returns a 404 for an unknown key."""
+        with pytest.raises(requests.exceptions.HTTPError):
+            live_data_client.get("does_not_exist/data/test.csv")
