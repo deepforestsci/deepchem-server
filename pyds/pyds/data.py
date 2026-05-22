@@ -5,7 +5,7 @@ Contains the Data class for all data management operations.
 """
 
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from requests_toolbelt import MultipartEncoder
 
@@ -97,7 +97,12 @@ class Data(BaseClient):
             fields["file"][1].close()
             raise ValueError(f"Failed to upload data: {str(e)}") from e
 
-    def list_data(self, profile_name: Optional[str] = None, project_name: Optional[str] = None) -> Dict[str, Any]:
+    def list_data(
+        self,
+        profile_name: Optional[str] = None,
+        project_name: Optional[str] = None,
+        backend: str = "local",
+    ) -> List[str]:
         """
         List data in datastore.
 
@@ -107,11 +112,13 @@ class Data(BaseClient):
                 Profile name (uses settings if not provided)
             project_name: str
                 Project name (uses settings if not provided)
+            backend: str
+                Datastore backend identifier (default: local)
 
         Returns
         -------
-            Dict[str, Any]
-                List of data in datastore
+            List[str]
+                List of datastore file names
 
         Raises
         ------
@@ -126,7 +133,7 @@ class Data(BaseClient):
         ["data1.csv", "data2.csv"]
         """
         profile, project = self._get_profile_and_project(profile_name, project_name)
-        response = self._get(f"/data?profile_name={profile}&project_name={project}")
+        response = self._get(f"/data?profile_name={profile}&project_name={project}&backend={backend}")
         data = self._validate_response(response)
         return data["data_files"]
 
@@ -136,6 +143,7 @@ class Data(BaseClient):
         destination_path: str,
         profile_name: Optional[str] = None,
         project_name: Optional[str] = None,
+        backend: str = "local",
     ) -> str:
         """
         Download data from datastore.
@@ -150,6 +158,8 @@ class Data(BaseClient):
                 Profile name (uses settings if not provided)
             project_name: str
                 Project name (uses settings if not provided)
+            backend: str
+                Datastore backend identifier (default: local)
 
         Returns
         -------
@@ -170,5 +180,5 @@ class Data(BaseClient):
 
         """
         profile, project = self._get_profile_and_project(profile_name, project_name)
-        response = self._get(f"/data/{address}?profile_name={profile}&project_name={project}")
+        response = self._get(f"/data/{address}?profile_name={profile}&project_name={project}&backend={backend}")
         return self._validate_file_response(response, destination_path)

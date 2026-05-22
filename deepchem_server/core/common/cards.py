@@ -99,8 +99,8 @@ class DataCard(Card):
         'binary',
     ]
     SUPPORTED_FILE_TYPES = [
-        'csv', 'dir', 'json', 'pdb', 'fasta', 'fastq', 'png', 'sdf', 'dcd', 'txt', 'xml', 'py', 'pdbqt', 'zip', 'smi',
-        'smiles', 'bz2', 'cxsmiles', 'onnx', 'hdf5', 'log'
+        'csv', 'parquet', 'dir', 'json', 'pdb', 'fasta', 'fastq', 'png', 'sdf', 'dcd', 'txt', 'xml', 'py', 'pdbqt',
+        'zip', 'smi', 'smiles', 'bz2', 'cxsmiles', 'onnx', 'hdf5', 'log'
     ]
 
     def __init__(self,

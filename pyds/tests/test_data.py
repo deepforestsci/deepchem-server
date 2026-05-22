@@ -226,6 +226,6 @@ class TestData:
         dataset_address2 = result["dataset_address"]
         assert dataset_address2 is not None
 
-        result = data_client.list_data()
+        result = data_client.list_data()  # type: ignore
         assert dataset_address1 in result
         assert dataset_address2 in result

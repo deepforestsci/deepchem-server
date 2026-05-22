@@ -5,7 +5,7 @@ from typing import Dict
 
 from deepchem_server.core import config
 from deepchem_server.core.primitives.compute import ComputeWorkflow
-from deepchem_server.core.datastore import DataStore, DiskDataStore
+from deepchem_server.core.datastore import DataStore, DiskDataStore, S3DataStore
 
 
 logger = logging.getLogger(__name__)
@@ -28,6 +28,11 @@ def _init_datastore(profile_name: str, project_name: str, backend='local') -> Da
     """
     if backend == 'local':
         datastore: DataStore = DiskDataStore(profile_name=profile_name, project_name=project_name, basedir=DATA_DIR)
+    elif backend == 's3':
+        bucket = os.getenv("AWS_BUCKET")
+        if not bucket:
+            raise ValueError("AWS_BUCKET environment variable must be set for the s3 backend")
+        datastore = S3DataStore(profile_name=profile_name, project_name=project_name, bucket_name=bucket)
     else:
         raise NotImplementedError(f"{backend} backend not implemented")
     return datastore
@@ -79,7 +84,7 @@ def run_job(profile_name: str, project_name: str, program: Dict, backend: str = 
     backend: str
         Backend to be used to run the job (Default: local)
     """
-    if backend == 'local':
+    if backend in ('local', 's3'):
         logger.info("beginning")
         datastore: DataStore = _init_datastore(profile_name=profile_name, project_name=project_name, backend=backend)
         config.set_datastore(datastore)  # type: ignore
