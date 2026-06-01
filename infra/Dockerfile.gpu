@@ -1,0 +1,18 @@
+FROM nvidia/cuda:12.1.1-cudnn8-runtime-ubuntu22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        python3.11 python3-pip python3.11-dev \
+        build-essential git wget libxrender1 libxext6 \
+    && rm -rf /var/lib/apt/lists/* \
+    && ln -sf python3.11 /usr/bin/python \
+    && ln -sf pip3 /usr/bin/pip
+
+WORKDIR /app
+COPY . .
+
+RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cu121 \
+    && pip install --no-cache-dir -e ".[aws,ml]"
+
+ENTRYPOINT ["python", "-m", "deepchem_server.aws.command"]
