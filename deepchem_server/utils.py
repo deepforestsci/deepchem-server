@@ -28,10 +28,10 @@ def _init_datastore(profile_name: str, project_name: str, backend='local') -> Da
     """
     if backend == 'local':
         datastore: DataStore = DiskDataStore(profile_name=profile_name, project_name=project_name, basedir=DATA_DIR)
-    elif backend == 's3':
+    elif backend in ('s3', 'aws'):
         bucket = os.getenv("AWS_BUCKET")
         if not bucket:
-            raise ValueError("AWS_BUCKET environment variable must be set for the s3 backend")
+            raise ValueError("AWS_BUCKET environment variable must be set for the s3 or aws backend")
         datastore = S3DataStore(profile_name=profile_name, project_name=project_name, bucket_name=bucket)
     else:
         raise NotImplementedError(f"{backend} backend not implemented")
@@ -95,6 +95,14 @@ def run_job(profile_name: str, project_name: str, program: Dict, backend: str = 
             logger.error(f"Error executing workflow: {e}")
             raise e
         return output
+    elif backend == 'aws':
+        from deepchem_server.aws.batch import submit_job
+        job_id = submit_job(
+            program=program,
+            profile_name=profile_name,
+            project_name=project_name,
+        )
+        return {"job_id": job_id, "status": "SUBMITTED"}
     else:
         raise NotImplementedError(f"{backend} backend not implemented")
 
