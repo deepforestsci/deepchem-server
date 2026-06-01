@@ -19,14 +19,20 @@ RESOURCE_PROFILES = {
 _DEFAULT = {"vcpu": "4", "memory": "8192", "gpu": False}
 
 
+def _require_env(name: str) -> str:
+    raise ValueError(f"{name} environment variable must be set for the aws backend")
+
+
 def submit_job(program: dict, profile_name: str, project_name: str) -> str:
     """Submit a primitive program to AWS Batch and return the Batch job ID."""
     profile  = RESOURCE_PROFILES.get(program.get("program_name", ""), _DEFAULT)
     use_gpu  = profile["gpu"]
 
-    job_queue   = os.environ["AWS_BATCH_GPU_JOB_QUEUE"       if use_gpu else "AWS_BATCH_CPU_JOB_QUEUE"]
-    job_def     = os.environ["AWS_BATCH_GPU_JOB_DEFINITION"  if use_gpu else "AWS_BATCH_CPU_JOB_DEFINITION"]
-    bucket      = os.environ["AWS_BUCKET"]
+    queue_var = "AWS_BATCH_GPU_JOB_QUEUE" if use_gpu else "AWS_BATCH_CPU_JOB_QUEUE"
+    def_var   = "AWS_BATCH_GPU_JOB_DEFINITION" if use_gpu else "AWS_BATCH_CPU_JOB_DEFINITION"
+    job_queue = os.environ.get(queue_var) or _require_env(queue_var)
+    job_def   = os.environ.get(def_var)   or _require_env(def_var)
+    bucket    = os.environ.get("AWS_BUCKET") or _require_env("AWS_BUCKET")
 
     resource_reqs = [
         {"type": "VCPU",   "value": profile["vcpu"]},
