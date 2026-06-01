@@ -93,7 +93,8 @@ async def featurize(
         result = run_job(profile_name=profile_name, project_name=project_name, program=program)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Featurization failed: {str(e)}")
-
+    if isinstance(result, dict) and "job_id" in result:
+        return result
     return {"featurized_file_address": str(result)}
 
 
@@ -170,7 +171,8 @@ async def train(
         result = run_job(profile_name=profile_name, project_name=project_name, program=program)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Training failed: {str(e)}")
-
+    if isinstance(result, dict) and "job_id" in result:
+        return result
     return {"trained_model_address": str(result)}
 
 
@@ -218,7 +220,8 @@ async def evaluate(
         result = run_job(profile_name=profile_name, project_name=project_name, program=program)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Evaluation failed: {str(e)}")
-
+    if isinstance(result, dict) and "job_id" in result:
+        return result
     return {"evaluation_result_address": str(result)}
 
 
@@ -301,7 +304,8 @@ async def infer(
         result = run_job(profile_name=profile_name, project_name=project_name, program=program)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Inference failed: {str(e)}")
-
+    if isinstance(result, dict) and "job_id" in result:
+        return result
     return {"inference_results_address": str(result)}
 
 
@@ -348,7 +352,8 @@ async def train_valid_test_split(
         result = run_job(profile_name=profile_name, project_name=project_name, program=program)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Train valid test split failed: {str(e)}")
-
+    if isinstance(result, dict) and "job_id" in result:
+        return result
     return {"train_valid_test_split_results_address": result}
 
 
@@ -387,7 +392,8 @@ async def partition(
         result = run_job(profile_name=profile_name, project_name=project_name, program=program)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Partition failed: {str(e)}")
-
+    if isinstance(result, dict) and "job_id" in result:
+        return result
     return {"partitioned_dataset_addresses": result}
 
 
@@ -440,7 +446,8 @@ async def docking_generate_pose(
         result = run_job(profile_name=profile_name, project_name=project_name, program=program)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"VINA docking failed: {str(e)}")
-
+    if isinstance(result, dict) and "job_id" in result:
+        return result
     return {"docking_results_address": str(result)}
 
 
@@ -567,7 +574,9 @@ async def relative_binding_free_energy(
             result = run_job(profile_name=profile_name, project_name=project_name, program=program)
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Relative binding free energy calculation failed: {str(e)}")
-    return {"relative_binding_free_energy_results_address": str(result)}
+        if isinstance(result, dict) and "job_id" in result:
+            return result
+        return {"relative_binding_free_energy_results_address": str(result)}
 
 
 @router.post("/del/denoise")
@@ -666,7 +675,8 @@ async def del_denoise(
         result = run_job(profile_name=profile_name, project_name=project_name, program=program)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"DEL denoising failed: {str(e)}")
-
+    if isinstance(result, dict) and "job_id" in result:
+        return result
     return {"denoised_dataset_address": str(result)}
 
 
@@ -758,5 +768,6 @@ async def collate_rbfe_results(
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Collate relative binding free energy results failed: {str(e)}")
-
+    if isinstance(result, dict) and "job_id" in result:
+        return result
     return {"collate_relative_binding_free_energy_results_address": str(result)}
