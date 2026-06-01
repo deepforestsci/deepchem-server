@@ -56,6 +56,11 @@ members = [
     "deepchem_server/services/datastore/client",
 ]
 
+[tool.pytest.ini_options]
+filterwarnings = [
+    "always::FutureWarning",
+]
+
 [dependency-groups]
 dev = [
     "pytest>=9.0.1",
