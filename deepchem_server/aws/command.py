@@ -12,16 +12,24 @@ logger = logging.getLogger("deepchem-batch")
 
 
 def main(args: argparse.Namespace) -> None:
-    datastore = S3DataStore(
-        profile_name=args.profile,
-        project_name=args.project,
-        bucket_name=args.bucket,
-    )
-    config.set_datastore(datastore)
-    program = json.loads(args.program)
-    logger.info(f"Running program: {program['program_name']}")
-    ComputeWorkflow(program).execute()
-    logger.info("Done")
+    try:
+        datastore = S3DataStore(
+            profile_name=args.profile,
+            project_name=args.project,
+            bucket_name=args.bucket,
+        )
+        config.set_datastore(datastore)
+        try:
+            program = json.loads(args.program)
+        except json.JSONDecodeError as exc:
+            logger.error(f"Invalid JSON in --program: {exc}")
+            raise
+        logger.info(f"Running program: {program.get('program_name', 'unknown')}")
+        ComputeWorkflow(program).execute()
+        logger.info("Done")
+    except Exception:
+        logger.exception("Job failed")
+        raise
 
 
 if __name__ == "__main__":
