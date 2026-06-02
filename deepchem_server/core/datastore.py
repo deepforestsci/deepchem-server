@@ -86,6 +86,8 @@ class DataStore:
     implementations.
     """
 
+    storage_loc: str
+
     def upload_data(self, datastore_filename: Any, filename: Any, card: Union[ModelCard, DataCard]) -> Optional[str]:
         """Upload data to the datastore in question.
 
@@ -106,7 +108,16 @@ class DataStore:
         """
         raise NotImplementedError
 
-    def get(self, deepchem_address: str, kind: Optional[str], fetch_sample: bool):
+    def upload_data_from_memory(
+        self,
+        data: Any,
+        datastore_filename: str,
+        card: Any,
+        kind: str = 'data',
+    ) -> str:
+        raise NotImplementedError
+
+    def get(self, deepchem_address: str, kind: Optional[str] = 'data', fetch_sample: bool = False) -> Any:
         """Fetch something from datastore at address.
 
         Parameters
@@ -126,18 +137,35 @@ class DataStore:
         """
         raise NotImplementedError
 
-    def delete_object(self, deepchem_address: str):
+    def get_card(self, address: str, kind: Optional[str] = 'data') -> Optional[Union[DataCard, ModelCard]]:
+        raise NotImplementedError
+
+    def get_file_size(self, address: str) -> int:
+        raise NotImplementedError
+
+    def exists(self, address: str, kind: str = 'data') -> bool:
+        raise NotImplementedError
+
+    def download_object(self, address: str, filename: Any = None) -> Any:
+        raise NotImplementedError
+
+    def _get_datastore_objects(self, directory: str) -> List[str]:
+        raise NotImplementedError
+
+    def delete_object(self, address: str, kind: str = 'data') -> bool:
         """Delete an object pointed by the address from the datastore.
 
         Parameters
         ----------
-        deepchem_address : str
+        address : str
             Location of object in the datastore.
+        kind : str, optional
+            Type of object ('data', 'model', 'dir'), by default 'data'.
 
         Returns
         -------
-        Any
-            Result of the deletion operation.
+        bool
+            True if deletion was successful.
         """
         raise NotImplementedError
 

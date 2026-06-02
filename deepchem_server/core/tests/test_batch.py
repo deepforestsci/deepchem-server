@@ -7,11 +7,11 @@ import pytest
 
 @pytest.fixture
 def batch_env(monkeypatch):
-    monkeypatch.setenv("AWS_BUCKET",                    "test-bucket")
-    monkeypatch.setenv("AWS_BATCH_CPU_JOB_QUEUE",       "cpu-queue")
-    monkeypatch.setenv("AWS_BATCH_GPU_JOB_QUEUE",       "gpu-queue")
-    monkeypatch.setenv("AWS_BATCH_CPU_JOB_DEFINITION",  "cpu-job-def")
-    monkeypatch.setenv("AWS_BATCH_GPU_JOB_DEFINITION",  "gpu-job-def")
+    monkeypatch.setenv("AWS_BUCKET", "test-bucket")
+    monkeypatch.setenv("AWS_BATCH_CPU_JOB_QUEUE", "cpu-queue")
+    monkeypatch.setenv("AWS_BATCH_GPU_JOB_QUEUE", "gpu-queue")
+    monkeypatch.setenv("AWS_BATCH_CPU_JOB_DEFINITION", "cpu-job-def")
+    monkeypatch.setenv("AWS_BATCH_GPU_JOB_DEFINITION", "gpu-job-def")
 
 
 def _mock_boto3_batch(job_id="job-abc"):
@@ -71,14 +71,14 @@ def test_submit_embeds_program_profile_project_bucket_in_command(batch_env):
         submit_job(program, "my-profile", "my-project")
 
     cmd = mock_client.submit_job.call_args[1]["containerOverrides"]["command"]
-    assert "--program"  in cmd
-    assert "--profile"  in cmd
-    assert "--project"  in cmd
-    assert "--bucket"   in cmd
+    assert "--program" in cmd
+    assert "--profile" in cmd
+    assert "--project" in cmd
+    assert "--bucket" in cmd
     assert json.loads(cmd[cmd.index("--program") + 1]) == program
     assert cmd[cmd.index("--profile") + 1] == "my-profile"
     assert cmd[cmd.index("--project") + 1] == "my-project"
-    assert cmd[cmd.index("--bucket")  + 1] == "test-bucket"
+    assert cmd[cmd.index("--bucket") + 1] == "test-bucket"
 
 
 def test_get_job_status_succeeded():
@@ -96,8 +96,8 @@ def test_get_job_status_succeeded():
         from deepchem_server.aws.batch import get_job_status
         result = get_job_status("job-abc")
 
-    assert result["job_id"]     == "job-abc"
-    assert result["status"]     == "SUCCEEDED"
+    assert result["job_id"] == "job-abc"
+    assert result["status"] == "SUCCEEDED"
     assert result["log_stream"] == "group/stream/123"
 
 

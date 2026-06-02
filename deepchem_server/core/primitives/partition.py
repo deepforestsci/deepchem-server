@@ -171,6 +171,8 @@ def _partition_csv_dataframe(dataset_address: str, n_partition: int) -> List[str
                     filename=file_path,
                     card=card,
                 )
+                if address is None:
+                    raise ValueError(f"Failed to upload partition {i} for {dataset_address}")
                 partitioned_dataset_addresses.append(address)
 
     return partitioned_dataset_addresses

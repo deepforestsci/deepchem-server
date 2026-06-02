@@ -10,7 +10,7 @@ def test_init_datastore_aws_returns_s3_datastore(monkeypatch):
     monkeypatch.setenv("AWS_BUCKET", "my-bucket")
     with patch("deepchem_server.utils.S3DataStore") as mock_cls:
         mock_cls.return_value = MagicMock()
-        ds = _init_datastore("prof", "proj", backend="aws")
+        _ = _init_datastore("prof", "proj", backend="aws")
 
     mock_cls.assert_called_once_with(
         profile_name="prof",
@@ -26,9 +26,9 @@ def test_init_datastore_aws_raises_without_bucket(monkeypatch):
 
 
 def test_run_job_aws_submits_to_batch_and_returns_job_id(monkeypatch):
-    monkeypatch.setenv("AWS_BUCKET",                   "b")
-    monkeypatch.setenv("AWS_BATCH_CPU_JOB_QUEUE",      "q")
-    monkeypatch.setenv("AWS_BATCH_GPU_JOB_QUEUE",      "gq")
+    monkeypatch.setenv("AWS_BUCKET", "b")
+    monkeypatch.setenv("AWS_BATCH_CPU_JOB_QUEUE", "q")
+    monkeypatch.setenv("AWS_BATCH_GPU_JOB_QUEUE", "gq")
     monkeypatch.setenv("AWS_BATCH_CPU_JOB_DEFINITION", "d")
     monkeypatch.setenv("AWS_BATCH_GPU_JOB_DEFINITION", "gd")
 
@@ -48,9 +48,9 @@ def test_run_job_aws_submits_to_batch_and_returns_job_id(monkeypatch):
 
 
 def test_run_job_aws_does_not_call_compute_workflow(monkeypatch):
-    monkeypatch.setenv("AWS_BUCKET",                   "b")
-    monkeypatch.setenv("AWS_BATCH_CPU_JOB_QUEUE",      "q")
-    monkeypatch.setenv("AWS_BATCH_GPU_JOB_QUEUE",      "gq")
+    monkeypatch.setenv("AWS_BUCKET", "b")
+    monkeypatch.setenv("AWS_BATCH_CPU_JOB_QUEUE", "q")
+    monkeypatch.setenv("AWS_BATCH_GPU_JOB_QUEUE", "gq")
     monkeypatch.setenv("AWS_BATCH_CPU_JOB_DEFINITION", "d")
     monkeypatch.setenv("AWS_BATCH_GPU_JOB_DEFINITION", "gd")
 
