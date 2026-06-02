@@ -4,17 +4,58 @@ import uuid
 
 import boto3
 
+
 RESOURCE_PROFILES = {
-    "featurize": {"vcpu": "4", "memory": "8192", "gpu": False},
-    "train": {"vcpu": "8", "memory": "32768", "gpu": True},
-    "infer": {"vcpu": "4", "memory": "16384", "gpu": True},
-    "evaluate": {"vcpu": "4", "memory": "16384", "gpu": True},
-    "train_valid_test_split": {"vcpu": "4", "memory": "8192", "gpu": False},
-    "partition": {"vcpu": "4", "memory": "8192", "gpu": False},
-    "generate_pose": {"vcpu": "4", "memory": "8192", "gpu": False},
-    "relative_binding_free_energy": {"vcpu": "16", "memory": "65536", "gpu": False},
-    "collate_rbfe_results": {"vcpu": "4", "memory": "8192", "gpu": False},
-    "del_denoise": {"vcpu": "4", "memory": "8192", "gpu": False},
+    "featurize": {
+        "vcpu": "4",
+        "memory": "8192",
+        "gpu": False
+    },
+    "train": {
+        "vcpu": "8",
+        "memory": "32768",
+        "gpu": True
+    },
+    "infer": {
+        "vcpu": "4",
+        "memory": "16384",
+        "gpu": True
+    },
+    "evaluate": {
+        "vcpu": "4",
+        "memory": "16384",
+        "gpu": True
+    },
+    "train_valid_test_split": {
+        "vcpu": "4",
+        "memory": "8192",
+        "gpu": False
+    },
+    "partition": {
+        "vcpu": "4",
+        "memory": "8192",
+        "gpu": False
+    },
+    "generate_pose": {
+        "vcpu": "4",
+        "memory": "8192",
+        "gpu": False
+    },
+    "relative_binding_free_energy": {
+        "vcpu": "16",
+        "memory": "65536",
+        "gpu": False
+    },
+    "collate_rbfe_results": {
+        "vcpu": "4",
+        "memory": "8192",
+        "gpu": False
+    },
+    "del_denoise": {
+        "vcpu": "4",
+        "memory": "8192",
+        "gpu": False
+    },
 }
 _DEFAULT = {"vcpu": "4", "memory": "8192", "gpu": False}
 
@@ -35,8 +76,14 @@ def submit_job(program: dict, profile_name: str, project_name: str) -> str:
     bucket = os.environ.get("AWS_BUCKET") or _require_env("AWS_BUCKET")
 
     resource_reqs = [
-        {"type": "VCPU", "value": profile["vcpu"]},
-        {"type": "MEMORY", "value": profile["memory"]},
+        {
+            "type": "VCPU",
+            "value": profile["vcpu"]
+        },
+        {
+            "type": "MEMORY",
+            "value": profile["memory"]
+        },
     ]
     if use_gpu:
         resource_reqs.append({"type": "GPU", "value": "1"})

@@ -7,6 +7,7 @@ from deepchem_server.core import config
 from deepchem_server.core.datastore import S3DataStore
 from deepchem_server.core.primitives.compute import ComputeWorkflow
 
+
 logging.basicConfig(stream=sys.stdout, level=logging.INFO, force=True)
 logger = logging.getLogger("deepchem-batch")
 
@@ -37,5 +38,5 @@ if __name__ == "__main__":
     parser.add_argument("--program", required=True, help="JSON-encoded program dict")
     parser.add_argument("--profile", required=True, help="Profile name")
     parser.add_argument("--project", required=True, help="Project name")
-    parser.add_argument("--bucket",  required=True, help="S3 bucket name")
+    parser.add_argument("--bucket", required=True, help="S3 bucket name")
     main(parser.parse_args())

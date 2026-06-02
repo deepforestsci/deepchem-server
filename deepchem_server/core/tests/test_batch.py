@@ -89,7 +89,9 @@ def test_get_job_status_succeeded():
         "jobs": [{
             "status": "SUCCEEDED",
             "statusReason": "Essential container in task exited",
-            "container": {"logStreamName": "group/stream/123"},
+            "container": {
+                "logStreamName": "group/stream/123"
+            },
         }]
     }
     with patch("deepchem_server.aws.batch.boto3", mock_boto3):
