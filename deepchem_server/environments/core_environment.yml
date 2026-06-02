@@ -8,7 +8,9 @@ dependencies:
   - pip
   - pip:
       - setuptools<78
+      - boto3
       - pandas
+      - moto
       - python-multipart
       - fastapi
       - pytest

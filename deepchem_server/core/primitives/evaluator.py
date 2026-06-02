@@ -126,5 +126,8 @@ def model_evaluator(dataset_addresses: List[str],
         df.to_csv(temp_output_path, index=False)
 
         card = DataCard(address='', file_type='csv', data_type='DataFrame')
-        output_address = datastore.upload_data(DeepchemAddress.get_key(output_key), temp_output_path, card)
+        _addr = datastore.upload_data(DeepchemAddress.get_key(output_key), temp_output_path, card)
+        if _addr is None:
+            raise ValueError(f"Failed to upload evaluation results to {output_key}")
+        output_address = _addr
     return output_address

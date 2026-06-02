@@ -204,6 +204,8 @@ def run_rbfe(ligands_sdf_address: str,
         if datastore is None:
             raise ValueError("Datastore not set")
         result_datastore_address = datastore.upload_data(RESULT_FILE_NAME, f"tmp_{i+1}.json", result_datacard)
+        if result_datastore_address is None:
+            raise ValueError(f"Failed to upload results for edge {edge.componentA.name}-{edge.componentB.name}")
 
         logger.info(f"Results saved at address: {result_datastore_address}")
 
