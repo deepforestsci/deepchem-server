@@ -3,8 +3,6 @@ resource "aws_cloudwatch_log_group" "batch" {
   retention_in_days = 30
 }
 
-# ── CPU compute environment ───────────────────────────────────────────────────
-
 resource "aws_batch_compute_environment" "cpu" {
   compute_environment_name = "${var.project_name}-cpu"
   type                     = "MANAGED"
@@ -37,7 +35,7 @@ resource "aws_batch_job_definition" "cpu" {
     image      = "${aws_ecr_repository.compute.repository_url}:cpu"
     jobRoleArn = aws_iam_role.job.arn
     resourceRequirements = [
-      { type = "VCPU",   value = "4"    },
+      { type = "VCPU", value = "4" },
       { type = "MEMORY", value = "8192" }
     ]
     logConfiguration = {
@@ -49,8 +47,6 @@ resource "aws_batch_job_definition" "cpu" {
     }
   })
 }
-
-# ── GPU compute environment ───────────────────────────────────────────────────
 
 resource "aws_batch_compute_environment" "gpu" {
   compute_environment_name = "${var.project_name}-gpu"
@@ -84,9 +80,9 @@ resource "aws_batch_job_definition" "gpu" {
     image      = "${aws_ecr_repository.compute.repository_url}:gpu"
     jobRoleArn = aws_iam_role.job.arn
     resourceRequirements = [
-      { type = "VCPU",   value = "8"     },
+      { type = "VCPU", value = "8" },
       { type = "MEMORY", value = "32768" },
-      { type = "GPU",    value = "1"     }
+      { type = "GPU", value = "1" }
     ]
     logConfiguration = {
       logDriver = "awslogs"
