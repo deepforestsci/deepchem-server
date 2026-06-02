@@ -1,5 +1,3 @@
-# ── Batch service role ────────────────────────────────────────────────────────
-
 data "aws_iam_policy_document" "batch_assume" {
   statement {
     actions = ["sts:AssumeRole"]
@@ -19,8 +17,6 @@ resource "aws_iam_role_policy_attachment" "batch_service" {
   role       = aws_iam_role.batch_service.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSBatchServiceRole"
 }
-
-# ── EC2 instance role + instance profile ─────────────────────────────────────
 
 data "aws_iam_policy_document" "ec2_assume" {
   statement {
@@ -46,8 +42,6 @@ resource "aws_iam_instance_profile" "ec2_instance" {
   name = "${var.project_name}-ec2-instance-profile"
   role = aws_iam_role.ec2_instance.name
 }
-
-# ── Job role (S3 access for containers) ──────────────────────────────────────
 
 data "aws_iam_policy_document" "ecs_task_assume" {
   statement {
