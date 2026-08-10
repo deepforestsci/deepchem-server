@@ -19,6 +19,11 @@ dependencies = [
 # Gateway-only (already in base deps)
 common = []
 
+# AWS S3 storage backend
+aws = [
+    "boto3",
+]
+
 # ML dependencies (heavy)
 ml = [
     "deepchem",
@@ -51,10 +56,16 @@ members = [
     "deepchem_server/services/datastore/client",
 ]
 
+[tool.pytest.ini_options]
+filterwarnings = [
+    "always::FutureWarning",
+]
+
 [dependency-groups]
 dev = [
     "pytest>=9.0.1",
     "pytest-cov>=7.0.0",
+    "moto[batch,s3]>=5.0.0",
 ]
 # Note: deepchem_server/core/primitives uses conda/mamba (not UV-managed)
 

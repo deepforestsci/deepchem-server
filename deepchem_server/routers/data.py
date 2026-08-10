@@ -1,5 +1,5 @@
 import logging
-from typing import Dict
+from typing import Dict, Optional
 import mimetypes
 import os
 
@@ -51,7 +51,7 @@ async def upload_data(
     if filename is None:
         filename = file.filename
 
-    file_type = filename.split('.')[-1]  # getting extension
+    file_type = filename.split('.')[-1]
     if file_type in ['csv', 'parquet']:
         data_type = 'pandas.DataFrame'
     elif file_type in [
@@ -101,8 +101,11 @@ async def list_files(profile_name: str, project_name: str, backend="local") -> D
     return {"data_files": data_files}
 
 
-@router.get("/{file_name}")
-async def download_file(profile_name: str, project_name: str, file_name: str, backend="local") -> FileResponse:
+@router.get("/{file_name:path}")
+async def download_file(profile_name: Optional[str],
+                        project_name: Optional[str],
+                        file_name: str,
+                        backend="local") -> FileResponse:
     """
     Download a file from the datastore for a given profile and project
 
@@ -127,7 +130,17 @@ async def download_file(profile_name: str, project_name: str, file_name: str, ba
     HTTPException:
         If the file is not found in the datastore
     """
+    if file_name.startswith(DeepchemAddress.address_prefix):
+        parsed_address = DeepchemAddress(file_name).parse_address(file_name)
+        profile_name = parsed_address["profile"]
+        project_name = parsed_address["project"]
+        file_name = parsed_address["key"]
+
+    if profile_name is None or project_name is None:
+        raise HTTPException(status_code=400, detail="Profile and project names are required")
+
     address = f"deepchem://{profile_name}/{project_name}/{file_name}"
+    print(address)
     key = DeepchemAddress(address).key
     file_path = _download_file(profile_name=profile_name,
                                project_name=project_name,
@@ -143,7 +156,6 @@ async def download_file(profile_name: str, project_name: str, file_name: str, ba
         if backend == "local":
             return
 
-        # Clean up the file or directory after downloading
         if os.path.exists(file_path):
             if os.path.isfile(file_path):
                 os.remove(file_path)
@@ -152,7 +164,6 @@ async def download_file(profile_name: str, project_name: str, file_name: str, ba
 
                 shutil.rmtree(file_path)
         if mime_type == "application/zip":
-            # Clean up the zipped directory after downloading
             zip_dir_path = os.path.join(os.path.dirname(file_path), key)
             if os.path.exists(zip_dir_path):
                 import shutil

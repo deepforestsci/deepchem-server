@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from deepchem_server.routers import data, primitives
+from deepchem_server.routers import data, jobs, primitives
 
 
 logger = logging.getLogger("backend_logs")
@@ -14,6 +14,7 @@ app = FastAPI()
 
 app.include_router(primitives.router)
 app.include_router(data.router)
+app.include_router(jobs.router)
 
 app.add_middleware(
     CORSMiddleware,

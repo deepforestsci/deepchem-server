@@ -2,12 +2,15 @@
 # mypy errors ignored because ModelCard yet to added
 from __future__ import annotations
 
+import io
 import json
 import logging
 import os
 from pathlib import Path
 import shutil
-from typing import Any, IO, List, Optional, Tuple, Union
+import tempfile
+from typing import Any, IO, List, Literal, Optional, Tuple, Union
+import warnings
 
 import deepchem as dc
 import pandas as pd
@@ -915,4 +918,259 @@ class DiskDataStore(DataStore):
         objects = []
         for _, object_ in enumerate(all_objects):
             objects.append(DeepchemAddress(self.address_prefix + object_).address)
+        return '\n'.join(objects)
+
+
+DEFAULT_RANGE_LIMIT_HEADER = "bytes=0-99999"  # for s3 datastore
+
+
+class S3DataStore(DataStore):
+    """A DataStore instance that stores objects in an AWS S3 bucket."""
+
+    GB = 1024**3
+
+    def __init__(self,
+                 profile_name: str,
+                 project_name: str,
+                 bucket_name: str,
+                 range_limit_header: str = DEFAULT_RANGE_LIMIT_HEADER) -> None:
+        assert bucket_name, "bucket_name must not be empty"
+        import boto3
+        from boto3.s3.transfer import TransferConfig
+        self.boto3_module = boto3
+        self.storage_loc = profile_name + '/' + project_name + '/'
+        self.bucket_name = bucket_name
+        self._s3_client = boto3.client("s3")
+        self._s3_transfer_config = TransferConfig(multipart_threshold=S3DataStore.GB // 2)
+        self.range_limit_header = range_limit_header
+
+    def _get_datastore_objects(self, directory: str) -> List[str]:
+        paginator = self._s3_client.get_paginator('list_objects_v2')
+        pages = paginator.paginate(Bucket=self.bucket_name, Prefix=directory)
+        objects: List[str] = []
+        for page in pages:
+            if 'CommonPrefixes' in page:
+                for common_prefix in page['CommonPrefixes']:
+                    objects.append(common_prefix['Prefix'].strip('/'))
+            if 'Contents' in page:
+                for content in page['Contents']:
+                    objects.append(content['Key'])
+        return objects
+
+    def _read_s3_dir(self, path: str) -> str:
+        """Download an S3 prefix recursively into a local temp directory."""
+        tmpdir = tempfile.mkdtemp()
+        paginator = self._s3_client.get_paginator('list_objects_v2')
+        pages = paginator.paginate(Bucket=self.bucket_name, Prefix=path + '/')
+        for page in pages:
+            for content in page.get('Contents', []):
+                key = content['Key']
+                response = self._s3_client.get_object(Bucket=self.bucket_name, Key=key)
+                file_bytes = response["Body"].read()
+                filename = key.split(path + '/')[-1].lstrip('/')
+                tmp_dir_path = tmpdir
+                for part in filename.split('/')[:-1]:
+                    tmp_dir_path = os.path.join(tmp_dir_path, part)
+                    if not os.path.isdir(tmp_dir_path):
+                        os.mkdir(tmp_dir_path)
+                with open(os.path.join(tmpdir, filename), 'wb') as f:
+                    f.write(file_bytes)
+        return tmpdir
+
+    def upload_data(self, datastore_filename: str, filename: Any, card: Union[DataCard, ModelCard]) -> Optional[str]:
+        dest_key = self.storage_loc + datastore_filename
+        dataset_address = DeepchemAddress(dest_key)
+        card.address = str(dataset_address)
+
+        if isinstance(filename, str) and os.path.isdir(filename):
+            for root, _dirs, files in os.walk(filename):
+                for file in files:
+                    key = dest_key + '/' + os.path.join(root[len(filename):], file)
+                    with open(os.path.join(root, file), 'rb') as fh:
+                        self._s3_client.put_object(Bucket=self.bucket_name, Key=key, Body=fh)
+        else:
+            if isinstance(filename, bytes):
+                tmpdir = tempfile.TemporaryDirectory()
+                filepath = os.path.join(tmpdir.name, 'temp.file')
+                with open(filepath, 'wb') as f:
+                    f.write(filename)
+            elif isinstance(filename, str) and os.path.isfile(filename):
+                filepath = filename
+            else:
+                raise ValueError("filename must be a file path (str) or bytes")
+
+            if isinstance(card, DataCard) and datastore_filename.endswith('.csv'):
+                card.shape = _get_csv_or_dataframe_shape(filename=filepath)
+            try:
+                self._s3_client.upload_file(Filename=filepath,
+                                            Bucket=self.bucket_name,
+                                            Key=dest_key,
+                                            Config=self._s3_transfer_config)
+            except self._s3_client.exceptions.NoSuchBucket:
+                raise ValueError(f"Bucket '{self.bucket_name}' does not exist")
+
+        card_key = self.storage_loc + datastore_filename + '.cdc'
+        response = self._s3_client.put_object(Body=bytes(card), Bucket=self.bucket_name, Key=card_key)
+        if response['ResponseMetadata']['HTTPStatusCode'] != 200:
+            return None
+        return repr(dataset_address)
+
+    def add_dir(self, dir_name: str) -> None:
+        prefix = self.storage_loc + dir_name + '/'
+        response = self._s3_client.list_objects_v2(Bucket=self.bucket_name, Prefix=prefix)
+        if 'Contents' in response:
+            raise ValueError(f"Directory '{dir_name}' already exists.")
+        self._s3_client.put_object(Bucket=self.bucket_name, Key=prefix)
+
+    def list_data(self) -> str:
+        return repr(self)
+
+    def get_dir(self, address: str) -> str:
+        path = DeepchemAddress.get_path(self.storage_loc, address, 's3')
+        return self._read_s3_dir(path=path)
+
+    def get_card(self,
+                 address: str,
+                 kind: Optional[Literal['data', 'model']] = 'data') -> Optional[Union[DataCard, ModelCard]]:
+        if kind == 'data':
+            address = address + '.cdc'
+        elif kind == 'model':
+            address = address + '.cmc'
+        path = DeepchemAddress.get_path(self.storage_loc, address, 's3')
+        response = self._s3_client.get_object(Bucket=self.bucket_name, Key=path)
+        if path.endswith('.cdc'):
+            return DataCard.from_bytes(response["Body"].read())
+        elif path.endswith('.cmc'):
+            return ModelCard.from_bytes(response["Body"].read())
+        return None
+
+    def get_data(self, address: str, fetch_sample: bool = False) -> Any:
+        if not self.exists(address, kind='data'):
+            return None
+        path = DeepchemAddress.get_path(self.storage_loc, address, 's3')
+        datacard = self.get_card(address, kind='data')
+
+        if datacard is not None and isinstance(datacard, DataCard):
+            if datacard.data_type in ('dc.data.DiskDataset', 'DiskDataset'):
+                tmpdir = self._read_s3_dir(path=path)
+                return dc.data.DiskDataset(tmpdir)
+            elif datacard.data_type in ('pandas.DataFrame', 'DataFrame'):
+                if datacard.file_type == 'csv' and fetch_sample:
+                    response = self._s3_client.get_object(Bucket=self.bucket_name,
+                                                          Key=path,
+                                                          Range=self.range_limit_header)
+                else:
+                    response = self._s3_client.get_object(Bucket=self.bucket_name, Key=path)
+                contents = response["Body"].read()
+                if datacard.file_type == 'csv' and fetch_sample:
+                    last_newline = contents.rfind(b'\n')
+                    contents = contents[:last_newline + 1]
+                if datacard.file_type == 'csv':
+                    return pd.read_csv(io.BytesIO(contents))
+                elif datacard.file_type == 'parquet':
+                    return pd.read_parquet(io.BytesIO(contents))
+            elif datacard.data_type == 'png':
+                response = self._s3_client.get_object(Bucket=self.bucket_name, Key=path)
+                return Image.open(io.BytesIO(response["Body"].read()))
+            else:
+                response = self._s3_client.get_object(Bucket=self.bucket_name, Key=path)
+                return response["Body"].read()
+        return None
+
+    def get_model(self, address: str) -> Any:
+        if not self.exists(address, kind='model'):
+            return None
+        path = DeepchemAddress.get_path(self.storage_loc, address, 's3')
+        modelcard = self.get_card(address, kind='model')
+        tmpdir = self._read_s3_dir(path=path)
+        model = model_mappings.model_address_map[modelcard.model_type](model_dir=tmpdir, **modelcard.init_kwargs)
+        try:
+            model.restore()
+        except AttributeError:
+            model.reload()
+        return model
+
+    def get(self, deepchem_address: str, kind: Optional[str] = 'data', fetch_sample: bool = False) -> Any:
+        if deepchem_address.endswith('.cdc'):
+            return self.get_card(deepchem_address[:-4], kind='data')
+        elif deepchem_address.endswith('.cmc'):
+            return self.get_card(deepchem_address[:-4], kind='model')
+        if kind == 'data':
+            return self.get_data(deepchem_address, fetch_sample)
+        elif kind == 'model':
+            return self.get_model(deepchem_address)
+        return None
+
+    def delete_object(self, deepchem_address: str, kind: str = 'data') -> bool:
+        key = DeepchemAddress.get_path(self.storage_loc, deepchem_address, 's3').strip('/')
+        card_key: Optional[str]
+        if kind == 'data':
+            card_key = key + '.cdc'
+        elif kind == 'model':
+            card_key = key + '.cmc'
+        else:
+            card_key = None
+        self._s3_client.delete_object(Bucket=self.bucket_name, Key=key)
+        if card_key:
+            self._s3_client.delete_object(Bucket=self.bucket_name, Key=card_key)
+        response = self._s3_client.list_objects_v2(Bucket=self.bucket_name, Prefix=key + '/')
+        if response.get('KeyCount', 0) > 0:
+            for content in response["Contents"]:
+                self._s3_client.delete_object(Bucket=self.bucket_name, Key=content['Key'])
+        return True
+
+    def download_object(self, address: str, filename: Union[str, Path, None] = None) -> Union[str, Path]:
+        if not self.exists(address, kind='model') and not self.exists(address, kind='data'):
+            raise ValueError(f"The address {address} does not exist")
+        address_key = DeepchemAddress.get_key(address)
+        storage_path = DeepchemAddress.get_path(self.storage_loc, address, 's3')
+        card = self.get(address + '.cdc')
+        if card.file_type != 'dir':
+            if filename is None:
+                warnings.warn('Provide filename argument for S3DataStore.download_object', FutureWarning, stacklevel=1)
+                tmpdir = tempfile.mkdtemp()
+                filename = os.path.join(tmpdir, address_key)
+            self._s3_client.download_file(Bucket=self.bucket_name,
+                                          Key=storage_path,
+                                          Filename=str(filename),
+                                          Config=self._s3_transfer_config)
+        else:
+            if filename is None:
+                warnings.warn('Provide filename argument for S3DataStore.download_object', FutureWarning, stacklevel=1)
+                tmpdir = tempfile.mkdtemp()
+                filename = os.path.join(tmpdir, address_key)
+            path = DeepchemAddress.get_path(self.storage_loc, address, 's3')
+            tmpdir = self._read_s3_dir(path=path)
+            shutil.move(tmpdir, str(filename))
+        return filename
+
+    def get_file_size(self, address: str) -> int:
+        key = DeepchemAddress.get_path(self.storage_loc, address, 's3')
+        response = self._s3_client.head_object(Bucket=self.bucket_name, Key=key)
+        return int(response['ContentLength'])
+
+    def exists(self, address: str, kind: str = 'data') -> bool:
+        key = DeepchemAddress.get_path(self.storage_loc, address, 's3')
+        if address.endswith('.cdc') or address.endswith('.cmc'):
+            response = self._s3_client.list_objects_v2(Bucket=self.bucket_name, Prefix=key, MaxKeys=1)
+            return response['KeyCount'] > 0
+
+        if kind == 'data':
+            card_key: Optional[str] = key + '.cdc'
+        elif kind == 'model':
+            card_key = key + '.cmc'
+        else:
+            card_key = None
+
+        r1 = self._s3_client.list_objects_v2(Bucket=self.bucket_name, Prefix=key, MaxKeys=1)
+        if card_key:
+            r2 = self._s3_client.list_objects_v2(Bucket=self.bucket_name, Prefix=card_key, MaxKeys=1)
+            return r1['KeyCount'] > 0 and r2['KeyCount'] > 0
+        return r1['KeyCount'] > 0
+
+    def __repr__(self) -> str:
+        all_objects = self._get_datastore_objects(self.storage_loc)
+        objects = []
+        for object_ in all_objects:
+            objects.append(DeepchemAddress(object_).address)
         return '\n'.join(objects)
