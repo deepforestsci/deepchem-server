@@ -10,6 +10,7 @@ dependencies:
       - setuptools<78
       - boto3
       - pandas
+      - pyarrow
       - moto
       - python-multipart
       - fastapi
