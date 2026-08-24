@@ -8,6 +8,7 @@ from typing import Any, Dict, Optional
 
 from .base import Primitive
 
+
 class Transform(Primitive):
     """
     Primitive for transformation tasks.

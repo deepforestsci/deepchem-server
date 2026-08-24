@@ -40,13 +40,11 @@ class TestTransform:
         dataset_address = upload_result["dataset_address"]
 
         # Test log transformation
-        result = live_transform_client.run(
-            dataset_address=dataset_address,
-            transform_type="log",
-            column_name="property",
-            new_column_name="property_transformed",
-            output_key=f"test_transform_output_{test_id}_{timestamp}"
-        )
+        result = live_transform_client.run(dataset_address=dataset_address,
+                                           transform_type="log",
+                                           column_name="property",
+                                           new_column_name="property_transformed",
+                                           output_key=f"test_transform_output_{test_id}_{timestamp}")
 
         assert "transformed_file_address" in result
 

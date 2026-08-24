@@ -9,6 +9,7 @@ from deepchem_server.core.common.address import DeepchemAddress
 
 import logging
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -59,18 +60,14 @@ def cluster(dataset_address: str, num_clusters: int, output: str, column: str):
     df_centers = df.iloc[argmin][[column]].copy()
     df_centers['cluster'] = np.arange(df_centers.shape[0])
 
-    df_pred = pd.merge(df_centers,
-                       df_pred,
-                       on='cluster',
-                       how='inner',
-                       suffixes=['_cluster_center', '_molecule'])
+    df_pred = pd.merge(df_centers, df_pred, on='cluster', how='inner', suffixes=['_cluster_center', '_molecule'])
 
     card = DataCard(address='', file_type='csv', data_type='pandas.DataFrame')
-    prediction_address = datastore.upload_data_from_memory(
-        df_pred,
-        DeepchemAddress.get_key(output) + '_cluster_prediction.csv', card)
+    prediction_address = datastore.upload_data_from_memory(df_pred,
+                                                           DeepchemAddress.get_key(output) + '_cluster_prediction.csv',
+                                                           card)
     card = DataCard(address='', file_type='csv', data_type='pandas.DataFrame')
-    cluster_center_address = datastore.upload_data_from_memory(
-        df_centers,
-        DeepchemAddress.get_key(output) + '_cluster_centers.csv', card)
+    cluster_center_address = datastore.upload_data_from_memory(df_centers,
+                                                               DeepchemAddress.get_key(output) + '_cluster_centers.csv',
+                                                               card)
     return (prediction_address, cluster_center_address)

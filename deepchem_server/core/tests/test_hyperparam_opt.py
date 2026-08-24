@@ -1,7 +1,4 @@
-import os
-import json
 import pandas as pd
-import pytest
 import deepchem as dc
 from deepchem_server.core import config
 from deepchem_server.core.common.cards import DataCard
@@ -17,23 +14,19 @@ def test_hyperparam_opt_basic(disk_datastore):
     data_address = disk_datastore.upload_data_from_memory(df, "test.csv", card)
 
     # Featurize dataset as it needs to be a DeepChem dataset
-    dataset_address = featurize(
-        data_address,
-        featurizer="ecfp",
-        output="feat_test",
-        dataset_column="smiles",
-        label_column="label"
-    )
+    dataset_address = featurize(data_address,
+                                featurizer="ecfp",
+                                output="feat_test",
+                                dataset_column="smiles",
+                                label_column="label")
 
-    model_address, best_hp_address, all_res_address = hyperparam_opt(
-        model_type='linear_regression',
-        train_address=dataset_address,
-        valid_address=dataset_address,
-        hyperparams={"fit_intercept": [True, False]},
-        output_prefix="hopt_test",
-        metric="pearson_r2_score",
-        nb_epoch=1
-    )
+    model_address, best_hp_address, all_res_address = hyperparam_opt(model_type='linear_regression',
+                                                                     train_address=dataset_address,
+                                                                     valid_address=dataset_address,
+                                                                     hyperparams={"fit_intercept": [True, False]},
+                                                                     output_prefix="hopt_test",
+                                                                     metric="pearson_r2_score",
+                                                                     nb_epoch=1)
 
     # Loaded back model evaluation
     model = disk_datastore.get_model(model_address)

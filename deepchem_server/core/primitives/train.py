@@ -3,8 +3,6 @@ import logging
 import math
 from typing import Dict, Optional
 
-
-
 from deepchem_server.core.common import config, model_mappings
 from deepchem_server.core.common.address import DeepchemAddress
 from deepchem_server.core.common.cards import ModelCard

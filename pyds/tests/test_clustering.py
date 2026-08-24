@@ -40,12 +40,10 @@ class TestClustering:
         dataset_address = upload_result["dataset_address"]
 
         # Run clustering
-        result = live_clustering_client.run(
-            dataset_address=dataset_address,
-            num_clusters=2,
-            column="smiles",
-            output=f"test_cluster_output_{test_id}_{timestamp}"
-        )
+        result = live_clustering_client.run(dataset_address=dataset_address,
+                                            num_clusters=2,
+                                            column="smiles",
+                                            output=f"test_cluster_output_{test_id}_{timestamp}")
 
         assert "prediction_address" in result
         assert "cluster_center_address" in result

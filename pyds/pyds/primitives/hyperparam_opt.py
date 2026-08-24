@@ -8,6 +8,7 @@ from typing import Any, Dict, Optional
 
 from .base import Primitive
 
+
 class HyperparamOpt(Primitive):
     """
     Primitive for hyperparameter optimization tasks.

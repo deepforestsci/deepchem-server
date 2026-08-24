@@ -66,8 +66,8 @@ def log_transform(df: pd.DataFrame, column_name: str) -> pd.Series:
     return np.log(df[column_name] + 1)
 
 
-def transform(dataset_address: str, transform_type: str, column_name: str,
-              new_column_name: str, output_key: str) -> str:
+def transform(dataset_address: str, transform_type: str, column_name: str, new_column_name: str,
+              output_key: str) -> str:
     """
     `transform` primitive transforms columns based on different transform types
     and uploads the new dataset to datastore.
@@ -114,14 +114,10 @@ def transform(dataset_address: str, transform_type: str, column_name: str,
     ... new_column_name='test_col_log',
     ... output_key='updated_dataset')
     """
-    SUPPORTED_TRANSFORM_TYPES: Dict[str,
-                                    Callable[[pd.DataFrame, str],
-                                             pd.Series]] = {
-                                                 'norm':
-                                                     normalization_transform,
-                                                 'log':
-                                                     log_transform
-                                             }
+    SUPPORTED_TRANSFORM_TYPES: Dict[str, Callable[[pd.DataFrame, str], pd.Series]] = {
+        'norm': normalization_transform,
+        'log': log_transform
+    }
 
     transform_type = transform_type.lower()
     if transform_type not in SUPPORTED_TRANSFORM_TYPES:
@@ -146,8 +142,7 @@ def transform(dataset_address: str, transform_type: str, column_name: str,
     if not is_numeric_dtype(df[column_name]):
         raise Exception(f"{column_name} column does not contain numeric data")
 
-    df[new_column_name] = SUPPORTED_TRANSFORM_TYPES[transform_type](
-        df=df, column_name=column_name)  # type: ignore
+    df[new_column_name] = SUPPORTED_TRANSFORM_TYPES[transform_type](df=df, column_name=column_name)  # type: ignore
 
     output_key = DeepchemAddress.get_key(output_key)
     if not output_key.endswith('.csv'):
