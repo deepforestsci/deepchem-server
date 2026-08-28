@@ -104,8 +104,6 @@ def transform_client(test_settings: Settings) -> Transform:
     return Transform(settings=test_settings)
 
 
-
-
 @pytest.fixture
 def data_client(test_settings: Settings) -> Data:
     """Create Data client for testing."""
@@ -262,8 +260,6 @@ def live_del_denoise_client(live_settings: Settings) -> DelDenoise:
 def live_transform_client(live_settings: Settings) -> Transform:
     """Create Transform client for live server testing."""
     return Transform(settings=live_settings)
-
-
 
 
 # ===========================
