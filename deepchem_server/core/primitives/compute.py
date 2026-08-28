@@ -8,9 +8,7 @@ from deepchem_server.core.primitives.inference import infer
 from deepchem_server.core.primitives.partition import partition
 from deepchem_server.core.primitives.splitter import train_valid_test_split
 from deepchem_server.core.primitives.train import train
-from deepchem_server.core.primitives.transform import transform
 from deepchem_server.core.primitives.clustering import cluster
-from deepchem_server.core.primitives.hyperparam_opt import hyperparam_opt
 
 
 def lazy_run_rbfe(*args, **kwargs):
@@ -34,9 +32,7 @@ program_map = {
     "relative_binding_free_energy": lazy_run_rbfe,
     "collate_rbfe_results": lazy_collate_rbfe_results,
     "del_denoise": del_denoise,
-    "transform": transform,
     "cluster": cluster,
-    "hyperparam_opt": hyperparam_opt,
 }
 
 
