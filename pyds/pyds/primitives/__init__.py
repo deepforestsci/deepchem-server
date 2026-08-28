@@ -15,8 +15,6 @@ from .partition import Partition
 from .splitter import TVTSplit
 from .train import Train
 from .transform import Transform
-from .clustering import Clustering
-from .hyperparam_opt import HyperparamOpt
 
 
 __all__ = [
@@ -30,6 +28,4 @@ __all__ = [
     "Partition",
     "TVTSplit",
     "Transform",
-    "Clustering",
-    "HyperparamOpt",
 ]

@@ -19,8 +19,6 @@ from .primitives.partition import Partition
 from .primitives.splitter import TVTSplit
 from .primitives.train import Train
 from .primitives.transform import Transform
-from .primitives.clustering import Clustering
-from .primitives.hyperparam_opt import HyperparamOpt
 from .settings import Settings
 
 
@@ -38,6 +36,4 @@ __all__ = [
     "Partition",
     "TVTSplit",
     "Transform",
-    "Clustering",
-    "HyperparamOpt",
 ]
