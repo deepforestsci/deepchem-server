@@ -8,6 +8,7 @@ from deepchem_server.core.primitives.fep.rbfe.collate_rbfe_results import collat
 from deepchem_server.core.primitives.fep.rbfe.run_rbfe import run_rbfe
 from deepchem_server.core.primitives.inference import infer
 from deepchem_server.core.primitives.partition import partition
+from deepchem_server.core.primitives.proteome_scan.pdb_clean import pdb_clean
 from deepchem_server.core.primitives.splitter import train_valid_test_split
 from deepchem_server.core.primitives.train import train
 from deepchem_server.core.primitives.proteome_scan.ligand_prep import ligand_prep
@@ -24,6 +25,7 @@ program_map = {
     "relative_binding_free_energy": run_rbfe,
     "collate_rbfe_results": collate_rbfe_results,
     "del_denoise": del_denoise,
+    "pdb_clean": pdb_clean,
     "ligand_prep": ligand_prep,
 }
 

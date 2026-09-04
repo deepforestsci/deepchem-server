@@ -670,6 +670,56 @@ async def del_denoise(
     return {"denoised_dataset_address": str(result)}
 
 
+@router.post("/pdb_clean")
+async def proteome_scan_pdb_clean(
+    profile_name: Annotated[str, Body()],
+    project_name: Annotated[str, Body()],
+    gene_name: Annotated[str, Body()],
+    entry_id: Annotated[str, Body()],
+    scan_id: Annotated[str, Body()],
+    output: Annotated[str, Body()],
+    min_res_val: Annotated[float, Body()] = 2.5,
+) -> dict:
+    """Download, select and clean optimal PDB structures for a gene.
+
+    Parameters
+    ----------
+    profile_name : str
+        Name of the Profile where the job is run.
+    project_name : str
+        Name of the Project where the job is run.
+    gene_name : str
+        Human gene name (e.g. 'MAP2K1').
+    entry_id : str
+        UniProt accession for the canonical human protein (e.g. 'P02144').
+    scan_id : str
+        Unique identifier for the current ProteomeScan pipeline run.
+    output : str
+        Prefix used when naming files in the datastore.
+    min_res_val : float
+        Maximum crystallographic resolution threshold for the high-resolution
+        candidate set. Default is 2.5 Angstrom.
+
+    Returns
+    -------
+    dict
+        Dictionary containing the datastore address of the JSON summary.
+    """
+    program = {
+        "program_name": "pdb_clean",
+        "gene_name": gene_name,
+        "entry_id": entry_id,
+        "scan_id": scan_id,
+        "output": output,
+        "min_res_val": min_res_val,
+    }
+    try:
+        result = run_job(profile_name=profile_name, project_name=project_name, program=program)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"pdb_clean failed: {str(e)}")
+    return {"pdb_clean_results_address": str(result)}
+
+
 @router.post("/fep/collate_rbfe_results")
 async def collate_rbfe_results(
     profile_name: Annotated[str, Body()],
