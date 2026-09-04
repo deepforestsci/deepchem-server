@@ -90,14 +90,14 @@ class DataCard(Card):
     object (pandas.DataFrame, dask.dataframe.DataFrame, etc).
     """
     SUPPORTED_DATA_TYPES = [
-        'pandas.DataFrame',
-        'dc.data.NumpyDataset',
-        'dc.data.DiskDataset',
-        'json',
-        'text/plain',
-        'png',
-        'binary',
-        'sdf',
+        "pandas.DataFrame",
+        "dc.data.NumpyDataset",
+        "dc.data.DiskDataset",
+        "json",
+        "text/plain",
+        "png",
+        "binary",
+        "sdf",
     ]
     SUPPORTED_FILE_TYPES = [
         'csv', 'dir', 'json', 'pdb', 'fasta', 'fastq', 'png', 'sdf', 'dcd', 'txt', 'xml', 'py', 'pdbqt', 'zip', 'smi',
