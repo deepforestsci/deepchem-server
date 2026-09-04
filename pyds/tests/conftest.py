@@ -7,11 +7,20 @@ from typing import Any, Dict, Generator, List
 
 import pytest
 import responses
-
 from pyds import Settings
 from pyds.base.client import BaseClient
 from pyds.data import Data
-from pyds.primitives import DelDenoise, Evaluate, Featurize, Infer, Partition, Train
+from pyds.primitives import (
+    DelDenoise,
+    Evaluate,
+    Featurize,
+    FilterPromiscuousTargets,
+    Infer,
+    LigandPrep,
+    Partition,
+    PdbClean,
+    Train,
+)
 
 from .test_utils import (
     cleanup_temp_file,
@@ -331,6 +340,25 @@ def live_data_client(live_settings: Settings) -> Data:
     return Data(settings=live_settings)
 
 
-def pytest_configure(config: pytest.Config) -> None:
-    """Configure pytest markers."""
-    pass
+@pytest.fixture
+def live_pdb_clean_client(live_settings: Settings) -> PdbClean:
+    """Create PdbClean client for live server testing."""
+    return PdbClean(settings=live_settings)
+
+
+@pytest.fixture
+def live_ligand_prep_client(live_settings: Settings) -> LigandPrep:
+    """Create LigandPrep client for live server testing."""
+    return LigandPrep(settings=live_settings)
+
+
+@pytest.fixture
+def filter_promiscuous_targets_client(test_settings: Settings) -> FilterPromiscuousTargets:
+    """Create FilterPromiscuousTargets primitive client for testing."""
+    return FilterPromiscuousTargets(settings=test_settings)
+
+
+@pytest.fixture
+def live_filter_promiscuous_targets_client(live_settings: Settings) -> FilterPromiscuousTargets:
+    """Create FilterPromiscuousTargets client for live server testing."""
+    return FilterPromiscuousTargets(settings=live_settings)

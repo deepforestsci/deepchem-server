@@ -16,11 +16,26 @@ class TestImports:
 
     def test_primitive_imports(self):
         """Test importing primitive classes."""
-        from pyds import DelDenoise, Evaluate, Featurize, Infer, Partition, Primitive, Train, TVTSplit
+        from pyds import (
+            DelDenoise,
+            Docking,
+            Evaluate,
+            Featurize,
+            Infer,
+            LigandPrep,
+            Partition,
+            PdbClean,
+            Primitive,
+            Train,
+            TVTSplit,
+        )
 
         assert Primitive is not None
         assert DelDenoise is not None
         assert Featurize is not None
+        assert Docking is not None
+        assert LigandPrep is not None
+        assert PdbClean is not None
         assert Train is not None
         assert Evaluate is not None
         assert Infer is not None
@@ -38,6 +53,9 @@ class TestImports:
             "Primitive",
             "DelDenoise",
             "Featurize",
+            "Docking",
+            "LigandPrep",
+            "PdbClean",
             "Train",
             "Evaluate",
             "Infer",
@@ -57,12 +75,14 @@ class TestImports:
         import pyds.data  # noqa: F401
         import pyds.primitives  # noqa: F401
         import pyds.primitives.base  # noqa: F401
+        import pyds.primitives.del_denoising  # noqa: F401
         import pyds.primitives.evaluate  # noqa: F401
         import pyds.primitives.featurize  # noqa: F401
         import pyds.primitives.infer  # noqa: F401
+        import pyds.primitives.ligand_prep  # noqa: F401
         import pyds.primitives.partition  # noqa: F401
+        import pyds.primitives.pdb_clean  # noqa: F401
         import pyds.primitives.splitter  # noqa: F401
-        import pyds.primitives.del_denoising  # noqa: F401
         import pyds.primitives.train  # noqa: F401
         import pyds.settings  # noqa: F401
 

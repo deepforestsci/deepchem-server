@@ -13,6 +13,8 @@ Currently, Deepchem Server provides the following primitives: (Other primitives 
 * **Evaluation**: Assess model performance using various metrics
 * **Docking**: Perform molecular docking to predict protein-ligand binding poses
 * **DEL Denoise**: Score DEL screening data to identify strong binders
+* **PDB clean**: Prepare protein structures (PDBFixer/OpenMM: heterogens, water, chains, hydrogens)
+* **Ligand prep**: Build 3D ligand conformers from SMILES (RDKit) and store as SDF in the datastore
 
 These primitives are designed to work seamlessly together while also being usable independently for specific tasks.
 
@@ -139,6 +141,27 @@ Supporting Functions
 .. autofunction:: deepchem_server.core.docking.split_pdbqt_docked_ligands
    :no-index:
 
+PDB cleaning
+------------
+
+The PDB cleaning primitive loads a structure from the datastore, optionally removes chains, 
+heterogens, and water, adds missing hydrogens at a chosen pH using PDBFixer and OpenMM, 
+and writes a cleaned PDB back to the datastore.
+
+**Dependencies:** PDBFixer and OpenMM must be installed in the execution environment.
+
+.. autofunction:: deepchem_server.core.primitives.pdb_clean.pdb_clean
+
+Ligand preparation
+------------------
+
+The ligand preparation primitive converts a SMILES string to a 3D molecule with RDKit (ETKDG),
+serializes it as SDF, and uploads the file to the datastore.
+
+**Dependencies:** RDKit must be installed in the execution environment.
+
+.. autofunction:: deepchem_server.core.primitives.ligand_prep.ligand_prep
+
 Available Metrics
 ~~~~~~~~~~~~~~~~~
 
@@ -207,6 +230,8 @@ These primitives are designed to work together in typical machine learning workf
 5. **Inference**: Use ``infer()`` to make predictions on new data
 6. **Evaluation**: Use ``model_evaluator()`` to assess model performance
 7. **Docking**: Use ``generate_pose()`` to predict protein-ligand binding interactions
+8. **PDB clean** (optional): Use ``pdb_clean()`` to standardize a receptor PDB before docking or simulation
+9. **Ligand prep** (optional): Use ``ligand_prep()`` to generate a 3D SDF for a ligand from SMILES
 
 Example Workflow
 ~~~~~~~~~~~~~~~~
@@ -216,6 +241,8 @@ Here's a typical workflow using all five primitives:
 .. code-block:: python
 
    from deepchem_server.core import feat, train, inference, evaluator, docking
+   from deepchem_server.core.primitives.pdb_clean import pdb_clean
+   from deepchem_server.core.primitives.ligand_prep import ligand_prep
    from deepchem_server.core import config
    from deepchem_server.core.datastore import DiskDataStore
    import tempfile
@@ -258,7 +285,7 @@ Here's a typical workflow using all five primitives:
 
    # 5. Perform molecular docking
    docking_address = docking.generate_pose(
-       protein_address="protein_address",
-       ligand_address="ligand_address",
+       protein_address=cleaned_protein,
+       ligand_address=ligand_sdf,
        output="docking_results"
    ) 

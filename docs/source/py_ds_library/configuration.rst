@@ -56,6 +56,8 @@ The pyds library interfaces with the following DeepChem Server endpoints:
 * ``POST /primitive/evaluate``: Submit evaluation jobs
 * ``POST /primitive/infer``: Submit inference jobs
 * ``POST /primitive/train-valid-test-split``: Submit splitting jobs
+* ``POST /primitive/pdb-clean``: Clean a PDB (PDBFixer/OpenMM) and store the result
+* ``POST /primitive/ligand-prep``: Build a 3D SDF from SMILES (RDKit) and store the result
 
 **System Endpoints:**
 

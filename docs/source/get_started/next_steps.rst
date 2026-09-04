@@ -14,4 +14,6 @@ Once running, you'll primarily work with the following endpoints:
 * ``POST /primitive/train``: Train machine learning models
 * ``POST /primitive/evaluate``: Evaluate model performance
 * ``POST /primitive/infer``: Run inference on new data
+* ``POST /primitive/pdb-clean``: Clean a PDB for docking or simulation prep
+* ``POST /primitive/ligand-prep``: Prepare a 3D ligand structure from SMILES
 * ``GET /healthcheck``: Check server status
