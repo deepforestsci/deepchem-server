@@ -10,6 +10,7 @@ from deepchem_server.core.primitives.inference import infer
 from deepchem_server.core.primitives.partition import partition
 from deepchem_server.core.primitives.splitter import train_valid_test_split
 from deepchem_server.core.primitives.train import train
+from deepchem_server.core.primitives.proteome_scan.docking import run_docking
 from deepchem_server.core.primitives.proteome_scan.ligand_prep import ligand_prep
 
 
@@ -24,6 +25,7 @@ program_map = {
     "relative_binding_free_energy": run_rbfe,
     "collate_rbfe_results": collate_rbfe_results,
     "del_denoise": del_denoise,
+    "run_docking": run_docking,
     "ligand_prep": ligand_prep,
 }
 

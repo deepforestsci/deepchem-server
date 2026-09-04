@@ -762,60 +762,65 @@ async def collate_rbfe_results(
     return {"collate_relative_binding_free_energy_results_address": str(result)}
 
 
-@router.post("/ligand-prep")
-async def ligand_prep_primitive(
+@router.post("/proteome-scan/docking")
+async def proteome_scan_docking(
     profile_name: Annotated[str, Body()],
     project_name: Annotated[str, Body()],
-    smiles: Annotated[str, Body()],
+    gene_name: Annotated[str, Body()],
+    ligand_name: Annotated[str, Body()],
+    ligand_address: Annotated[str, Body()],
+    scan_id: Annotated[str, Body()],
     output: Annotated[str, Body()],
-    ligand_name: Annotated[str, Body()] = "",
-    random_seed: Annotated[int, Body()] = 42,
+    exhaustiveness: Annotated[int, Body()] = 32,
+    num_modes: Annotated[int, Body()] = 8,
 ) -> dict:
     """
-    Submits a ligand preparation job (SMILES to 3D SDF via RDKit).
+    Run gene-guided docking for a single (gene, ligand) pair.
 
     Parameters
     ----------
     profile_name: str
-        Name of the Profile where the job is run
+        Name of the Profile where the job is run.
     project_name: str
-        Name of the Project where the job is run
-    smiles: str
-        Input SMILES string
-    output: str
-        Output key for the SDF in the datastore
+        Name of the Project where the job is run.
+    gene_name: str
+        Gene symbol. ``pdb_clean`` must have run already for
+        the same ``scan_id``.
     ligand_name: str
-        Optional molecule name stored in the SDF
-    random_seed: int
-        Seed for 3D embedding (default 42)
+        Display name for the ligand. Used to namespace on-disk
+        artifacts and CSVs.
+    ligand_address: str
+        DeepChem address of the prepared ligand SDF.
+    scan_id: str
+        Scan identifier used to locate the per-gene PDB CSV and to
+        group all outputs on disk.
+    output: str
+        Output name prefix for uploaded datastore artifacts.
+    exhaustiveness: int
+        VINA exhaustiveness (default: 32).
+    num_modes: int
+        Number of binding modes (default: 8).
 
     Returns
     -------
     dict
-        Dictionary with the datastore address of the prepared SDF.
-
-    Raises
-    ------
-    HTTPException
-        If the job submission fails.
+        Dictionary containing ``results_address`` - the datastore
+        address of the run summary JSON.
     """
-    if isinstance(random_seed, str):
-        try:
-            random_seed = int(random_seed)
-        except ValueError:
-            raise HTTPException(status_code=400, detail=f"Invalid random_seed value: {random_seed}")
-
-    program: Dict = {
-        "program_name": "ligand_prep",
-        "smiles": smiles,
-        "output": output,
+    program = {
+        "program_name": "run_docking",
+        "gene_name": gene_name,
         "ligand_name": ligand_name,
-        "random_seed": random_seed,
+        "ligand_address": ligand_address,
+        "scan_id": scan_id,
+        "output": output,
+        "exhaustiveness": exhaustiveness,
+        "num_modes": num_modes,
     }
 
     try:
         result = run_job(profile_name=profile_name, project_name=project_name, program=program)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Ligand preparation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"run_docking failed: {str(e)}")
 
-    return {"ligand_sdf_address": str(result)}
+    return {"results_address": str(result)}
