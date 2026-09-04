@@ -2,6 +2,9 @@
 Unit tests for BaseClient class.
 """
 
+import socket
+import threading
+import time
 from typing import Any, Dict
 from unittest.mock import Mock, patch
 
@@ -11,6 +14,37 @@ import responses
 
 from pyds.base.client import BaseClient
 from pyds.settings import Settings
+
+
+def _localhost_listener_that_never_accepts() -> tuple[int, threading.Event, threading.Thread]:
+    """
+    Bind a TCP socket on 127.0.0.1, listen, and never call accept().
+
+    Clients can complete connect and send a request; the peer will not send an HTTP
+    response, so requests read timeouts can be exercised.
+
+    Returns
+    -------
+    tuple[int, threading.Event, threading.Thread]
+        Listening port, event to stop the background thread, and that thread.
+    """
+    port_ref: list[int] = []
+    shutdown = threading.Event()
+
+    def run() -> None:
+        srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        srv.bind(("127.0.0.1", 0))
+        srv.listen(1)
+        port_ref.append(int(srv.getsockname()[1]))
+        shutdown.wait(timeout=120.0)
+        srv.close()
+
+    thread = threading.Thread(target=run, daemon=True)
+    thread.start()
+    while not port_ref:
+        time.sleep(0.01)
+    return port_ref[0], shutdown, thread
 
 
 class TestBaseClient:
@@ -242,3 +276,64 @@ class TestBaseClient:
         base_client.close()
 
         mock_session.close.assert_called_once()
+
+
+class TestBaseClientLiveTransport:
+    """
+    Tests for live server transport behavior.
+    """
+
+    def test_make_request_connection_refused_live(self, test_settings: Settings) -> None:
+        """Test connection refused live."""
+        client = BaseClient(settings=test_settings, base_url="http://127.0.0.1:1")
+        with pytest.raises(Exception) as exc_info:
+            client._make_request("GET", "/healthcheck", timeout=5.0)
+        msg = str(exc_info.value).lower()
+        assert "api request failed" in msg
+        assert "refused" in msg or "failed to establish" in msg
+
+    def test_healthcheck_connection_refused_live(self, test_settings: Settings) -> None:
+        """Test healthcheck connection refused live."""
+        client = BaseClient(settings=test_settings, base_url="http://127.0.0.1:1")
+        with pytest.raises(Exception) as exc_info:
+            client.healthcheck()
+        assert "api request failed" in str(exc_info.value).lower()
+
+    def test_make_request_read_timeout_live(self, test_settings: Settings) -> None:
+        """Test make request read timeout live."""
+        port, shutdown, thread = _localhost_listener_that_never_accepts()
+        try:
+            client = BaseClient(settings=test_settings, base_url=f"http://127.0.0.1:{port}")
+            with pytest.raises(Exception) as exc_info:
+                client._make_request("GET", "/", timeout=2.0)
+        finally:
+            shutdown.set()
+            thread.join(timeout=2.0)
+        msg = str(exc_info.value).lower()
+        assert "api request failed" in msg
+        assert "read" in msg and "timed out" in msg
+
+    def test_healthcheck_read_timeout_live(self, test_settings: Settings) -> None:
+        """Test healthcheck read timeout live."""
+        port, shutdown, thread = _localhost_listener_that_never_accepts()
+        try:
+            client = BaseClient(settings=test_settings, base_url=f"http://127.0.0.1:{port}")
+            with pytest.raises(Exception) as exc_info:
+                client.healthcheck(timeout=2.0)
+        finally:
+            shutdown.set()
+            thread.join(timeout=2.0)
+        msg = str(exc_info.value).lower()
+        assert "api request failed" in msg
+        assert "read" in msg and "timed out" in msg
+
+    def test_make_request_connect_timeout_live(self, test_settings: Settings) -> None:
+        """Test make request connect timeout live."""
+        client = BaseClient(settings=test_settings, base_url="http://192.0.2.1")
+        with pytest.raises(Exception) as exc_info:
+            client._make_request("GET", "/", timeout=1.5)
+        msg = str(exc_info.value).lower()
+        assert "api request failed" in msg
+        if "timed out" not in msg and "timeout" not in msg:
+            pytest.skip("connect did not time out as expected for 192.0.2.1; "
+                        f"got {exc_info.value!r}",)
