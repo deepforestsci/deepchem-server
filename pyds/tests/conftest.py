@@ -11,7 +11,11 @@ import responses
 from pyds import Settings
 from pyds.base.client import BaseClient
 from pyds.data import Data
+<<<<<<< HEAD
 from pyds.primitives import DelDenoise, Evaluate, Featurize, Infer, Partition, Train, Transform
+=======
+from pyds.primitives import DelDenoise, Evaluate, Featurize, Infer, Partition, Train, Clustering
+>>>>>>> 3b7981b (feat: add clustering primitive)
 
 from .test_utils import (
     cleanup_temp_file,
@@ -102,6 +106,12 @@ def del_denoise_client(test_settings: Settings) -> DelDenoise:
 def transform_client(test_settings: Settings) -> Transform:
     """Create Transform primitive client for testing."""
     return Transform(settings=test_settings)
+
+
+@pytest.fixture
+def clustering_client(test_settings: Settings) -> Clustering:
+    """Create Clustering primitive client for testing."""
+    return Clustering(settings=test_settings)
 
 
 @pytest.fixture
@@ -260,6 +270,12 @@ def live_del_denoise_client(live_settings: Settings) -> DelDenoise:
 def live_transform_client(live_settings: Settings) -> Transform:
     """Create Transform client for live server testing."""
     return Transform(settings=live_settings)
+
+
+@pytest.fixture
+def live_clustering_client(live_settings: Settings) -> Clustering:
+    """Create Clustering client for live server testing."""
+    return Clustering(settings=live_settings)
 
 
 # ===========================
