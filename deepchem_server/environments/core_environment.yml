@@ -11,6 +11,7 @@ dependencies:
       - pandas
       - python-multipart
       - fastapi
+      - lark
       - pytest
       - uvicorn[standard]
       - numpy>=1.24.0,<2.0
