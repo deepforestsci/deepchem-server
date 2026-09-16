@@ -7,6 +7,7 @@ from deepchem_server.core.primitives.evaluator import model_evaluator
 from deepchem_server.core.primitives.feat import featurize
 from deepchem_server.core.primitives.inference import infer
 from deepchem_server.core.primitives.partition import partition
+from deepchem_server.core.primitives.proteome_scan.pdb_clean import pdb_clean
 from deepchem_server.core.primitives.splitter import train_valid_test_split
 from deepchem_server.core.primitives.train import train
 
@@ -19,6 +20,7 @@ __all__ = [
     "model_evaluator",
     "train_valid_test_split",
     "generate_pose",
+    "pdb_clean",
     "ComputeWorkflow",
     "program_map",
 ]

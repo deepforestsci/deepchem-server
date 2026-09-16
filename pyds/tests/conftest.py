@@ -12,6 +12,7 @@ from pyds import Settings
 from pyds.base.client import BaseClient
 from pyds.data import Data
 from pyds.primitives import DelDenoise, Evaluate, Featurize, Infer, Partition, Train, Transform
+from pyds.primitives.proteome_scan import PdbClean
 
 from .test_utils import (
     cleanup_temp_file,
@@ -257,6 +258,11 @@ def live_del_denoise_client(live_settings: Settings) -> DelDenoise:
 
 
 @pytest.fixture
+def live_pdb_clean_client(live_settings: Settings) -> PdbClean:
+    """Create PdbClean client for live server testing."""
+    return PdbClean(settings=live_settings)
+
+
 def live_transform_client(live_settings: Settings) -> Transform:
     """Create Transform client for live server testing."""
     return Transform(settings=live_settings)
