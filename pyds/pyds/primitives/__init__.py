@@ -15,6 +15,7 @@ from .partition import Partition
 from .proteome_scan import PdbClean
 from .splitter import TVTSplit
 from .train import Train
+from .transform import Transform
 
 
 __all__ = [
@@ -28,4 +29,5 @@ __all__ = [
     "Partition",
     "PdbClean",
     "TVTSplit",
+    "Transform",
 ]

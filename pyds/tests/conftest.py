@@ -11,7 +11,7 @@ import responses
 from pyds import Settings
 from pyds.base.client import BaseClient
 from pyds.data import Data
-from pyds.primitives import DelDenoise, Evaluate, Featurize, Infer, Partition, Train
+from pyds.primitives import DelDenoise, Evaluate, Featurize, Infer, Partition, Train, Transform
 from pyds.primitives.proteome_scan import PdbClean
 
 from .test_utils import (
@@ -97,6 +97,12 @@ def partition_client(test_settings: Settings) -> Partition:
 def del_denoise_client(test_settings: Settings) -> DelDenoise:
     """Create DelDenoise primitive client for testing."""
     return DelDenoise(settings=test_settings)
+
+
+@pytest.fixture
+def transform_client(test_settings: Settings) -> Transform:
+    """Create Transform primitive client for testing."""
+    return Transform(settings=test_settings)
 
 
 @pytest.fixture
@@ -255,6 +261,11 @@ def live_del_denoise_client(live_settings: Settings) -> DelDenoise:
 def live_pdb_clean_client(live_settings: Settings) -> PdbClean:
     """Create PdbClean client for live server testing."""
     return PdbClean(settings=live_settings)
+
+
+def live_transform_client(live_settings: Settings) -> Transform:
+    """Create Transform client for live server testing."""
+    return Transform(settings=live_settings)
 
 
 # ===========================

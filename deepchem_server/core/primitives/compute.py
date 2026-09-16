@@ -12,6 +12,7 @@ from deepchem_server.core.primitives.proteome_scan.pdb_clean import pdb_clean
 from deepchem_server.core.primitives.splitter import train_valid_test_split
 from deepchem_server.core.primitives.train import train
 from deepchem_server.core.primitives.proteome_scan.ligand_prep import ligand_prep
+from deepchem_server.core.primitives.transform import transform
 
 
 program_map = {
@@ -27,6 +28,7 @@ program_map = {
     "del_denoise": del_denoise,
     "pdb_clean": pdb_clean,
     "ligand_prep": ligand_prep,
+    "transform": transform,
 }
 
 
