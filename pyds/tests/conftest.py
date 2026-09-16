@@ -11,11 +11,7 @@ import responses
 from pyds import Settings
 from pyds.base.client import BaseClient
 from pyds.data import Data
-<<<<<<< HEAD
-from pyds.primitives import DelDenoise, Evaluate, Featurize, Infer, Partition, Train, Transform
-=======
-from pyds.primitives import DelDenoise, Evaluate, Featurize, Infer, Partition, Train, Clustering
->>>>>>> 3b7981b (feat: add clustering primitive)
+from pyds.primitives import DelDenoise, Evaluate, Featurize, Infer, Partition, Train, Transform, Clustering
 
 from .test_utils import (
     cleanup_temp_file,

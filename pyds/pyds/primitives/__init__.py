@@ -14,11 +14,8 @@ from .infer import Infer
 from .partition import Partition
 from .splitter import TVTSplit
 from .train import Train
-<<<<<<< HEAD
 from .transform import Transform
-=======
 from .clustering import Clustering
->>>>>>> 3b7981b (feat: add clustering primitive)
 
 
 __all__ = [
@@ -31,9 +28,6 @@ __all__ = [
     "Infer",
     "Partition",
     "TVTSplit",
-<<<<<<< HEAD
     "Transform",
-=======
     "Clustering",
->>>>>>> 3b7981b (feat: add clustering primitive)
 ]

@@ -491,7 +491,7 @@ async def relative_binding_free_energy(
     dict
         Dictionary containing the address of the relative binding free energy results.
     """
-    from deepchem_server.core.fep.rbfe.utils.constants import NetworkPlanningConstants
+    from deepchem_server.core.primitives.fep.rbfe.utils.constants import NetworkPlanningConstants
 
     if overridden_rbfe_settings is not None:
         try:
@@ -701,7 +701,7 @@ async def collate_rbfe_results(
         Dictionary containing the address of the collated relative binding free energy results.
     """
     import pint
-    from deepchem_server.core.fep.rbfe.collate_rbfe_results import (
+    from deepchem_server.core.primitives.fep.rbfe.collate_rbfe_results import (
         process_input_files,
         get_ligands_from_results,
     )
