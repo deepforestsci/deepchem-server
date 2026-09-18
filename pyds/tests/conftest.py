@@ -105,15 +105,14 @@ def transform_client(test_settings: Settings) -> Transform:
 
 
 @pytest.fixture
-<<<<<<< HEAD
 def clustering_client(test_settings: Settings) -> Clustering:
     """Create Clustering primitive client for testing."""
     return Clustering(settings=test_settings)
-=======
+
+@pytest.fixture
 def hyperparam_opt_client(test_settings: Settings) -> HyperparamOpt:
     """Create HyperparamOpt primitive client for testing."""
     return HyperparamOpt(settings=test_settings)
->>>>>>> a842521 (feat: add hyperparam_opt primitive)
 
 
 @pytest.fixture
@@ -275,15 +274,15 @@ def live_transform_client(live_settings: Settings) -> Transform:
 
 
 @pytest.fixture
-<<<<<<< HEAD
 def live_clustering_client(live_settings: Settings) -> Clustering:
     """Create Clustering client for live server testing."""
     return Clustering(settings=live_settings)
-=======
+
+
+@pytest.fixture
 def live_hyperparam_opt_client(live_settings: Settings) -> HyperparamOpt:
     """Create HyperparamOpt client for live server testing."""
     return HyperparamOpt(settings=live_settings)
->>>>>>> a842521 (feat: add hyperparam_opt primitive)
 
 
 # ===========================
