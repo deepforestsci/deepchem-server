@@ -109,6 +109,7 @@ def clustering_client(test_settings: Settings) -> Clustering:
     """Create Clustering primitive client for testing."""
     return Clustering(settings=test_settings)
 
+
 @pytest.fixture
 def hyperparam_opt_client(test_settings: Settings) -> HyperparamOpt:
     """Create HyperparamOpt primitive client for testing."""
