@@ -100,8 +100,8 @@ class DataCard(Card):
         "sdf",
     ]
     SUPPORTED_FILE_TYPES = [
-        'csv', 'dir', 'json', 'pdb', 'fasta', 'fastq', 'png', 'sdf', 'dcd', 'txt', 'xml', 'py', 'ds', 'dcs', 'md', 'pdbqt', 'zip', 'smi',
-        'smiles', 'bz2', 'cxsmiles', 'onnx', 'hdf5', 'log'
+        'csv', 'dir', 'json', 'pdb', 'fasta', 'fastq', 'png', 'sdf', 'dcd', 'txt', 'xml', 'py', 'ds', 'dcs', 'md',
+        'pdbqt', 'zip', 'smi', 'smiles', 'bz2', 'cxsmiles', 'onnx', 'hdf5', 'log'
     ]
 
     def __init__(self,
