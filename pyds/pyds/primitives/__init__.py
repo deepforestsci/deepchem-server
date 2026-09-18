@@ -15,6 +15,7 @@ from .partition import Partition
 from .splitter import TVTSplit
 from .train import Train
 from .transform import Transform
+from .clustering import Clustering
 
 
 __all__ = [
@@ -28,4 +29,5 @@ __all__ = [
     "Partition",
     "TVTSplit",
     "Transform",
+    "Clustering",
 ]
