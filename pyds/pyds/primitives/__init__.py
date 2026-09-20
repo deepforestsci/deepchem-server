@@ -16,6 +16,7 @@ from .proteome_scan import PdbClean
 from .splitter import TVTSplit
 from .train import Train
 from .transform import Transform
+from .clustering import Clustering
 
 
 __all__ = [
@@ -30,4 +31,5 @@ __all__ = [
     "PdbClean",
     "TVTSplit",
     "Transform",
+    "Clustering",
 ]
