@@ -451,3 +451,61 @@ def safe_mkdir(path: Path, exist_ok: bool = True) -> Path:
 def get_optional_env(name: str) -> Optional[str]:
     """Helper used by tests to introspect the active cache env var."""
     return os.getenv(name)
+
+
+def pdb_raw_path(scan_id: str, gene_name: str, pdb_id: str) -> Path:
+    """Return the local path for a raw (unprocessed) PDB file.
+
+    Parameters
+    ----------
+    scan_id : str
+        Scan run identifier.
+    gene_name : str
+        Gene name.
+    pdb_id : str
+        PDB identifier (uppercase, eg '7M0X').
+
+    Returns
+    -------
+    Path
+        Expected local path of the raw PDB file.
+    """
+    return gene_root(scan_id, gene_name) / f"g_{gene_name}_p_{pdb_id}.pdb"
+
+
+def gene_root(scan_id: str, gene_name: str) -> Path:
+    """Return the cache directory for a specific gene within a scan.
+
+    Parameters
+    ----------
+    scan_id : str
+        Scan run identifier.
+    gene_name : str
+        Gene name (e.g. 'MAP2K1').
+
+    Returns
+    -------
+    Path
+        Per-gene cache directory.
+    """
+    return get_cache_root() / scan_id / gene_name
+
+
+def pdb_clean_path(scan_id: str, gene_name: str, pdb_id: str) -> Path:
+    """Return the local path for a cleaned PDB file.
+
+    Parameters
+    ----------
+    scan_id : str
+        Scan run identifier.
+    gene_name : str
+        Gene name.
+    pdb_id : str
+        PDB identifier (uppercase, eg '7M0X').
+
+    Returns
+    -------
+    Path
+        Expected local path of the cleaned PDB file.
+    """
+    return gene_root(scan_id, gene_name) / f"cleaned_g_{gene_name}_p_{pdb_id}.pdb"
