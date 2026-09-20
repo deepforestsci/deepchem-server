@@ -12,8 +12,12 @@ from .featurize import Featurize
 from .docking import Docking
 from .infer import Infer
 from .partition import Partition
+from .proteome_scan import PdbClean
 from .splitter import TVTSplit
 from .train import Train
+from .transform import Transform
+from .clustering import Clustering
+from .hyperparam_opt import HyperparamOpt
 
 
 __all__ = [
@@ -25,5 +29,9 @@ __all__ = [
     "Evaluate",
     "Infer",
     "Partition",
+    "PdbClean",
     "TVTSplit",
+    "Transform",
+    "Clustering",
+    "HyperparamOpt",
 ]

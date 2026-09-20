@@ -8,10 +8,14 @@ from deepchem_server.core.primitives.fep.rbfe.collate_rbfe_results import collat
 from deepchem_server.core.primitives.fep.rbfe.run_rbfe import run_rbfe
 from deepchem_server.core.primitives.inference import infer
 from deepchem_server.core.primitives.partition import partition
+from deepchem_server.core.primitives.proteome_scan.pdb_clean import pdb_clean
 from deepchem_server.core.primitives.splitter import train_valid_test_split
 from deepchem_server.core.primitives.train import train
 from deepchem_server.core.primitives.proteome_scan.docking import run_docking
 from deepchem_server.core.primitives.proteome_scan.ligand_prep import ligand_prep
+from deepchem_server.core.primitives.transform import transform
+from deepchem_server.core.primitives.clustering import cluster
+from deepchem_server.core.primitives.hyperparam_opt import hyperparam_opt
 
 
 program_map = {
@@ -26,7 +30,11 @@ program_map = {
     "collate_rbfe_results": collate_rbfe_results,
     "del_denoise": del_denoise,
     "run_docking": run_docking,
+    "pdb_clean": pdb_clean,
     "ligand_prep": ligand_prep,
+    "transform": transform,
+    "cluster": cluster,
+    "hyperparam_opt": hyperparam_opt,
 }
 
 
