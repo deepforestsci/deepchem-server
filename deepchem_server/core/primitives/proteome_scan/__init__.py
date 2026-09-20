@@ -2,8 +2,6 @@ from deepchem_server.core.primitives.proteome_scan import cache  # noqa: F401
 from deepchem_server.core.primitives.proteome_scan.docking import run_docking
 from deepchem_server.core.primitives.proteome_scan.ligand_prep import ligand_prep
 from deepchem_server.core.primitives.proteome_scan.pdb_clean import pdb_clean
-from deepchem_server.core.primitives.proteome_scan import cache  # noqa: F401
-from deepchem_server.core.primitives.proteome_scan.docking import run_docking
 
 
 __all__ = [
@@ -11,6 +9,4 @@ __all__ = [
     "run_docking",
     "pdb_clean",
     "ligand_prep",
-    "cache",
-    "run_docking",
 ]
