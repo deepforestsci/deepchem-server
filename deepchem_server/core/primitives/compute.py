@@ -16,7 +16,6 @@ from deepchem_server.core.primitives.proteome_scan.ligand_prep import ligand_pre
 from deepchem_server.core.primitives.transform import transform
 from deepchem_server.core.primitives.clustering import cluster
 from deepchem_server.core.primitives.hyperparam_opt import hyperparam_opt
-from deepchem_server.core.primitives.proteome_scan.docking import run_docking
 
 
 program_map = {
@@ -36,7 +35,6 @@ program_map = {
     "transform": transform,
     "cluster": cluster,
     "hyperparam_opt": hyperparam_opt,
-    "run_docking": run_docking,
 }
 
 
