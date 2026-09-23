@@ -1,0 +1,60 @@
+// deepchem_server/core/script/grammar.lark
+start: _NL* statement+
+
+?statement: assign | call_stmt | if_stmt | for_stmt | rank_on_stmt
+
+assign:       NAME "=" expr _NL
+call_stmt:    call _NL
+rank_on_stmt: "rank_on" expr _NL
+
+if_stmt:     "if" expr ":" block elif_clause* else_clause?
+elif_clause: "elif" expr ":" block
+else_clause: "else" ":" block
+
+for_stmt:   "for" NAME "in" iterable ":" block
+?iterable:  list_literal | name_ref | range_form
+range_form: "range" "(" INT ")"
+
+block: _NL _INDENT statement+ _DEDENT
+
+?expr:       or_test
+?or_test:    and_test ("or" and_test)*
+?and_test:   not_test ("and" not_test)*
+?not_test:   "not" not_test -> not_op
+           | comparison
+?comparison: arith (COMP_OP arith)?
+?arith:      term (ADD_OP term)*
+?term:       factor (MUL_OP factor)*
+?factor:     "-" factor -> neg
+           | atom_expr
+?atom_expr:  atom trailer*
+trailer:     "." NAME       -> attr_trailer
+           | "[" expr "]"   -> index_trailer
+?atom:       call | name_ref | literal | "(" expr ")"
+
+call:     NAME "(" [kwarg ("," kwarg)* ","?] ")"
+kwarg:    NAME "=" expr
+name_ref: NAME
+
+?literal:     STRING | SIGNED_NUMBER | TRUE | FALSE | NONE | list_literal | dict_literal
+list_literal: "[" [expr ("," expr)* ","?] "]"
+dict_literal: "{" [pair ("," pair)* ","?] "}"
+pair:         STRING ":" expr
+
+TRUE:  "true"
+FALSE: "false"
+NONE:  "none"
+COMP_OP: "==" | "!=" | "<=" | ">=" | "<" | ">"
+ADD_OP:  "+" | "-"
+MUL_OP:  "*" | "/"
+
+%import common.CNAME -> NAME
+%import common.INT
+%import common.SIGNED_NUMBER
+%import common.ESCAPED_STRING -> STRING
+%import common.WS_INLINE
+%declare _INDENT _DEDENT
+%ignore WS_INLINE
+%ignore COMMENT
+COMMENT: /#[^\n]*/
+_NL: /(\r?\n[\t ]*)+/
