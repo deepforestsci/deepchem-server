@@ -56,3 +56,10 @@ installation, server configuration, available computation primitives, and the Py
    py_ds_library/core_modules
    py_ds_library/primitives
    py_ds_library/configuration
+
+
+.. toctree::
+   :maxdepth: 2
+   :caption: PyDS Demo
+
+   notebooks/demo

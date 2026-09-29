@@ -26,6 +26,7 @@ release = "1.0.0"
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
+    "nbsphinx",
     "sphinx.ext.autodoc",
     "sphinx.ext.viewcode",
     "sphinx.ext.napoleon",
@@ -35,6 +36,7 @@ extensions = [
     "sphinx.ext.mathjax",
     "sphinx.ext.ifconfig",
     "sphinx.ext.githubpages",
+    "sphinx_copybutton",
 ]
 
 # Options for autodoc directives
@@ -92,6 +94,14 @@ html_sidebars = {
 }
 
 copybutton_remove_prompts = True
+
+# -- Options for nbsphinx extension ------------------------------------------
+
+# This prevents nbsphinx from executing notebooks during the build
+nbsphinx_execute = "never"
+
+# Allow errors in notebooks (useful for showing error examples)
+nbsphinx_allow_errors = False
 
 # This value selects what content will be inserted into the main body of an autoclass directive.
 autoclass_content = "both"
@@ -152,6 +162,16 @@ autodoc_mock_imports = [
     "PIL.Image",
     "PIL.ImageDraw",
     "PIL.ImageFont",
+    "openff",
+    "openfe",
+    "mdtraj",
+    "gufe",
+    "pint",
+    "openmm",
+    "pdbfixer",
+    "vina",
+    "ipython3",
+    "csv",
 ]
 
 # -- Options for intersphinx extension ---------------------------------------
