@@ -139,7 +139,7 @@ def _first_token(node: Tree) -> Any:
     return None
 
 
-def _statement(node: Tree) -> Any:
+def _statement(node: Any) -> Any:
     handler = _STATEMENTS.get(node.data)
     if handler is None:
         raise ScriptParseError(f"unsupported statement {node.data!r}", **_pos(node))
