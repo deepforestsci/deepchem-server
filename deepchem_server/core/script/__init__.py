@@ -11,6 +11,7 @@ from deepchem_server.core.script.errors import (
     ScriptRuntimeError,
     ScriptValidationError,
 )
+from deepchem_server.core.script.parser import parse_script
 from deepchem_server.core.script.values import DEFAULT_LIMITS, Limits
 
 
@@ -21,4 +22,5 @@ __all__ = [
     "ScriptParseError",
     "ScriptRuntimeError",
     "ScriptValidationError",
+    "parse_script",
 ]
